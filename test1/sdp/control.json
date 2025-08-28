@@ -1,0 +1,4 @@
+{
+  "num_blocks": 1,
+  "command": "pmp2sdp --precision 1024 -i /usr/local/share/sdpb/pmp.json -o /usr/local/share/sdpb/sdp"
+}
