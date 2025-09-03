@@ -8,3 +8,7 @@ This would convert a *polynomial matrix program* problem into an internal SDP fo
 ```
 One can find the output of this problem in `sdpb/sdpb/out.txt`, and it shows the reason for termination, the final primal/dual objective value, the final duality gap, the final primal/dual errors, and the total runtime.
 The output one may be interested in is the vector **y**, which is stored in `sdpb/sdpb/y.txt`.
+
+# Note
+- For every new run, one must remove the check-point data.
+

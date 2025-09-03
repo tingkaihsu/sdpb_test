@@ -16,32 +16,48 @@ but does affect the choice of sample scalings and bilinear basis.
 
 *)
 
-testSDP[jsonFile_, prec_:200] := Module[
-    {
-        pols = {PositiveMatrixWithPrefactor[<|
-        "prefactor"->DampedRational[1,{}, 1/E,x],
-        "polynomials"->{
-            {
-                {1 + x^4, x^4/12 + x^2,0},
-                {1 + x^4, x^4/12 + x^2,0}
-            },
-            {
-                {1 + x^4, x^4/12 + x^2,0},
-                {1 + x^4, x^4/12 + x^2,0}
-            }
-        }
-        |>]},
-        norm = {1, 0,0},
-        obj  = {0, -1,0}
-    },
-    
-    (*
-    If you want to specify sample points, sample scalings and/or bilinear bases explicitly,
-    you may provide a function computing this data.
-    See SDPB.m, getAnalyticSampleData[PositiveMatrixWithPrefactor[pmp_?AssociationQ],prec_]
-    *)
-    WritePmpJson[jsonFile, SDP[obj, norm, pols], prec(*, getAnalyticSampleData*)]
+(* existing code unchanged *)
+polynomial[J_] := {
+  (1 + x)*(3 - 2*(J + 1)*J),
+  (1 + x)^2,
+  2*J*(J + 1)*(J*(J + 1) - 8)
+};
+
+polynomialsList = Table[polynomial[J], {J, 0, 40, 2}]; (* length 21 *)
+
+(* extra triplet to add *)
+extraTriplet = {0, 0, 2};
+
+(* extended list (length 22) *)
+extendedList = Append[polynomialsList, extraTriplet];
+
+(* construct 22×22 symmetric matrix from extendedList *)
+matrix = Table[
+  If[i <= j,
+    extendedList[[i + 1]],
+    extendedList[[j + 1]]
+  ],
+  {i, 0, 21}, {j, 0, 21}
 ];
+
+
+Print[matrix]
+
+(* Main definition *)
+test2SDP[jsonFile_, prec_:200] := Module[
+    {
+        pols = {
+            PositiveMatrixWithPrefactor[<|
+                "prefactor" -> DampedRational[1, {}, 1/E, x],
+                "polynomials" -> matrix
+            |>]
+        },
+        norm = {1, 0, 0},
+        obj  = {0, 1, 0}
+    },
+    WritePmpJson[jsonFile, SDP[obj, norm, pols], prec, getAnalyticSampleData]
+];
+
 
 (* A similar computation to the above, except with nontrivial matrix semidefiniteness constraints *)
 testSDPMatrix[jsonFile_, prec_:200] := Module[
@@ -67,4 +83,4 @@ testSDPMatrix[jsonFile_, prec_:200] := Module[
     WritePmpJson[jsonFile, SDP[obj, norm, pols], prec(*, getAnalyticSampleData*)]
 ];
 
-testSDP["pmp.json", 200];
+test2SDP["pmp.json", 200];
