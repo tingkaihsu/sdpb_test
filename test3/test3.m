@@ -1,4 +1,4 @@
-(* Examples *)
+(* Finding the inequality between g3 and g4 *)
 
 <<"../SDPB.m";
 
@@ -13,6 +13,8 @@ test2SDP[jsonFile_, prec_:200] := Module[
     (* build one PositiveMatrixWithPrefactor per J *)
     pols = Table[
       PositiveMatrixWithPrefactor[<|
+        (* what is damped rational *)
+        (* Only damped-rational prefactors are supported. Such prefactors are relevant to the conformal bootstrap problems. *)
         "prefactor"   -> DampedRational[1, {}, 1/E, x],
         "polynomials" -> {{
           { ( 1 + x )^2, ( 1 + x )*( 3 - 2*( J + 1 )*J ), 1/2, 2 * J * ( J + 1 )*( J*( J + 1 ) - 8 ) }

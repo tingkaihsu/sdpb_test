@@ -1,4 +1,4 @@
-(* Examples *)
+(* Finding the lower bound of g3 *)
 
 <<"../SDPB.m";
 
@@ -26,6 +26,7 @@ polynomial[J_] := {
 polynomialsList = Table[polynomial[J], {J, 0, 40, 2}]; (* length 21 *)
 
 (* extra triplet to add *)
+(* Extremal large J limit *)
 extraTriplet = {0, 0, 2};
 
 (* extended list (length 22) *)

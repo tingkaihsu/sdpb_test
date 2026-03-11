@@ -6,12 +6,13 @@
 (* Maximize {a,b}.{0,-1} = -b over {a,b} such that {a,b}.{1,0}=a=1 and 
 
 E^(-x)(a(1+x^4) + b(x^4/12 + x^2)) >= 0 for all x>=0
+where E^(-x) is the damped rational prefactor.
 
 Equivalently,
 
 1+x^4 + b(x^4/12 + x^2) >= 0 for all x >= 0
 
-The prefactor DampedRational[1,{},1/E,x] doesn't affect the answer,
+The prefactor DampedRational[1,{},1/E,x] = E^(-x)} doesn't affect the answer,
 but does affect the choice of sample scalings and bilinear basis.
 
 *)
