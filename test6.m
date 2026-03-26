@@ -172,7 +172,9 @@ With[{testExpr = XKernelCached[4, 4]},
    failed) into floats, hiding the bug and breaking evaluation.
    The 60-digit precision comes from mP = SetPrecision[m, 60].
    =========================================================== *)
-KernelXNum[k_Integer, n_Integer, J_Integer, m_?NumericQ] /; m > 1 :=
+
+
+(* KernelXNum[k_Integer, n_Integer, J_Integer, m_?NumericQ] /; m > 1 :=
   KernelXNum[k, n, J, m] =
   Module[{mP = SetPrecision[m, 60], xkExpr, integrandFn, eps = 10^-10},
     xkExpr = XKernelCached[k, J];
@@ -185,8 +187,23 @@ KernelXNum[k_Integer, n_Integer, J_Integer, m_?NumericQ] /; m > 1 :=
       WorkingPrecision -> 60, PrecisionGoal -> 50, MaxRecursion -> 30,
       Method -> {"GlobalAdaptive", "SingularityHandler" -> None}
     ]
-  ];
+  ]; *)
 
+
+KernelXNum[k_Integer, n_Integer, J_Integer, m_?NumericQ] /; m > 1 :=
+  KernelXNum[k, n, J, m] =
+  Module[{mP = SetPrecision[m, 60], xkExpr, integrandFn},
+    xkExpr = XKernelCached[k, J];
+    integrandFn = Function[pp,
+      Evaluate[pp^n * (xkExpr /. {mSym -> mP, uSym -> -pp^2})]
+    ];
+    NIntegrate[
+      integrandFn[pp],
+      {pp, 0, 1},     (* now safe because integrand is analytic at 0 *)
+      WorkingPrecision -> 60, PrecisionGoal -> 50, MaxRecursion -> 30,
+      Method -> {"GlobalAdaptive", "SingularityHandler" -> None}
+    ]
+  ];
 
 (* ===========================================================
    IMPACT INTEGRALS (unchanged)
@@ -210,11 +227,11 @@ ImpactCoeffAD[k_] := ImpactCoeffA[k] - ImpactCoeffA[2];
    GRID AND INDEX SETUP (unchanged)
    =========================================================== *)
 (* Jmax     = 42; *)
-Jmax = 0;
+Jmax = 10;
 Jlist    = Range[0, Jmax, 2];
 (* deltax   = 1/400; *)
-deltax = 1/10;
-xgrid0   = N @ Range[0, 1 - deltax, deltax];
+deltax = 1/100;
+xgrid0   = N @ Range[deltax, 1 - deltax, deltax];
 epsilonb = 1/250;
 deltab   = 1/32;
 Blarge   = 40;
