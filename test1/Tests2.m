@@ -49,45 +49,43 @@ WritePmpJsonNumerical[
 
 (* Example numeric functions; in a real application these can be NIntegrate-based
    or any black-box numerical evaluator. *)
-f1[J_?NumericQ, x_?NumericQ] := 1 + x^4;
-f2[J_?NumericQ, x_?NumericQ] := x^4/12 + x^2 + J;
+f1[x_?NumericQ] := 1 + x^4;
+f2[x_?NumericQ] := x^4/12 + x^2;
 
 myNumericSampleData[NumericalPositiveMatrixWithPrefactor[pmp_], prec_] := <|
-  "samplePoints" -> SetPrecision[{0.1, 0.5, 1.2, 2.8, 6.0}, prec],
-  "sampleScalings" -> SetPrecision[{0.2, 0.6, 1.1, 1.7, 2.4}, prec]
+  "samplePoints" -> SetPrecision[{0.06, 0.57, 1.63, 3.42, 6.49}, prec],
+  "sampleScalings" -> SetPrecision[{0.94, 0.57, 0.20, 0.03, 0.001}, prec]
 |>;
 
 testNumericalSDP[jsonFile_, prec_:200] := Module[
-  {Jlist, pols, norm, obj, samplePoints},
+  {pols, norm, obj, samplePoints},
 
-  Jlist = Range[0, 40, 2];
-  samplePoints = SetPrecision[{0.1, 0.5, 1.2, 2.8, 6.0}, prec];
+  samplePoints = SetPrecision[{0.06, 0.57, 1.63, 3.42, 6.49}, prec];
 
-  pols = Table[
+  pols =
     NumericalPositiveMatrixWithPrefactor[<|
       "prefactor" -> DampedRational[1, {}, 1/E, x],
       "samplePoints" -> samplePoints,
-      "sampleScalings" -> SetPrecision[{0.2, 0.6, 1.1, 1.7, 2.4}, prec],
-      "polynomials" -> Table[
+      "sampleScalings" -> SetPrecision[{0.94, 0.57, 0.20, 0.03, 0.001}, prec],
+      "polynomials" -> {
         {
-          f1[J, xi],
-          f2[J, xi]
-        },
-        {xi, samplePoints}
-      ]
-    |>],
-    {J, Jlist}
-  ];
+          {
+            Table[f1[xi], {xi, samplePoints}],
+            Table[f2[xi], {xi, samplePoints}]
+          }
+        }
+      }
+    |>];
 
   norm = {1, 0};
   obj  = {0, -1};
 
   WritePmpJsonNumerical[
     jsonFile,
-    SDP[obj, norm, pols],
+    SDP[obj, norm, {pols}],
     prec,
     myNumericSampleData
   ]
 ];
 
-testNumericalSDP["numeric_pmp.json", 200];
+testNumericalSDP["numeric_pmp.json", 2];

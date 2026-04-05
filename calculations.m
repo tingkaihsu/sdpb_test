@@ -1,19 +1,11 @@
-(* e1 = Sqrt[m^2 + (pr^2-pi^2+2I*pr*pi)] + Sqrt[mr^2-I*g*mr+(pr^2-pi^2+2I*pr*pi)] - (Sqrt[m^2 + (pr^2-pi^2-2I*pr*pi)] + Sqrt[mr^2+I*g*mr+(pr^2-pi^2-2I*pr*pi)]);
+f1[x_?NumericQ] := 1 + x^4;
+f2[x_?NumericQ] := x^4/12 + x^2;
 
 
-Print[ Solve[e1 == 0, {pr,pi}, Assumptions -> {m>0, mr>0, g>0, pr∈Reals, pi∈Reals}]//FullSimplify ] *)
+x = 6.4864280197437242972874017053872975623045755697052723340587997145691587901315896124628668604055689757653464227653856579213186132727599837628483439362121910529615879006718864993691113647881371955207225;
 
+s = 0.0015239829343038635658890866163083216180438290533192078781412750940839990869596660663240751650102338345476173948406190645666261161803365848768441731714171956552484163171574908865420376891202010952345898;
 
-s = (Sqrt[m^2 + (pr^2-pi^2+2I*pr*pi)] + Sqrt[mr^2-I*g*mr+(pr^2-pi^2+2I*pr*pi)])^2;
+Print["f1[x*s] = ", f1[x*s]];
+Print["f2[x*s] = ", f2[x*s]];
 
-
-Print[ SeriesCoefficient[s/.{pr->pr/e, pi->pi*e}, {e,0,-2}]//FullSimplify ]
-
-
-t = (Sqrt[m^2 + (pr^2-pi^2+2I*pr*pi)] - Sqrt[m^2 + (pr^2-pi^2-2I*pr*pi)])^2 - (2*I*pi)^2;
-
-Print[ SeriesCoefficient[t/.{pr->pr/e, pi->pi*e}, {e,0,-2}]//FullSimplify ]
-
-Print[ SeriesCoefficient[t/.{pr->pr/e, pi->pi*e}, {e,0,0}]//FullSimplify ]
-
-Print[ Series[t/.{pr->pr/e, pi->pi*e}, {e,0,2}]//FullSimplify ]
