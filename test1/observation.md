@@ -94,3 +94,6 @@ etc.
 My result: -2.483
 
 The analytic result: -1.840
+
+My result with different sample point: -1.846
+The analytic result: -1.840

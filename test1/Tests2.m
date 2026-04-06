@@ -101,7 +101,7 @@ f2[x_?NumericQ] := x^4/12 + x^2;
 testNumericalSDP[jsonFile_, prec_:200] := Module[
   {samplePoints, sampleScalings, pols, norm, obj},
 
-  samplePoints   = SetPrecision[{0.06, 0.57, 1.63, 3.42, 6.49}, prec];
+  samplePoints   = SetPrecision[{0.06, 0.57, 1.0, 1.25, 1.50}, prec];
   sampleScalings = SetPrecision[{0.94, 0.57, 0.20, 0.03, 0.001}, prec];
 
   (* One block per sample point. Each encodes a degree-0 (constant) polynomial
