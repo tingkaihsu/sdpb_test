@@ -5,43 +5,47 @@ ClearAll[NumericalPositiveMatrixWithPrefactor];
 toJsonNestedNumberArray[expr_, prec_] := expr /. n_?NumericQ :> toJsonNumber[n, prec];
 
 (*
-  SDPB manual (Section 3.1) is definitive:
-      polynomial c0 + c1*x + ... + cd*x^d  <=>  ["c0", ..., "cd"]
-  The `polynomials` field ALWAYS requires polynomial coefficient lists.
-  There is no "sample-values mode."
+  Design: the "constant-function" approach.
 
-  The analytic path (SDPB.m) has symbolic polynomial expressions in pmp[["polynomials"]]
-  and extracts coefficients directly via safeCoefficientList[#, x].
+  For each sample point xᵢ we create ONE PositiveMatrixWithPrefactor block whose
+  polynomial matrix entries are CONSTANT (degree-0) polynomials:
+      W⁰ⱼ(x) = f1(xᵢ),   W¹ⱼ(x) = f2(xᵢ)
 
-  The numerical path (here) stores function VALUES evaluated at sample points instead,
-  because the functions are black-box evaluators (e.g. NIntegrate-based) with no
-  accessible polynomial form. To produce coefficient lists we must reconstruct the
-  polynomial via Lagrange interpolation.
+  This gives n independent 1×1 PSD constraints solved simultaneously:
+      a·f1(xᵢ) + b·f2(xᵢ) ≥ 0   for each i = 1..n
 
-  Previous attempt used the user-specified `prec` as the working precision for the
-  interpolation computation. This fails because the 5 sample points over [0.06, 6.5]
-  give a Vandermonde matrix with condition number ~10^8: one needs prec + 8 digits of
-  working precision minimum just to recover 2-digit coefficients. The fix: use
-  Max[prec + 50, 100] digits internally, then round to `prec` at output. This is
-  stable for all practical values of prec >= 2.
+  SDPB manual (Section 3.1, p.4) JSON nesting for "polynomials":
+    Level 1: [ ]   — column list          (m_j columns; here m_j=1)
+    Level 2:  [ ]  — row within column    (m_j rows;    here m_j=1)
+    Level 3:   [ ] — polynomial vector    [Q^0, Q^1]  (N+1=2 entries for N=1)
+    Level 4:    [ "c0", ..., "cd" ]       coefficient list of each polynomial
+
+  For degree-0 (constant) polynomials dⱼ=0, so each coefficient list has 1 element:
+    Level 4: [ "f1(xᵢ)" ]   and   [ "f2(xᵢ)" ]
+
+  CORRECT JSON output for block i:
+    "polynomials": [              ← level 1 (len=1)
+        [                         ← level 2 (len=1)
+            [                     ← level 3 (len=2): polynomial vector
+                ["f1(xᵢ)"],       ← level 4 (len=1): Q^0 coefficient list
+                ["f2(xᵢ)"]        ← level 4 (len=1): Q^1 coefficient list
+            ]
+        ]
+    ]
+
+  In Mathematica this requires exactly THREE wrapping brace pairs before the
+  coefficient lists:
+      {{{  {f1(xᵢ)}, {f2(xᵢ)}  }}}
+       ↑1   ↑2        ↑↑ depth-3 elements = degree-0 coefficient lists
+
+  FOUR wrapping pairs (the previous bug):
+      {{{{  {f1(xᵢ)}, {f2(xᵢ)}  }}}}
+  produced depth 5, pushing coefficient lists one level too deep. The parser,
+  while in the Json_Float_Parser state (expecting float strings at depth 4),
+  received another '[' (array start), triggering:
+      "Not implemented: function 'bool json_start_array()' in class:
+       '17Json_Float_ParserIN2El8BigFloatEE'"
 *)
-
-interpolatedCoefficients[samplePoints_List, vals_List, prec_] :=
-  Module[
-    {workPrec = Max[prec + 50, 100], poly},
-    (* Lift both sample points and values to workPrec before interpolating.
-       This ensures the divided-difference computation does not lose information
-       to rounding, regardless of how low `prec` is. *)
-    poly = Expand @ InterpolatingPolynomial[
-      Transpose[{
-        SetPrecision[samplePoints, workPrec],
-        SetPrecision[vals,         workPrec]
-      }],
-      x
-    ];
-    (* Extract coefficient list, then round to the user-requested precision. *)
-    SetPrecision[safeCoefficientList[poly, x], prec]
-  ];
 
 toJsonObject[NumericalPositiveMatrixWithPrefactor[pmp_?AssociationQ], prec_, getSampleDataFn_:Function[<||>]] :=
 Module[
@@ -53,8 +57,6 @@ Module[
   prefactor        = Lookup[pmp, "prefactor",        1];
   reducedPrefactor = Lookup[pmp, "reducedPrefactor", prefactor];
 
-  (* samplePoints are taken from sampleData first (the authoritative source used
-     for evaluating the functions), falling back to the pmp association. *)
   samplePoints   = Lookup[sampleData, "samplePoints",  Lookup[pmp, "samplePoints",  Missing[]]];
   sampleScalings = Lookup[sampleData, "sampleScalings", Lookup[pmp, "sampleScalings", Missing[]]];
   functionValues = Lookup[pmp, "polynomials", Missing[]];
@@ -65,28 +67,13 @@ Module[
     "reducedPrefactor" -> toJsonDampedRational[reducedPrefactor, prec],
     "samplePoints"     -> toJsonNumberArray[samplePoints,   prec],
     "sampleScalings"   -> toJsonNumberArray[sampleScalings, prec],
-
-    (* Reconstruct polynomial coefficient lists from sampled values via Lagrange
-       interpolation. Map at depth {3} mirrors the analytic path in SDPB.m:
-         Map[toJsonNumberArray[safeCoefficientList[#,x],prec]&, pmp[["polynomials"]], {3}]
-       In both cases the level-3 elements are the per-entry polynomial data:
-         analytic: a symbolic expression like  1 + x^4
-         numeric:  a list of sampled values    {f(x0), f(x1), ..., f(xd)} *)
-    "polynomials" -> If[MissingQ[functionValues] || MissingQ[samplePoints],
-      Missing[],
-      Map[
-        Function[vals,
-          toJsonNumberArray[
-            interpolatedCoefficients[samplePoints, vals, prec],
-            prec
-          ]
-        ],
-        functionValues,
-        {3}
-      ]
+    (* functionValues has structure {{{ {f1(xᵢ)}, {f2(xᵢ)} }}} — 3 structural
+       wrapper levels, with depth-3 entries being the degree-0 coefficient lists.
+       toJsonNestedNumberArray stringifies all numeric leaves in-place. *)
+    "polynomials"      -> If[MissingQ[functionValues], Missing[],
+      toJsonNestedNumberArray[functionValues, prec]
     ],
-
-    "basisValues" -> If[MissingQ[basisValues], Missing[], toJsonNestedNumberArray[basisValues, prec]]
+    "basisValues"      -> If[MissingQ[basisValues], Missing[], toJsonNestedNumberArray[basisValues, prec]]
   |>
 ];
 
@@ -108,47 +95,43 @@ WritePmpJsonNumerical[
 
 << "../SDPB.m";
 
-(* Example numeric functions; in a real application these can be NIntegrate-based
-   or any black-box numerical evaluator. *)
 f1[x_?NumericQ] := 1 + x^4;
 f2[x_?NumericQ] := x^4/12 + x^2;
 
-myNumericSampleData[NumericalPositiveMatrixWithPrefactor[pmp_], prec_] := <|
-  "samplePoints"   -> SetPrecision[{0.06, 0.57, 1.63, 3.42, 6.49}, prec],
-  "sampleScalings" -> SetPrecision[{0.94, 0.57, 0.20, 0.03, 0.001}, prec]
-|>;
-
 testNumericalSDP[jsonFile_, prec_:200] := Module[
-  {pols, norm, obj, samplePoints},
+  {samplePoints, sampleScalings, pols, norm, obj},
 
-  samplePoints = SetPrecision[{0.06, 0.57, 1.63, 3.42, 6.49}, prec];
+  samplePoints   = SetPrecision[{0.06, 0.57, 1.63, 3.42, 6.49}, prec];
+  sampleScalings = SetPrecision[{0.94, 0.57, 0.20, 0.03, 0.001}, prec];
 
-  pols =
+  (* One block per sample point. Each encodes a degree-0 (constant) polynomial
+     constraint  a·f1(xᵢ) + b·f2(xᵢ) ≥ 0.
+
+     Polynomials nesting:  {{{ {f1(xᵢ)}, {f2(xᵢ)} }}}
+       {  }  ← Mathematica level 1 → JSON level 1 (column list, m_j=1)
+        {  } ← Mathematica level 2 → JSON level 2 (row within column, m_j=1)
+         {  }← Mathematica level 3 → JSON level 3 (polynomial vector, 2 elements)
+       {f1(xᵢ)} ← Mathematica level 4 → JSON level 4 (degree-0 coefficient list)
+       {f2(xᵢ)} ← Mathematica level 4 → JSON level 4 (degree-0 coefficient list)
+
+     Verified against pmp.json which also has depth 4 for its polynomial strings. *)
+  pols = Table[
     NumericalPositiveMatrixWithPrefactor[<|
       "prefactor"      -> DampedRational[1, {}, 1/E, x],
-      "samplePoints"   -> samplePoints,
-      "sampleScalings" -> SetPrecision[{0.94, 0.57, 0.20, 0.03, 0.001}, prec],
-      (* Store function values at sample points.
-         toJsonObject will reconstruct polynomial coefficient lists via interpolation. *)
-      "polynomials" -> {
-        {
-          {
-            Table[f1[xi], {xi, samplePoints}],
-            Table[f2[xi], {xi, samplePoints}]
-          }
-        }
-      }
-    |>];
+      "samplePoints"   -> {samplePoints[[i]]},
+      "sampleScalings" -> {sampleScalings[[i]]},
+      "polynomials"    -> {{{               (* THREE wrapping pairs — NOT four *)
+        {f1[samplePoints[[i]]]},            (* Q^0: degree-0 coeff list, len=1 *)
+        {f2[samplePoints[[i]]]}             (* Q^1: degree-0 coeff list, len=1 *)
+      }}}
+    |>],
+    {i, Length[samplePoints]}
+  ];
 
   norm = {1, 0};
   obj  = {0, -1};
 
-  WritePmpJsonNumerical[
-    jsonFile,
-    SDP[obj, norm, {pols}],
-    prec,
-    myNumericSampleData
-  ]
+  WritePmpJsonNumerical[jsonFile, SDP[obj, norm, pols], prec]
 ];
 
-testNumericalSDP["numeric_pmp.json"];
+testNumericalSDP["numeric_pmp.json", 200];
