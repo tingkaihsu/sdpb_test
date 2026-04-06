@@ -1,17 +1,19 @@
 # Observation
-1. New reducedPrefactor in the numeric implementation
-2. Polynomials with wrong format in the numeric implementation
-3. Missing reducedSampleScalings, bilinearBasis_0, and bilinearBasis_1
-   in the new numeric implementation.
-## Update 
-1. New reducedPrefactor in the numeric_pmp.json (minor)
-2. bilinearBasis_0, reducedSampleScalings, and bilinearBasis_1 STILL missing (minor)
-3. polynomials format is STILL wrong. (**Important**)
 
-Polynomials format in numeric implementation:
-[ [ f1[x1], f2[x1] ], [ f1[x2], f2[x2] ], ..., [ f1[x5], f2[x5] ] ].
+## 2nd Update
+1. Now the polynomials format is correct. 
+2. But the problem is the values of polynomials are different, but they IN FACT correspond to same optimization problem.
 
-The correct format:
-[ [ [ [ f1[x1], ..., f1[x5] ], [ f2[x1], ..., f2[x5] ] ] ] ].
+For $f1[x] = 1+x^4$ and $f2[x] = x^4/12 + x^2$,
+The original implementation:
+```
+[ [ [ [ "1", "0", "0", "0", "1" ], [ "0", "0", "1", "0", "0.0833"] ] ] ]
+```
+The numeric implementation:
+```
+[ [ [ [ "1.0", "1.1", "8.1", "140.", "1800." ], [ "0.0036 "0.33", "3.2", "23.", "190."] ] ] ]
+```
 
+Which are very different. I have checked the sampling points and the corresponding f1[x] and f2[x] values, which are correct. 
 
+*Comment*: maybe some other modifications is used.
