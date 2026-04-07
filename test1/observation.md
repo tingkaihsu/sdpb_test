@@ -1,99 +1,18 @@
-# Observation
+# Discretization (Adaptive Refinement)
+SDP problem
+$$
+    \text{Subjected to the bound: } f(x) \ge 0
+$$
+$$
+    \text{Maximize the objection: } \vec{b}(x) \cdot \vec{y} \text{where the normalization is } \vec{n}\cdot\vec{y} = 1
+$$
+The function $f(x)$ is given and one has to design the objection and the normalization according to the problem at hand.
+We initially take some sampling points $x = [\epsilon_x, \epsilon_x+\delta_x, ..., 1-\delta_x]$. One straightforward consequence of only imposing positivity bound at a discrete set of $x$ is that the function with the solution is negative between two discretized values where the inequalities are saturated. 
+*If the left-hand side of the inequality is zero at some values of $x$, it will generically be negative on one side of that zero.*
 
-## 2nd Update
-1. Now the polynomials format is correct. 
-2. But the problem is the values of polynomials are different, but they IN FACT correspond to same optimization problem.
+One can mitigate this problem by adaptively refining the discretization. Notice that the resulting functional would be negative between pairs of points in the initial discretization. **We identify these negative regions and add new positivity constraints in the finer-spaced grid that covers the negative regions.**
 
-For $f1[x] = 1+x^4$ and $f2[x] = x^4/12 + x^2$,
-The original implementation:
-```
-[ [ [ [ "1", "0", "0", "0", "1" ], [ "0", "0", "1", "0", "0.0833"] ] ] ]
-```
-The numeric implementation:
-```
-[ [ [ [ "1.0", "1.1", "8.1", "140.", "1800." ], [ "0.0036 "0.33", "3.2", "23.", "190."] ] ] ]
-```
+My collaborator suggests that *要跑完一次sdp 之後精進sampling points*, *你要回來確認你的functional是不是大於零*. His approach is that *另外寫一個shell script執行全部的東西, 包括讀檔分析*.
 
-Which are very different. I have checked the sampling points and the corresponding f1[x] and f2[x] values, which are correct. 
-
-*Comment*: maybe some other modifications is used.
-
-
-## 3rd Update
-### Previous Inconsistency
-The auto-built version is in fact still analytic form: 
-
-```
-[ [ [ [ "1", "0", "0", "0", "1" ], [ "0", "0", "1", "0", "0.0833"] ] ] ]
-```
-that correspond to $f1[x] = 1 + x^4$ and $f2[x] = x^2 + x^4/12$. The `polynomial` IN FACT stores the coefficient of $f1[x]$ and $f2[x]$.
-
-### Corrections
-
-For non-polynomial functions, I initially plan to **Talyor Expand** the functions and extract the coefficients of each term.
-
-My collaborator suggests a different approach: treat them as CONSTANT.
-
-Now PMP per sample point, which is weird at first. 
-
-The structure is now:
-A PMP for a sample point
-```
-{
-    "samplePoints":[
-        "x1"
-    ],
-    "sampleScalings":[
-        "s1"
-    ],
-    "polynomials":[
-        [
-            [
-                [
-                    [
-                        "f1[x1]"
-                    ],
-                    [
-                        "f2[x1]"
-                    ]
-                ]
-            ]
-        ]
-    ]
-}
-```
-for next sample point, we open another pmp
-```
-{
-    "samplePoints":[
-        "x2"
-    ],
-    "sampleScalings":[
-        "s2"
-    ],
-    "polynomials":[
-        [
-            [
-                [
-                    [
-                        "f1[x2]"
-                    ],
-                    [
-                        "f2[x2]"
-                    ]
-                ]
-            ]
-        ]
-    ]
-}
-```
-etc.
-
-
-### Result
-My result: -2.483
-
-The analytic result: -1.840
-
-My result with different sample point: -1.846
-The analytic result: -1.840
+## My Suggestion
+To understand my collaborator's approach, one has to study how SDPB solver works.
