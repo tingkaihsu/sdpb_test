@@ -7,6 +7,8 @@
 
 E^(-x)(a(1+x^4) + b(x^4/12 + x^2)) >= 0 for all x>=0
 
+with DampedRational[1, {}, 1/E, x] as the prefactor.
+
 Equivalently,
 
 1+x^4 + b(x^4/12 + x^2) >= 0 for all x >= 0
@@ -74,45 +76,5 @@ test2SDP[jsonFile_, prec_:200] := Module[
     ]
 ];
 
-
-(* existing code unchanged
-polynomial2[J_] := {
-  (1 + x)^2,
-  (1 + x)*(3 - 2*(J + 1)*J),
-  1/2,
-  2*J*(J + 1)*(J*(J + 1) - 8)
-};
-
-polynomialsList2 = Table[polynomial2[J], {J, 0, 40, 2}]; (* length 21 *)
-
-(* extra triplet to add *)
-extraTriplet2 = {0, 0, 0, 2};
-
-(* extended list (length 22) *)
-extendedList2 = Append[polynomialsList2, extraTriplet2];
-
-(* construct 22×22 symmetric matrix from extendedList *)
-matrix2 = Table[
-  If[i <= j,
-    extendedList2[[i + 1]],
-    extendedList2[[j + 1]]
-  ],
-  {i, 0, 21}, {j, 0, 21}
-];
-
-(* A similar computation to the above, except with nontrivial matrix semidefiniteness constraints *)
-test3SDP[jsonFile_, prec_:200] := Module[
-    {
-        pols = {
-            PositiveMatrixWithPrefactor[<|
-                "prefactor"->DampedRational[1, {}, 1/E, x],
-                "polynomials"-> matrix2
-                 |>]
-        },
-        norm = {0, 0, 1, 0},
-        obj  = {-1, 10.5, 0, 0}
-    },
-    WritePmpJson[jsonFile, SDP[obj, norm, pols], prec, getAnalyticSampleData]
-]; *)
 
 test2SDP["pmp.json", 200];
