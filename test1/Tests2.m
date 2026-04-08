@@ -95,18 +95,14 @@ WritePmpJsonNumerical[
 
 << "../SDPB.m";
 
-f1[x_?NumericQ, J_?IntegerQ] := (1 + x)^2;
-f2[x_?NumericQ, J_?IntegerQ] := ( 1 + x )*( 3 - 2*J*( J + 1 ));
-f3[x_?NumericQ, J_?IntegerQ] := 2 * J * ( J + 1 )*( J*( J + 1 ) - 8 );
-
-Jmax = 40;
-Jlist = Range[0, Jmax, 2];  (* J = 0,2,...,40 *)
+f1[x_?NumericQ] := 1 + x^4;
+f2[x_?NumericQ] := x^4/12 + x^2;
 
 testNumericalSDP[jsonFile_, prec_:200] := Module[
   {samplePoints, sampleScalings, pols, norm, obj},
 
-  samplePoints   = SetPrecision[{0.10340307765328547223630314082809872663649381367363570975866784459698950504846341436922826311233950415189685238409396227869590051487073360626174297880103181595478543065121171494081853010904892646771338, 0.97916391245035555397176210290443067298734173579221772588582301539489572733566938662472014152406657682245446430494243569601717924997604591473186319949654140608234966937487306130555629123626373267927949, 3.1450444531112909997984044773046581892845330789724131607992431051810113773940557833026483070649486883573151970746975847192422203679264870466595378300400920362599311630852176696089772742812014549423457}, prec];
-  sampleScalings = SetPrecision[{0.90176341953323843798759045259032131659279233414342432294447471521607637811482288681937794999943292682649086768222789014656104058902714922501490993519844845467193976549344637063847467307127543462916940, 0.37562502300414320000623464943592436927747038445337677317825463674907535940473614239996104636093545947398985152128846241183359713001975271219984104672033251785836160106566703709943481372689361805633954, 0.043065009630614498560144075965094246234665231509999232187616552190861984641783256918190761425941162230338792571115907030330011934483910316041580807782687043748534787062965609301934098806334671855477152}, prec];
+  samplePoints   = SetPrecision[{0.06, 0.57, 1.0, 1.25, 1.50}, prec];
+  sampleScalings = SetPrecision[{0.94, 0.57, 0.20, 0.03, 0.001}, prec];
 
   (* One block per sample point. Each encodes a degree-0 (constant) polynomial
      constraint  a·f1(xᵢ) + b·f2(xᵢ) ≥ 0.
@@ -125,18 +121,17 @@ testNumericalSDP[jsonFile_, prec_:200] := Module[
       "samplePoints"   -> {samplePoints[[i]]},
       "sampleScalings" -> {sampleScalings[[i]]},
       "polynomials"    -> {{{               (* THREE wrapping pairs — NOT four *)
-        {f1[ samplePoints[[i]], Jlist[[j]] ]},            (* Q^0: degree-0 coeff list, len=1 *)
-        {f2[ samplePoints[[i]], Jlist[[j]] ]},             (* Q^1: degree-0 coeff list, len=1 *)
-        {f3[ samplePoints[[i]], Jlist[[j]] ]}              (* Q^2: degree-0 coeff list, len=1 *)
+        {f1[samplePoints[[i]]]},            (* Q^0: degree-0 coeff list, len=1 *)
+        {f2[samplePoints[[i]]]}             (* Q^1: degree-0 coeff list, len=1 *)
       }}}
     |>],
-    {i, Length[samplePoints]}, {j, Length[Jlist]}
+    {i, Length[samplePoints]}
   ];
 
-  norm = {0, 1, 0};
-  obj  = {-1, 0, 0};
+  norm = {1, 0};
+  obj  = {0, -1};
 
-  WritePmpJsonNumerical[jsonFile, SDP[obj, norm, Flatten[pols]], prec]
+  WritePmpJsonNumerical[jsonFile, SDP[obj, norm, pols], prec]
 ];
 
 testNumericalSDP["numeric_pmp.json", 200];
