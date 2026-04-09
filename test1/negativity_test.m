@@ -227,8 +227,8 @@ Print[""];
          s   = (xb - xa) / nPts
          new = { x* + (k - nPts/2) * s  :  k = 0, ..., nPts }
              = { xa, xa+s, ..., x*, ..., xb-s, xb }
-       xa and xb are already in samplePoints; they will be removed
-       by deduplication in step 8.
+       This places nPts+1 points spanning [xa, xb] exactly, including
+       the endpoints — which are kept since the old file is overwritten.
    ---------------------------------------------------------------- *)
 
 newPoints = Flatten[
@@ -251,19 +251,17 @@ Print["New candidate points (before dedup): ", Length[newPoints]];
 
 
 (* ----------------------------------------------------------------
-   8.  MERGE, DEDUPLICATE, AND SORT
-       Combine original sample points with new candidates.
-       Two points are considered identical if they differ by < 10^-12.
+   8.  DEDUPLICATE AND SORT NEW POINTS ONLY
+       The new points already span every flagged interval, including
+       its endpoints (xa, xb). Those endpoints came from the old
+       sampling_points.txt, but the old file is being OVERWRITTEN, so
+       we only need the new interior grid — not the previous points.
+       Dedup tolerance 10^-10 guards against near-identical endpoints
+       produced by two adjacent flagged intervals sharing a boundary.
    ---------------------------------------------------------------- *)
 
-allPoints = Sort[Join[samplePoints, newPoints]];
+allPoints = Sort[newPoints];
 
-(* Deduplicate: keep first of any cluster closer than 10^-10.
-   The tolerance is wider than 1e-12 to guard against near-misses
-   that arise when the same endpoint is computed via two different
-   arithmetic paths, e.g. xb computed directly vs. xStar + N/2 * s.
-   With SetPrecision[..., 50] this situation is rare but the guard
-   costs nothing and prevents stale duplicates accumulating. *)
 dedupPoints = Fold[
   Function[{kept, pt},
     If[Abs[pt - Last[kept]] < 10^-10, kept, Append[kept, pt]]
@@ -272,14 +270,13 @@ dedupPoints = Fold[
   Rest[allPoints]
 ];
 
-Print["Points before dedup : ", Length[allPoints]];
-Print["Points after  dedup : ", Length[dedupPoints]];
-Print["Net new points added: ", Length[dedupPoints] - Length[samplePoints]];
+Print["New points before dedup : ", Length[allPoints]];
+Print["New points after  dedup : ", Length[dedupPoints]];
 Print[""];
 
 
 (* ----------------------------------------------------------------
-   9.  WRITE AUGMENTED SAMPLING POINTS TO FILE
+   9.  OVERWRITE sampling_points.txt WITH THE NEW POINTS ONLY
        One high-precision number per line, 50 significant digits.
    ---------------------------------------------------------------- *)
 
@@ -290,7 +287,7 @@ outLines = StringRiffle[
 
 Export[outFile, outLines, "Text"];
 
-Print["Wrote ", Length[dedupPoints], " sampling points to: ", outFile];
+Print["Overwrote ", outFile, " with ", Length[dedupPoints], " new sampling points."];
 Print[""];
 Print["New sampling points:"];
 Print["  ", dedupPoints];

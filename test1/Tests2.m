@@ -1,297 +1,214 @@
-(* ================================================================
-   negative_region.m
-   ----------------------------------------------------------------
-   PURPOSE
-     After each SDPB run, read the current sampling points and the
-     solver's y.txt, reconstruct the functional
+(* New head for purely numerical data *)
+ClearAll[NumericalPositiveMatrixWithPrefactor];
 
-         F(x) = f1(x)*y1 + f2(x)*y2
+(* Helper: recursively stringify all numeric leaves *)
+toJsonNestedNumberArray[expr_, prec_] := expr /. n_?NumericQ :> toJsonNumber[n, prec];
 
-     and identify intervals between consecutive sampling points where
-     F is negative, by evaluating F at the midpoint of each interval.
+(*
+  Design: the "constant-function" approach.
 
-   WHY MIDPOINTS ONLY (not a fine grid scan)
-     SDPB already guarantees F(xᵢ) >= 0 at every sampling point xᵢ.
-     Therefore we do NOT need to scan the whole real line. We only
-     need to probe each open interval (xᵢ, xᵢ₊₁). A single midpoint
-     evaluation per interval is sufficient: if F((xᵢ+xᵢ₊₁)/2) < 0
-     the interval is flagged for refinement. This is both faster and
-     more principled than a fine-grid sweep.
+  For each sample point xᵢ we create ONE PositiveMatrixWithPrefactor block whose
+  polynomial matrix entries are CONSTANT (degree-0) polynomials:
+      W⁰ⱼ(x) = f1(xᵢ),   W¹ⱼ(x) = f2(xᵢ)
 
-   NEW POINTS (from observation.md)
-     For each flagged interval [xa, xb]:
-       x*  = (xa + xb) / 2          (midpoint = centre of interval)
-       s   = (xb - xa) / N_pts      (step size)
-       new = { x* + (k - N_pts/2)*s : k = 0, 1, ..., N_pts }
-           = { xa, xa+s, ..., x*, ..., xb-s, xb }
-     This places N_pts+1 points that span [xa, xb] exactly.
-     xa and xb are already sample points; after deduplication they
-     are dropped, leaving N_pts-1 new interior points.
+  This gives n independent 1×1 PSD constraints solved simultaneously:
+      a·f1(xᵢ) + b·f2(xᵢ) ≥ 0   for each i = 1..n
 
-   STOPPING CRITERION
-     If F(midpoint) < 0 but the interval width  xb - xa < min_width
-     (default 10^-6), the interval is NOT flagged for refinement.
-     The functional is negative there, but the region is so narrow
-     that adding more points would not improve the bound meaningfully.
-     Convergence is declared when every interval with F(mid) < 0 has
-     width below min_width — i.e. no refinable negative intervals remain.
+  SDPB manual (Section 3.1, p.4) JSON nesting for "polynomials":
+    Level 1: [ ]   — column list          (m_j columns; here m_j=1)
+    Level 2:  [ ]  — row within column    (m_j rows;    here m_j=1)
+    Level 3:   [ ] — polynomial vector    [Q^0, Q^1]  (N+1=2 entries for N=1)
+    Level 4:    [ "c0", ..., "cd" ]       coefficient list of each polynomial
 
-   USAGE
-     wolframscript -file negative_region.m <sp_file> <y_file> \
-                   [N_pts] [min_width] [out_sp_file]
+  For degree-0 (constant) polynomials dⱼ=0, so each coefficient list has 1 element:
+    Level 4: [ "f1(xᵢ)" ]   and   [ "f2(xᵢ)" ]
 
-     sp_file      path to current sampling_points.txt (one x per line)
-     y_file       path to SDPB output y.txt           (one yᵢ per line)
-     N_pts        new interior subdivisions per flagged interval (default: 10)
-     min_width    minimum interval width to bother refining  (default: 1e-6)
-     out_sp_file  where to write the augmented sample list
-                  (default: overwrites sp_file in place)
+  CORRECT JSON output for block i:
+    "polynomials": [              ← level 1 (len=1)
+        [                         ← level 2 (len=1)
+            [                     ← level 3 (len=2): polynomial vector
+                ["f1(xᵢ)"],       ← level 4 (len=1): Q^0 coefficient list
+                ["f2(xᵢ)"]        ← level 4 (len=1): Q^1 coefficient list
+            ]
+        ]
+    ]
 
-   EXIT CODES
-     0  converged — no refinable negative intervals remain, out_sp_file unchanged
-     1  refined   — new points written to out_sp_file, loop continues
-     2  error     — bad arguments or unreadable files
-   ================================================================ *)
+  In Mathematica this requires exactly THREE wrapping brace pairs before the
+  coefficient lists:
+      {{{  {f1(xᵢ)}, {f2(xᵢ)}  }}}
+       ↑1   ↑2        ↑↑ depth-3 elements = degree-0 coefficient lists
 
+  FOUR wrapping pairs (the previous bug):
+      {{{{  {f1(xᵢ)}, {f2(xᵢ)}  }}}}
+  produced depth 5, pushing coefficient lists one level too deep. The parser,
+  while in the Json_Float_Parser state (expecting float strings at depth 4),
+  received another '[' (array start), triggering:
+      "Not implemented: function 'bool json_start_array()' in class:
+       '17Json_Float_ParserIN2El8BigFloatEE'"
+*)
 
-(* ----------------------------------------------------------------
-   1.  ARGUMENT PARSING
-       $ScriptCommandLine = {scriptname, arg1, arg2, ...}
-       Works identically for  wolframscript -file  and  math -script.
-   ---------------------------------------------------------------- *)
+toJsonObject[NumericalPositiveMatrixWithPrefactor[pmp_?AssociationQ], prec_, getSampleDataFn_:Function[<||>]] :=
+Module[
+  {sampleData, samplePoints, sampleScalings, functionValues, basisValues,
+   prefactor, reducedPrefactor},
 
-myArgs = If[Length[$ScriptCommandLine] >= 2, Rest[$ScriptCommandLine], {}];
+  sampleData = getSampleDataFn[NumericalPositiveMatrixWithPrefactor[pmp], prec];
 
-If[Length[myArgs] < 2,
-  Print["USAGE: wolframscript -file negative_region.m ",
-        "<sp_file> <y_file> [N_pts] [out_sp_file]"];
-  Quit[2]
+  prefactor        = Lookup[pmp, "prefactor",        1];
+  reducedPrefactor = Lookup[pmp, "reducedPrefactor", prefactor];
+
+  samplePoints   = Lookup[sampleData, "samplePoints",  Lookup[pmp, "samplePoints",  Missing[]]];
+  sampleScalings = Lookup[sampleData, "sampleScalings", Lookup[pmp, "sampleScalings", Missing[]]];
+  functionValues = Lookup[pmp, "polynomials", Missing[]];
+  basisValues    = Lookup[sampleData, "basisValues", Lookup[pmp, "basisValues", Missing[]]];
+
+  DeleteMissing @ <|
+    "prefactor"        -> toJsonDampedRational[prefactor,        prec],
+    "reducedPrefactor" -> toJsonDampedRational[reducedPrefactor, prec],
+    "samplePoints"     -> toJsonNumberArray[samplePoints,   prec],
+    "sampleScalings"   -> toJsonNumberArray[sampleScalings, prec],
+    (* functionValues has structure {{{ {f1(xᵢ)}, {f2(xᵢ)} }}} — 3 structural
+       wrapper levels, with depth-3 entries being the degree-0 coefficient lists.
+       toJsonNestedNumberArray stringifies all numeric leaves in-place. *)
+    "polynomials"      -> If[MissingQ[functionValues], Missing[],
+      toJsonNestedNumberArray[functionValues, prec]
+    ],
+    "basisValues"      -> If[MissingQ[basisValues], Missing[], toJsonNestedNumberArray[basisValues, prec]]
+  |>
 ];
 
-spFile    = myArgs[[1]];
-yFile     = myArgs[[2]];
-nPts      = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 10];
-minWidth  = If[Length[myArgs] >= 4, ToExpression[myArgs[[4]]], 10^-6];
-outFile   = If[Length[myArgs] >= 5, myArgs[[5]], spFile];
-
-Print["=== negative_region.m ==="];
-Print["  sp_file    = ", spFile];
-Print["  y_file     = ", yFile];
-Print["  N_pts      = ", nPts];
-Print["  min_width  = ", minWidth];
-Print["  out_file   = ", outFile];
-Print[""];
-
-
-(* ----------------------------------------------------------------
-   2.  READ SAMPLING POINTS
-   ---------------------------------------------------------------- *)
-
-If[!FileExistsQ[spFile],
-  Print["ERROR: sampling points file not found: ", spFile]; Quit[2]];
-
-spRaw = Select[
-  ReadList[spFile, String],
-  StringLength[StringTrim[#]] > 0 && !StringStartsQ[StringTrim[#], "#"] &
+WritePmpJsonNumerical[
+  file_,
+  SDP[objective_, normalization_, positiveMatricesWithPrefactors_],
+  prec_,
+  getSampleDataFn_:Function[<||>]
+] := exportJson[
+  file,
+  <|
+    "objective"     -> toJsonNumberArray[objective,     prec],
+    "normalization" -> toJsonNumberArray[normalization, prec],
+    "PositiveMatrixWithPrefactorArray" ->
+      Table[toJsonObject[pmp, prec, getSampleDataFn], {pmp, positiveMatricesWithPrefactors}]
+  |>
 ];
 
-If[Length[spRaw] == 0,
-  Print["ERROR: no sample points found in ", spFile]; Quit[2]];
 
-(* Parse and sort; keep high precision *)
-samplePoints = Sort[SetPrecision[ToExpression /@ spRaw, 50]];
-
-Print["Loaded ", Length[samplePoints], " sampling points:"];
-Print["  ", samplePoints];
-Print[""];
-
-
-(* ----------------------------------------------------------------
-   3.  READ y.txt
-       SDPB writes one component per line; blank lines and lines
-       starting with "#" are skipped.
-       The normalization n = (1,0) fixes y[[1]] = 1.  y[[2]] is the
-       free optimisation variable returned by the solver.
-   ---------------------------------------------------------------- *)
-
-If[!FileExistsQ[yFile],
-  Print["ERROR: y.txt not found: ", yFile]; Quit[2]];
-
-yRaw = Select[
-  ReadList[yFile, String],
-  StringLength[StringTrim[#]] > 0 && !StringStartsQ[StringTrim[#], "#"] &
-];
-
-If[Length[yRaw] == 0,
-  Print["ERROR: y.txt is empty: ", yFile]; Quit[2]];
-
-yVec = SetPrecision[ToExpression /@ yRaw, 50];
-
-(* Guard: if SDPB only wrote the free component, prepend the fixed y1=1 *)
-If[Length[yVec] == 1, yVec = Prepend[yVec, 1]];
-
-Print["y vector: ", yVec];
-Print[""];
-
-
-(* ----------------------------------------------------------------
-   4.  FUNCTIONAL DEFINITION  ← edit here for your problem
-       F(x) = Sum_k  f_k(x) * y_k
-   ---------------------------------------------------------------- *)
+<< "../SDPB.m";
 
 f1[x_?NumericQ] := 1 + x^4;
 f2[x_?NumericQ] := x^4/12 + x^2;
 
-F[x_?NumericQ] := yVec[[1]] * f1[x] + yVec[[2]] * f2[x];
-
-
 (* ----------------------------------------------------------------
-   5.  MIDPOINT CHECK OVER CONSECUTIVE INTERVALS
-       For each pair (samplePoints[[i]], samplePoints[[i+1]]):
-         - compute midpoint m and interval width w = xb - xa
-         - evaluate F(m)
-         - if F(m) < 0 AND w >= minWidth: flag for refinement
-         - if F(m) < 0 AND w <  minWidth: negative but below the
-           stopping threshold — skip, do not generate new points
+   testNumericalSDP
+   ----------------------------------------------------------------
+   Read sample points from spFile (one number per line, blank lines
+   and lines starting with "#" are ignored), build one constant-
+   function SDP block per point, and write the PMP JSON to jsonFile.
+
+   sampleScalings are derived as Exp[-xᵢ], i.e. the value of the
+   DampedRational[1,{},1/E,x] prefactor at each sample point.
+   This is the correct systematic choice: the scaling for block i
+   should equal the prefactor evaluated at xᵢ.
    ---------------------------------------------------------------- *)
+testNumericalSDP[spFile_String, jsonFile_String, prec_:200] := Module[
+  {rawLines, spLines, samplePoints, sampleScalings, pols, norm, obj},
 
-nIntervals       = Length[samplePoints] - 1;
-flaggedIntervals = {};   (* intervals to refine: F(mid)<0 AND width>=minWidth *)
-tinyNegative     = {};   (* intervals with F(mid)<0 but width<minWidth        *)
-midpointValues   = {};   (* for diagnostic printing *)
+  (* --- Read and parse sample_points.txt --- *)
+  rawLines = ReadList[spFile, String];
+  spLines  = Select[rawLines,
+               StringLength[StringTrim[#]] > 0
+               && !StringStartsQ[StringTrim[#], "#"] &];
 
-Print["Checking ", nIntervals, " interval(s) between consecutive sample points:"];
-Print["  (stopping threshold: min_width = ", minWidth, ")"];
-Print[""];
+  If[Length[spLines] == 0,
+    Print["ERROR: no sample points found in ", spFile]; Quit[1]];
 
-Do[
-  xa    = samplePoints[[i]];
-  xb    = samplePoints[[i + 1]];
-  width = xb - xa;
-  mid   = (xa + xb) / 2;
-  fm    = F[mid];
-  AppendTo[midpointValues, {mid, fm}];
+  samplePoints = SetPrecision[ToExpression /@ spLines, prec];
+  Print["Read ", Length[samplePoints], " sample points from ", spFile];
+  Print["  Points: ", samplePoints];
 
-  Which[
-    fm >= 0,
-      Print["  [", xa, ", ", xb, "]  w=", width,
-            "  F(mid)=", fm, "  ok"],
+  (* --- Derive scalings from the prefactor DampedRational[1,{},1/E,x]
+         evaluated at each xᵢ: value = (1/E)^xᵢ = Exp[-xᵢ].           --- *)
+  sampleScalings = SetPrecision[Exp[-#] & /@ samplePoints, prec];
 
-    fm < 0 && width < minWidth,
-      AppendTo[tinyNegative, {xa, xb}];
-      Print["  [", xa, ", ", xb, "]  w=", width,
-            "  F(mid)=", fm,
-            "  negative but w < ", minWidth, " — below threshold, skipping"],
+  (* --- Build one constant-function block per sample point.
 
-    fm < 0 && width >= minWidth,
-      AppendTo[flaggedIntervals, {xa, xb}];
-      Print["  [", xa, ", ", xb, "]  w=", width,
-            "  F(mid)=", fm, "  *** NEGATIVE, will refine ***"]
-  ],
-  {i, nIntervals}
-];
-Print[""];
+     One block per sample point. Each encodes a degree-0 (constant) polynomial
+     constraint  a·f1(xᵢ) + b·f2(xᵢ) ≥ 0.
 
+     Polynomials nesting:  {{{ {f1(xᵢ)}, {f2(xᵢ)} }}}
+       {  }  ← Mathematica level 1 → JSON level 1 (column list, m_j=1)
+        {  } ← Mathematica level 2 → JSON level 2 (row within column, m_j=1)
+         {  }← Mathematica level 3 → JSON level 3 (polynomial vector, 2 elements)
+       {f1(xᵢ)} ← Mathematica level 4 → JSON level 4 (degree-0 coefficient list)
+       {f2(xᵢ)} ← Mathematica level 4 → JSON level 4 (degree-0 coefficient list)
 
-(* ----------------------------------------------------------------
-   6.  CONVERGENCE CHECK
-       Converged when there are no refinable intervals, i.e. every
-       interval with F(mid)<0 is already narrower than minWidth.
-   ---------------------------------------------------------------- *)
-
-If[Length[flaggedIntervals] == 0,
-  If[Length[tinyNegative] == 0,
-    Print["CONVERGED: F(midpoint) >= 0 for all ", nIntervals, " intervals."],
-    Print["CONVERGED: ", Length[tinyNegative],
-          " interval(s) have F(mid) < 0 but all widths < ", minWidth, "."];
-    Print["  Tiny negative intervals (not refined):"];
-    Do[Print["    [", r[[1]], ", ", r[[2]], "]  width = ", r[[2]] - r[[1]]],
-       {r, tinyNegative}]
+     Verified against pmp.json which also has depth 4 for its polynomial strings. --- *)
+  pols = Table[
+    NumericalPositiveMatrixWithPrefactor[<|
+      "prefactor"      -> DampedRational[1, {}, 1/E, x],
+      "samplePoints"   -> {samplePoints[[i]]},
+      "sampleScalings" -> {sampleScalings[[i]]},
+      "polynomials"    -> {{{               (* THREE wrapping pairs — NOT four *)
+        {f1[samplePoints[[i]]]},            (* Q^0: degree-0 coeff list, len=1 *)
+        {f2[samplePoints[[i]]]}             (* Q^1: degree-0 coeff list, len=1 *)
+      }}}
+    |>],
+    {i, Length[samplePoints]}
   ];
-  Print["No new sampling points needed. ", outFile, " is unchanged."];
-  Quit[0]
-];
 
-Print[Length[flaggedIntervals], " refinable interval(s). Generating new points..."];
-If[Length[tinyNegative] > 0,
-  Print["  (", Length[tinyNegative],
-        " additional interval(s) negative but below threshold — not refined)"]
-];
-Print[""];
+  norm = {1, 0};
+  obj  = {0, -1};
 
+  WritePmpJsonNumerical[jsonFile, SDP[obj, norm, pols], prec];
+  Print["Wrote PMP JSON to ", jsonFile]
+];
 
 (* ----------------------------------------------------------------
-   7.  GENERATE NEW SAMPLING POINTS
-       For each flagged [xa, xb] (from observation.md):
-         x*  = (xa + xb) / 2
-         s   = (xb - xa) / nPts
-         new = { x* + (k - nPts/2) * s  :  k = 0, ..., nPts }
-             = { xa, xa+s, ..., x*, ..., xb-s, xb }
-       This places nPts+1 points spanning [xa, xb] exactly, including
-       the endpoints — which are kept since the old file is overwritten.
-   ---------------------------------------------------------------- *)
+   Command-line entry point
+   ----------------------------------------------------------------
+   USAGE:
+     wolframscript -file Tests2.m <sample_points.txt> [output.json] [prec]
+     math          -script Tests2.m <sample_points.txt> [output.json] [prec]
 
-newPoints = Flatten[
-  Table[
-    Module[{xa, xb, xStar, s},
-      xa    = interval[[1]];
-      xb    = interval[[2]];
-      xStar = (xa + xb) / 2;
-      s     = (xb - xa) / nPts;
-      Print["  Flagged interval [", xa, ", ", xb, "]:"];
-      Print["    x* = ", xStar, "  s = ", s];
-      Table[SetPrecision[xStar + (k - nPts/2) * s, 50], {k, 0, nPts}]
-    ],
-    {interval, flaggedIntervals}
+   ARGUMENTS:
+     sample_points.txt   required  path to file with one x per line
+     output.json         optional  output path (default: numeric_pmp.json)
+     prec                optional  decimal digit precision (default: 200)
+
+   EXAMPLE:
+     wolframscript -file Tests2.m sampling_points.txt numeric_pmp.json 200
+
+   NOTE ON ARGUMENT PARSING
+     $ScriptCommandLine = {scriptname, arg1, arg2, ...}
+     It is set identically by both  wolframscript -file  and  math -script,
+     so no flag-hunting in $CommandLine is needed.
+     When the file is loaded with  <<  as a library, $ScriptCommandLine
+     is either empty or contains only the parent script's name, so
+     Length[$ScriptCommandLine] < 2 and the block is skipped cleanly.
+   ---------------------------------------------------------------- *)
+Module[{myArgs, spFile, jsonFile, prec},
+
+  (* Rest drops the leading script filename, leaving only user args. *)
+  myArgs = If[Length[$ScriptCommandLine] >= 2,
+    Rest[$ScriptCommandLine],
+    {}
+  ];
+
+  If[Length[myArgs] >= 1,
+
+    spFile   = myArgs[[1]];
+    jsonFile = If[Length[myArgs] >= 2, myArgs[[2]], "numeric_pmp.json"];
+    prec     = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 200];
+
+    Print["=== Tests2.m ==="];
+    Print["  sample_points = ", spFile];
+    Print["  output_json   = ", jsonFile];
+    Print["  precision     = ", prec];
+
+    testNumericalSDP[spFile, jsonFile, prec];
+    Quit[0],
+
+    (* Loaded as library (<<) or called with no arguments — do nothing. *)
+    Null
   ]
 ];
-
-Print[""];
-Print["New candidate points (before dedup): ", Length[newPoints]];
-
-
-(* ----------------------------------------------------------------
-   8.  DEDUPLICATE AND SORT NEW POINTS ONLY
-       The new points already span every flagged interval, including
-       its endpoints (xa, xb). Those endpoints came from the old
-       sampling_points.txt, but the old file is being OVERWRITTEN, so
-       we only need the new interior grid — not the previous points.
-       Dedup tolerance 10^-10 guards against near-identical endpoints
-       produced by two adjacent flagged intervals sharing a boundary.
-   ---------------------------------------------------------------- *)
-
-allPoints = Sort[newPoints];
-
-dedupPoints = Fold[
-  Function[{kept, pt},
-    If[Abs[pt - Last[kept]] < 10^-10, kept, Append[kept, pt]]
-  ],
-  {First[allPoints]},
-  Rest[allPoints]
-];
-
-Print["New points before dedup : ", Length[allPoints]];
-Print["New points after  dedup : ", Length[dedupPoints]];
-Print[""];
-
-
-(* ----------------------------------------------------------------
-   9.  OVERWRITE sampling_points.txt WITH THE NEW POINTS ONLY
-       One high-precision number per line, 50 significant digits.
-   ---------------------------------------------------------------- *)
-
-outLines = StringRiffle[
-  ToString[NumberForm[#, {50, 45}]] & /@ dedupPoints,
-  "\n"
-];
-
-Export[outFile, outLines, "Text"];
-
-Print["Overwrote ", outFile, " with ", Length[dedupPoints], " new sampling points."];
-Print[""];
-Print["New sampling points:"];
-Print["  ", dedupPoints];
-Print[""];
-Print["STATUS: Refinement needed. Re-run pmp2sdp + sdpb with updated ", outFile, "."];
-
-Quit[1];   (* exit code 1 = adaptive loop should continue *)

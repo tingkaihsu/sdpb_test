@@ -22,7 +22,7 @@ testSDP[jsonFile_, prec_:200] := Module[
         "prefactor"->DampedRational[1,{}, 1/E,x],
         "polynomials"->{{{1 + x^4, x^4/12 + x^2}}}
         |>]},
-        norm = {1, 0},
+        norm = {1, 1},
         obj  = {0, -1}
     },
     
