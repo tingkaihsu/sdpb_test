@@ -95,8 +95,38 @@ WritePmpJsonNumerical[
 
 << "../SDPB.m";
 
+(* ================================================================
+   PROBLEM-SPECIFIC SECTION  ← edit here for your problem
+   ----------------------------------------------------------------
+   Define the n constraint functions as a list fVec = {f1, f2, …, fn}.
+   Each function must accept a single numeric argument and return a
+   numeric value.  No symbolic or polynomial form is required — only
+   numeric evaluation at the sample points is ever used.
+
+   Also set obj (objective vector b) and norm (normalisation vector n),
+   both of length n = Length[fVec], such that:
+     Maximise   b · y
+     subject to n · y = 1   and   F(x) = sum_k fk(x)*yk >= 0 for all x
+
+   EXAMPLE  (n = 2):
+     Maximise -y₂  subject to  (1+x^4)·y₁ + (x^4/12+x^2)·y₂ ≥ 0
+     obj  = {0, -1}  →  b·y = -y₂
+     norm = {1,  0}  →  n·y = y₁ = 1
+   ================================================================ *)
+
 f1[x_?NumericQ] := 1 + x^4;
 f2[x_?NumericQ] := x^4/12 + x^2;
+(* Add further definitions here for n > 2, e.g.:
+   f3[x_?NumericQ] := …; *)
+
+fVec = {f1, f2};   (* ← replace {f1, f2, …, fn} to match your problem *)
+norm = {1, 0};     (* ← n-vector: normalisation constraint  n·y = 1   *)
+obj  = {0, -1};    (* ← n-vector: objective vector b  (maximise b·y)  *)
+
+(* ================================================================
+   END OF PROBLEM-SPECIFIC SECTION
+   ================================================================ *)
+
 
 (* ----------------------------------------------------------------
    testNumericalSDP
@@ -105,15 +135,20 @@ f2[x_?NumericQ] := x^4/12 + x^2;
    and lines starting with "#" are ignored), build one constant-
    function SDP block per point, and write the PMP JSON to jsonFile.
 
-   sampleScalings are derived as Exp[-xᵢ], i.e. the value of the
-   DampedRational[1,{},1/E,x] prefactor at each sample point.
-   This is the correct systematic choice: the scaling for block i
-   should equal the prefactor evaluated at xᵢ.
+   The positivity constraint in each block is:
+     fVec[[1]](xᵢ)·y₁ + fVec[[2]](xᵢ)·y₂ + … + fVec[[n]](xᵢ)·yₙ ≥ 0
+
+   Only numeric evaluations of fVec[[k]] at xᵢ are used; the
+   functions need not have any polynomial or closed-form structure.
+
+   sampleScalings are derived as Exp[-xᵢ], the value of the
+   DampedRational[1,{},1/E,x] prefactor at each xᵢ.  This formula
+   is independent of the dimension n of y.
    ---------------------------------------------------------------- *)
 testNumericalSDP[spFile_String, jsonFile_String, prec_:200] := Module[
-  {rawLines, spLines, samplePoints, sampleScalings, pols, norm, obj},
+  {rawLines, spLines, samplePoints, sampleScalings, pols},
 
-  (* --- Read and parse sample_points.txt --- *)
+  (* --- Read and parse sampling_points.txt --- *)
   rawLines = ReadList[spFile, String];
   spLines  = Select[rawLines,
                StringLength[StringTrim[#]] > 0
@@ -124,40 +159,39 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:200] := Module[
 
   samplePoints = SetPrecision[ToExpression /@ spLines, prec];
   Print["Read ", Length[samplePoints], " sample points from ", spFile];
+  Print["  n = ", Length[fVec], " functional component(s)"];
   Print["  Points: ", samplePoints];
 
-  (* --- Derive scalings from the prefactor DampedRational[1,{},1/E,x]
-         evaluated at each xᵢ: value = (1/E)^xᵢ = Exp[-xᵢ].           --- *)
+  (* --- Derive scalings from DampedRational[1,{},1/E,x] = e^{-x}.     --- *)
   sampleScalings = SetPrecision[Exp[-#] & /@ samplePoints, prec];
 
-  (* --- Build one constant-function block per sample point.
+  (* --- Build one constant-function SDP block per sample point.
 
-     One block per sample point. Each encodes a degree-0 (constant) polynomial
-     constraint  a·f1(xᵢ) + b·f2(xᵢ) ≥ 0.
+     Each block encodes the constraint F(xᵢ) ≥ 0, i.e.
+       fVec[[1]](xᵢ)·y₁ + … + fVec[[n]](xᵢ)·yₙ ≥ 0.
 
-     Polynomials nesting:  {{{ {f1(xᵢ)}, {f2(xᵢ)} }}}
-       {  }  ← Mathematica level 1 → JSON level 1 (column list, m_j=1)
-        {  } ← Mathematica level 2 → JSON level 2 (row within column, m_j=1)
-         {  }← Mathematica level 3 → JSON level 3 (polynomial vector, 2 elements)
-       {f1(xᵢ)} ← Mathematica level 4 → JSON level 4 (degree-0 coefficient list)
-       {f2(xᵢ)} ← Mathematica level 4 → JSON level 4 (degree-0 coefficient list)
+     Polynomials nesting:  {{ Table[{fVec[[k]][xᵢ]}, {k,n}] }}
+       {{ … }}  ← levels 1 and 2 (column list / row within column, each size 1)
+       Table[…] ← level 3: polynomial vector; n entries, one per component k
+       {fVec[[k]][xᵢ]} ← level 4: degree-0 coefficient list (exactly 1 element)
 
-     Verified against pmp.json which also has depth 4 for its polynomial strings. --- *)
+     For n=2 this produces {{{ {f1(xᵢ)}, {f2(xᵢ)} }}} — identical to the
+     original hardcoded form, verified against pmp.json. --- *)
   pols = Table[
     NumericalPositiveMatrixWithPrefactor[<|
       "prefactor"      -> DampedRational[1, {}, 1/E, x],
       "samplePoints"   -> {samplePoints[[i]]},
       "sampleScalings" -> {sampleScalings[[i]]},
-      "polynomials"    -> {{{               (* THREE wrapping pairs — NOT four *)
-        {f1[samplePoints[[i]]]},            (* Q^0: degree-0 coeff list, len=1 *)
-        {f2[samplePoints[[i]]]}             (* Q^1: degree-0 coeff list, len=1 *)
-      }}}
+      (* TWO outer braces = JSON levels 1 & 2.
+         Table gives level-3 list: { {f1(xᵢ)}, …, {fn(xᵢ)} }.
+         Each inner {…} is the level-4 coefficient list (1 element, degree-0). *)
+      "polynomials"    -> {{ Table[
+        {SetPrecision[fVec[[k]][samplePoints[[i]]], prec]},
+        {k, Length[fVec]}
+      ] }}
     |>],
     {i, Length[samplePoints]}
   ];
-
-  norm = {1, 0};
-  obj  = {0, -1};
 
   WritePmpJsonNumerical[jsonFile, SDP[obj, norm, pols], prec];
   Print["Wrote PMP JSON to ", jsonFile]

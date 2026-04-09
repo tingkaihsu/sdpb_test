@@ -5,7 +5,7 @@
      After each SDPB run, read the current sampling points and the
      solver's y.txt, reconstruct the functional
 
-         F(x) = f1(x)*y1 + f2(x)*y2
+         F(x) = f₁(x)·y₁ + f₂(x)·y₂ + … + fₙ(x)·yₙ
 
      and identify intervals between consecutive sampling points where
      F is negative, by evaluating F at the midpoint of each interval.
@@ -108,10 +108,10 @@ Print[""];
 
 (* ----------------------------------------------------------------
    3.  READ y.txt
-       SDPB writes one component per line; blank lines and lines
-       starting with "#" are skipped.
-       The normalization n = (1,0) fixes y[[1]] = 1.  y[[2]] is the
-       free optimisation variable returned by the solver.
+       SDPB writes all n components of y, one per line; blank lines
+       and lines starting with "#" are skipped.
+       The length of yVec must equal the number of functions in fVec.
+       A mismatch is caught by the dimensional check below.
    ---------------------------------------------------------------- *)
 
 If[!FileExistsQ[yFile],
@@ -127,22 +127,44 @@ If[Length[yRaw] == 0,
 
 yVec = SetPrecision[ToExpression /@ yRaw, 50];
 
-(* Guard: if SDPB only wrote the free component, prepend the fixed y1=1 *)
-If[Length[yVec] == 1, yVec = Prepend[yVec, 1]];
-
-Print["y vector: ", yVec];
+Print["y vector (", Length[yVec], " component(s)): ", yVec];
 Print[""];
 
 
-(* ----------------------------------------------------------------
-   4.  FUNCTIONAL DEFINITION  ← edit here for your problem
-       F(x) = Sum_k  f_k(x) * y_k
-   ---------------------------------------------------------------- *)
+(* ================================================================
+   PROBLEM-SPECIFIC SECTION  ← edit here for your problem
+   ----------------------------------------------------------------
+   Define fVec = {f1, f2, …, fn} to match the functions used in
+   Tests2.m.  Each function accepts a numeric argument and returns
+   a numeric value.  No symbolic form is required.
+   ================================================================ *)
 
 f1[x_?NumericQ] := 1 + x^4;
 f2[x_?NumericQ] := x^4/12 + x^2;
+(* Add further fk definitions for n > 2, e.g.:
+   f3[x_?NumericQ] := …; *)
 
-F[x_?NumericQ] := yVec[[1]] * f1[x] + yVec[[2]] * f2[x];
+fVec = {f1, f2};   (* ← must match fVec in Tests2.m *)
+
+(* ================================================================
+   END OF PROBLEM-SPECIFIC SECTION
+   ================================================================ *)
+
+
+(* --- Dimensional consistency check ---
+   y.txt must have exactly as many lines as there are functions in
+   fVec.  A mismatch means either the wrong y.txt or the wrong fVec
+   was supplied; either way the functional would be evaluated
+   incorrectly, so we stop immediately. *)
+If[Length[yVec] != Length[fVec],
+  Print["ERROR: y.txt has ", Length[yVec], " component(s) but fVec has ",
+        Length[fVec], " function(s). They must match."];
+  Quit[2]
+];
+
+(* F(x) = sum_{k=1}^{n} fVec[[k]](x) * yVec[[k]]
+   Works for any n >= 1; no change needed when n changes. *)
+F[x_?NumericQ] := Sum[yVec[[k]] * fVec[[k]][x], {k, Length[yVec]}];
 
 
 (* ----------------------------------------------------------------
