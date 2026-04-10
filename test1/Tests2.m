@@ -202,7 +202,6 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:200] := Module[
    ----------------------------------------------------------------
    USAGE:
      wolframscript -file Tests2.m <sample_points.txt> [output.json] [prec]
-     math          -script Tests2.m <sample_points.txt> [output.json] [prec]
 
    ARGUMENTS:
      sample_points.txt   required  path to file with one x per line

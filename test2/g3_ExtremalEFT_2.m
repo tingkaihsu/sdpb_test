@@ -95,48 +95,173 @@ WritePmpJsonNumerical[
 
 << "../SDPB.m";
 
+(* ================================================================
+   PROBLEM-SPECIFIC SECTION  ← edit here for your problem
+   ----------------------------------------------------------------
+   Functions fk[x, J] depend on BOTH x (continuous, discretised)
+   AND J (discrete spin, constrained EXACTLY for J in Jlist).
+   Sampling is done over x; J constraints are imposed exactly.
+
+   fList collects the functions for the generalised Table loop.
+   Each fList[[k]][x, J] must return a numeric value.
+
+   Jmax and Jlist define the discrete spin sum (even spins only).
+
+   extraTriplet is the J → ∞ limiting constraint vector:
+     As J → ∞, divide fk[x,J] by the leading power of J (here J^4):
+       f1[x,J] / J^4 → 0        (f1 is J-independent)
+       f2[x,J] / J^4 → 0        (f2 ~ J^2, subdominant)
+       f3[x,J] / J^4 → 2        (f3 ~ 2·J^4, leading term)
+     So extraTriplet = {0, 0, 2}.
+     This enforces  0·y1 + 0·y2 + 2·y3 ≥ 0  in the J→∞ limit.
+   ================================================================ *)
+
 f1[x_?NumericQ, J_?IntegerQ] := (1 + x)^2;
-f2[x_?NumericQ, J_?IntegerQ] := ( 1 + x )*( 3 - 2*J*( J + 1 ));
-f3[x_?NumericQ, J_?IntegerQ] := 2 * J * ( J + 1 )*( J*( J + 1 ) - 8 );
+f2[x_?NumericQ, J_?IntegerQ] := (1 + x) * (3 - 2*J*(J + 1));
+f3[x_?NumericQ, J_?IntegerQ] := 2 * J * (J + 1) * (J*(J + 1) - 8);
 
-Jmax = 40;
-Jlist = Range[0, Jmax, 2];  (* J = 0,2,...,40 *)
+fList = {f1, f2, f3};   (* one entry per component of y; must match Length[norm] *)
 
-testNumericalSDP[jsonFile_, prec_:200] := Module[
-  {samplePoints, sampleScalings, pols, norm, obj},
+Jmax  = 40;
+Jlist = Range[0, Jmax, 2];   (* J = 0, 2, 4, …, 40 — exact discrete constraints *)
 
-  samplePoints   = SetPrecision[{0.10340307765328547223630314082809872663649381367363570975866784459698950504846341436922826311233950415189685238409396227869590051487073360626174297880103181595478543065121171494081853010904892646771338, 0.97916391245035555397176210290443067298734173579221772588582301539489572733566938662472014152406657682245446430494243569601717924997604591473186319949654140608234966937487306130555629123626373267927949, 3.1450444531112909997984044773046581892845330789724131607992431051810113773940557833026483070649486883573151970746975847192422203679264870466595378300400920362599311630852176696089772742812014549423457}, prec];
-  sampleScalings = SetPrecision[{0.90176341953323843798759045259032131659279233414342432294447471521607637811482288681937794999943292682649086768222789014656104058902714922501490993519844845467193976549344637063847467307127543462916940, 0.37562502300414320000623464943592436927747038445337677317825463674907535940473614239996104636093545947398985152128846241183359713001975271219984104672033251785836160106566703709943481372689361805633954, 0.043065009630614498560144075965094246234665231509999232187616552190861984641783256918190761425941162230338792571115907030330011934483910316041580807782687043748534787062965609301934098806334671855477152}, prec];
+(* Extremal-J limit: leading J^4 coefficient vector of {f1, f2, f3}.
+   x-independent, so the same vector is used for all sample points xi. *)
+extraTriplet = {0, 0, 2};
 
-  (* One block per sample point. Each encodes a degree-0 (constant) polynomial
-     constraint  a·f1(xᵢ) + b·f2(xᵢ) ≥ 0.
+norm = {0, 1, 0};    (* normalisation: y2 = 1                *)
+obj  = {-1, 0, 0};   (* objective: maximise -y1 = minimise y1 *)
 
-     Polynomials nesting:  {{{ {f1(xᵢ)}, {f2(xᵢ)} }}}
-       {  }  ← Mathematica level 1 → JSON level 1 (column list, m_j=1)
-        {  } ← Mathematica level 2 → JSON level 2 (row within column, m_j=1)
-         {  }← Mathematica level 3 → JSON level 3 (polynomial vector, 2 elements)
-       {f1(xᵢ)} ← Mathematica level 4 → JSON level 4 (degree-0 coefficient list)
-       {f2(xᵢ)} ← Mathematica level 4 → JSON level 4 (degree-0 coefficient list)
+(* ================================================================
+   END OF PROBLEM-SPECIFIC SECTION
+   ================================================================ *)
 
-     Verified against pmp.json which also has depth 4 for its polynomial strings. *)
-  pols = Table[
+
+(* ----------------------------------------------------------------
+   testNumericalSDP
+   ----------------------------------------------------------------
+   Read x sample points from spFile (one number per line; blank
+   lines and "#"-comment lines are ignored).
+
+   For each (xi, Jj) pair a REGULAR block is created enforcing:
+     f1(xi,Jj)·y1 + f2(xi,Jj)·y2 + f3(xi,Jj)·y3 ≥ 0
+
+   For each xi an EXTRA block is created from extraTriplet,
+   enforcing the J→∞ limit constraint:
+     extraTriplet[[1]]·y1 + extraTriplet[[2]]·y2 + extraTriplet[[3]]·y3 ≥ 0
+
+   Total blocks = Length[samplePoints] × (Length[Jlist] + 1).
+
+   sampleScalings are Exp[-xi], the value of the prefactor
+   DampedRational[1,{},1/E,x] at each sample point xi.
+   ---------------------------------------------------------------- *)
+testNumericalSDP[spFile_String, jsonFile_String, prec_:200] := Module[
+  {rawLines, spLines, samplePoints, sampleScalings, polsRegular, polsExtra},
+
+  (* --- Read and parse sampling_points.txt --- *)
+  rawLines = ReadList[spFile, String];
+  spLines  = Select[rawLines,
+               StringLength[StringTrim[#]] > 0
+               && !StringStartsQ[StringTrim[#], "#"] &];
+
+  If[Length[spLines] == 0,
+    Print["ERROR: no sample points found in ", spFile]; Quit[1]];
+
+  samplePoints = SetPrecision[ToExpression /@ spLines, prec];
+  Print["Read ", Length[samplePoints], " x sample points from ", spFile];
+  Print["  x-points    : ", samplePoints];
+  Print["  J-values    : ", Jlist, "  (", Length[Jlist], " spins, exact)"];
+  Print["  extraTriplet: ", extraTriplet, "  (J\[Rule]\[Infinity] limit)"];
+
+  (* Scalings = prefactor DampedRational[1,{},1/E,x] evaluated at xi = e^{-xi} *)
+  sampleScalings = SetPrecision[Exp[-#] & /@ samplePoints, prec];
+
+  (* --- Regular blocks: one per (xi, Jj) pair.
+     Polynomials nesting:  {{ Table[{fk(xi,Jj)}, {k,3}] }}
+       {{ ... }}  ← JSON levels 1 and 2  (column list / row, each size 1)
+       Table[...] ← JSON level 3: polynomial vector, one entry per fList[[k]]
+       {fk(xi,Jj)} ← JSON level 4: degree-0 coefficient list (1 element) --- *)
+  polsRegular = Table[
     NumericalPositiveMatrixWithPrefactor[<|
       "prefactor"      -> DampedRational[1, {}, 1/E, x],
       "samplePoints"   -> {samplePoints[[i]]},
       "sampleScalings" -> {sampleScalings[[i]]},
-      "polynomials"    -> {{{               (* THREE wrapping pairs — NOT four *)
-        {f1[ samplePoints[[i]], Jlist[[j]] ]},            (* Q^0: degree-0 coeff list, len=1 *)
-        {f2[ samplePoints[[i]], Jlist[[j]] ]},             (* Q^1: degree-0 coeff list, len=1 *)
-        {f3[ samplePoints[[i]], Jlist[[j]] ]}              (* Q^2: degree-0 coeff list, len=1 *)
-      }}}
+      (* TWO outer braces = JSON levels 1 & 2.
+         Table produces level-3 list: {{f1(xi,Jj)}, {f2(xi,Jj)}, {f3(xi,Jj)}}.
+         Each {fList[[k]][...]} is the level-4 coefficient list (degree-0: 1 entry). *)
+      "polynomials" -> {{ Table[
+        {SetPrecision[fList[[k]][samplePoints[[i]], Jlist[[j]]], prec]},
+        {k, Length[fList]}
+      ] }}
     |>],
     {i, Length[samplePoints]}, {j, Length[Jlist]}
   ];
 
-  norm = {0, 1, 0};
-  obj  = {-1, 0, 0};
+  (* --- Extra blocks: one per xi, encoding the J→∞ limit constraint.
+     extraTriplet = {0, 0, 2} is x-independent (J^4 leading coefficient),
+     so every extra block carries the same polynomial values.
+     Each block is still associated with a distinct xi for SDPB bookkeeping. --- *)
+  polsExtra = Table[
+    NumericalPositiveMatrixWithPrefactor[<|
+      "prefactor"      -> DampedRational[1, {}, 1/E, x],
+      "samplePoints"   -> {samplePoints[[i]]},
+      "sampleScalings" -> {sampleScalings[[i]]},
+      "polynomials" -> {{ Table[
+        {SetPrecision[extraTriplet[[k]], prec]},
+        {k, Length[extraTriplet]}
+      ] }}
+    |>],
+    {i, Length[samplePoints]}
+  ];
 
-  WritePmpJsonNumerical[jsonFile, SDP[obj, norm, Flatten[pols]], prec]
+  Print["  Regular blocks : ", Length[samplePoints] * Length[Jlist]];
+  Print["  Extra blocks   : ", Length[polsExtra], "  (J\[Rule]\[Infinity] constraint)"];
+  Print["  Total blocks   : ", Length[samplePoints] * Length[Jlist] + Length[polsExtra]];
+
+  (* Flatten polsRegular (2D Table → flat list) and append polsExtra (already flat) *)
+  WritePmpJsonNumerical[
+    jsonFile,
+    SDP[obj, norm, Join[Flatten[polsRegular], polsExtra]],
+    prec
+  ];
+  Print["Wrote PMP JSON to ", jsonFile]
 ];
 
-testNumericalSDP["numeric_pmp.json", 200];
+
+(* ----------------------------------------------------------------
+   Command-line entry point
+   ----------------------------------------------------------------
+   USAGE:
+     wolframscript -file g3_ExtremalEFT_2.m <sp_file> [output.json] [prec]
+
+   ARGUMENTS:
+     sp_file       required  path to sampling_points.txt (one x per line)
+     output.json   optional  output path (default: numeric_pmp.json)
+     prec          optional  decimal digit precision (default: 200)
+
+   NOTE: $ScriptCommandLine = {scriptname, arg1, arg2, …} is populated
+   identically by both wolframscript -file and math -script. Rest[] drops
+   the script name leaving only user arguments. When loaded with << as a
+   library, $ScriptCommandLine has length ≤ 1 and the block is skipped.
+   ---------------------------------------------------------------- *)
+Module[{myArgs, spFile, jsonFile, prec},
+
+  myArgs = If[Length[$ScriptCommandLine] >= 2, Rest[$ScriptCommandLine], {}];
+
+  If[Length[myArgs] >= 1,
+    spFile   = myArgs[[1]];
+    jsonFile = If[Length[myArgs] >= 2, myArgs[[2]], "numeric_pmp.json"];
+    prec     = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 200];
+
+    Print["=== g3_ExtremalEFT_2.m ==="];
+    Print["  sample_points = ", spFile];
+    Print["  output_json   = ", jsonFile];
+    Print["  precision     = ", prec];
+
+    testNumericalSDP[spFile, jsonFile, prec];
+    Quit[0],
+
+    (* Loaded with << as a library — do nothing. *)
+    Null
+  ]
+];
