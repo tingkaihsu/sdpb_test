@@ -330,7 +330,9 @@ Print[""];
          new = { x* + (k - nPts/2) * s  :  k = 0, ..., nPts }
              = { xa, xa+s, ..., x*, ..., xb-s, xb }
        This places nPts+1 points spanning [xa, xb] exactly, including
-       the endpoints — which are kept since the old file is overwritten.
+       the endpoints xa and xb.  In section 8 these will be merged
+       with the original samplePoints; the dedup step removes any
+       exact coincidences between the two sets.
    ---------------------------------------------------------------- *)
 
 newPoints = Flatten[
@@ -353,16 +355,41 @@ Print["New candidate points (before dedup): ", Length[newPoints]];
 
 
 (* ----------------------------------------------------------------
-   8.  DEDUPLICATE AND SORT NEW POINTS ONLY
-       The new points already span every flagged interval, including
-       its endpoints (xa, xb). Those endpoints came from the old
-       sampling_points.txt, but the old file is being OVERWRITTEN, so
-       we only need the new interior grid — not the previous points.
-       Dedup tolerance 10^-10 guards against near-identical endpoints
-       produced by two adjacent flagged intervals sharing a boundary.
+   8.  MERGE ORIGINAL AND NEW POINTS, THEN DEDUPLICATE AND SORT
+       ----------------------------------------------------------------
+   WHY WE KEEP THE ORIGINAL SAMPLING POINTS (observation.md)
+
+   Discarding the original samplePoints and writing only newPoints
+   causes oscillatory instability across iterations:
+
+     Iter 1: original points cover [x_min, x_max].  Negative region
+             found in [xLeft, x_min].  newPoints are all near x_min.
+     Iter 2 (old code): sampling_points.txt = newPoints only.
+             SDPB is constrained only near x_min; the interval
+             [x'_max, xRight] is now completely unconstrained.
+             SDPB exploits this gap → negative region appears on
+             the right side.
+     Iter 3: newPoints now cover the right side.  Left side is
+             unconstrained again → negative region jumps back left.
+     → The negative region oscillates between the two boundaries
+       and never converges.  (Observed in practice, noted in
+       observation.md under "Unexpected Instability".)
+
+   FIX: always include the original samplePoints in the output.
+   They act as a GLOBAL SKELETON that prevents large unconstrained
+   gaps from opening on either side of the locally refined region.
+   The adaptive new points provide LOCAL refinement near each
+   negative region.  Together they ensure both coverage and
+   convergence.  The extra cost (more SDPB blocks per iteration)
+   is acceptable and necessary for stability.
+   ----------------------------------------------------------------
+   Dedup tolerance 10^-10 removes exact duplicates (e.g. an
+   endpoint of a flagged interval that coincides with an existing
+   sample point to full precision).  Distinct points that happen
+   to be close but numerically different are preserved.
    ---------------------------------------------------------------- *)
 
-allPoints = Sort[newPoints];
+allPoints = Sort[Join[samplePoints, newPoints]];
 
 dedupPoints = Fold[
   Function[{kept, pt},
@@ -372,13 +399,16 @@ dedupPoints = Fold[
   Rest[allPoints]
 ];
 
-Print["New points before dedup : ", Length[allPoints]];
-Print["New points after  dedup : ", Length[dedupPoints]];
+Print["Original points          : ", Length[samplePoints]];
+Print["New refined points       : ", Length[newPoints]];
+Print["Combined before dedup    : ", Length[allPoints]];
+Print["Combined after  dedup    : ", Length[dedupPoints]];
 Print[""];
 
 
 (* ----------------------------------------------------------------
-   9.  OVERWRITE sampling_points.txt WITH THE NEW POINTS ONLY
+   9.  WRITE MERGED SAMPLING POINTS TO FILE
+       Original samplePoints + new refined points, deduplicated.
        One high-precision number per line, 50 significant digits.
    ---------------------------------------------------------------- *)
 
@@ -389,7 +419,9 @@ outLines = StringRiffle[
 
 Export[outFile, outLines, "Text"];
 
-Print["Overwrote ", outFile, " with ", Length[dedupPoints], " new sampling points."];
+Print["Wrote ", Length[dedupPoints], " sampling points to: ", outFile,
+      "  (", Length[samplePoints], " original + ",
+      Length[dedupPoints] - Length[samplePoints], " new refined)"];
 Print[""];
 Print["New sampling points:"];
 Print["  ", dedupPoints];

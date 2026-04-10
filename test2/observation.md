@@ -110,3 +110,23 @@ The STOPPING criterion is that the area (length) of the regions where the functi
 IMPROTANT: We have to iteratively write the PMP problems in to `JSON` files at different sampling points, and then turn them into `SDP` problems and then solve them by the SDPB solver. After each solving, we have to check the negative region of the functional with the solution, and determine the sampling points for the next run. 
 
 It should be done by a `shell script` that has `sudo` permission.
+
+# Adaptive Refinement Observation
+During the adaptive refinement process, I found something interesting.
+
+Suppose the initial sampling points are chosen to be
+$$
+    x \in [x_1, x_2, \cdots, x_n].
+$$
+It is possible to have a convergent result **but** the solution might not be optimal. There are two reasons for our current procedure:
+1. Our bad sampling-point selection.
+2. $x$ is related to the normalized heavy mass spectrum: $ m^2 = \frac{1}{1-x} \in [1, \infty]$, so it is restricted to $x \in [0, 1)$. 
+
+In this sense, we miss the intervals $[0, x_{\text{min}}]$ and $[x_{\text{max}},1)$. 
+
+## Unexpected Instability
+By adding additional negativity check at these two intervals, we found that the consistent result that the original sampling is not refined enough. However, an unexpected thing happens. We found that, the negativity region lies in $[0, x_{\text{min}}]$ at the first check. After rerunning the SDPB solver again for the refined sampling points, we found that the negative regime lies in the oppisite side $[x'_{\text{max}}, 1)$ where $x'_{\text{max}}$ is the maximum point in the refined sampling points. 
+
+***The negativity regions oscillate between these two regions, which is unstable***
+
+I think this oscillation is due to the fact that we ONLY focus on the refined sampling points (LOCAL) each time and discard the original sampling points (GLOBAL) after the negativity check. Including original sampling points, although costs more resources and time, ensure the stability of our solution.

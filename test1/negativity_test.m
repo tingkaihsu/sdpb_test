@@ -282,7 +282,7 @@ Print["New candidate points (before dedup): ", Length[newPoints]];
        produced by two adjacent flagged intervals sharing a boundary.
    ---------------------------------------------------------------- *)
 
-allPoints = Sort[newPoints];
+allPoints = Sort[Join[samplePoints, newPoints]];
 
 dedupPoints = Fold[
   Function[{kept, pt},
