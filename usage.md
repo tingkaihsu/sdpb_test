@@ -1,3 +1,13 @@
+# Usage on Remote CPU Server
+```bash
+docker run --shm-size=16384m -v "$(pwd):/data" bootstrapcollaboration/sdpb:master pmp2sdp 2048 -i /data/n_pmp.json -o /data/out
+```
+
+One might reduce the number of slots
+```bash
+docker run --shm-size=16384m -v "$(pwd):/data" bootstrapcollaboration/sdpb:master mpirun --allow-run-as-root -n 24 sdpb --writeSolution="x,y,z,X,Y" --maxComplementarity=1e1000 --dualityGapThreshold=1e-30 --stepLengthReduction=0.7 --primalErrorThreshold=1e-30 --dualErrorThreshold=1e-30 --precision=2048 --procsPerNode=32 --maxIterations=50000 -s /data/out
+```
+
 # Usage of Mathematica code
 First one must have mathematica or wolfram engine, and note that the provide files merely define the function that can be used.
 One can modify the `.m` content or call the function by:
@@ -34,3 +44,5 @@ The results will be in `/my/project/`.
 Note that the newly created files may be owned by root. If you cannot remove them outside the container, run `rm` from the container, e.g.:
 
     docker run -v /my/project/:/usr/local/share/sdpb bootstrapcollaboration/sdpb:master rm /usr/local/share/sdpb/sdp
+
+
