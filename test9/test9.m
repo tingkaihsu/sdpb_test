@@ -1,65 +1,68 @@
-(* Numerical setup sec5.1 *)
-rho1[z_, z0_] := ( Sqrt[4-z0] - Sqrt[4-z] ) / ( Sqrt[4-z0] + Sqrt[4-z] );
+(* ---------- coefficient helper ---------- *)
 
-rho2[z_, z0_] := ( Sqrt[9-z0] - Sqrt[9-z] ) / ( Sqrt[9-z0] + Sqrt[9-z] );
+del[a_, b_] := delCoeff @@ Sort[{a, b}];
 
-(* coefficients in ansatz *)
+(* ---------- FIX: validTriples returns ALL ordered pairs ----------
+   Returns every {a,b} with a>=0, b>=0, a+b<=Nmax.
+   For a=/=b this includes BOTH {a,b} and {b,a}, giving the
+   s<->t-symmetric polynomial automatically via the del sort above. *)
 
-(* Alpha: fully symmetric -- always call with sorted ascending indices *)
-al[a_, b_, c_] := alCoeff @@ Sort[{a, b, c}];
- 
-(* Gamma: fully symmetric -- same canonical form *)
-ga[a_, b_, c_] := gaCoeff @@ Sort[{a, b, c}];
- 
-(* Beta: symmetric only under (a,b,c) <-> (c,b,a) *)
-be[a_, b_, c_] := beCoeff[ Min[a, c],  b,  Max[a, c] ];
+validTriples[Nmax_Integer] :=
+    Flatten[Table[{a, b}, {a, 0, Nmax}, {b, 0, Nmax - a}], 1];
 
-validTriples[Nmax_Integer] := validTriples[Nmax] =
-  Select[
-    Flatten[
-      Table[
-        {a, b, c},
-        {a, 0, Nmax},
-        {b, 0, Nmax - a},
-        {c, 0, Nmax - a - b}
-      ],
-      2
-    ],
-    ( #[[1]] * #[[2]] * #[[3]] == 0 ) &
-  ];
+(* Quick sanity check (comment out if not needed):
+   validTriples[2] should be:
+   {{0,0},{0,1},{0,2},{1,0},{1,1},{2,0}}  -- 6 pairs
+   validTriples[3] adds:
+   {{0,3},{1,2},{2,1},{3,0}}              -- 4 new pairs *)
 
-(* with extension *)
-TAAAA[s_, t_, u_, Nmax_Integer] :=
-    ap*( 1/(rho1[s, 4/3]-1) + 1/(rho1[t, 4/3]-1) + 1/(rho1[u, 4/3]-1) ) +
+(* ---------- amplitude ansatz ---------- *)
+
+(* Commented-out single-term prototype kept for reference:
+   Mlow[s_,t_] := gAAB^2*(1/s+1/t+1/u) + gAAA^2*(1/(s-1)+1/(t-1)+1/(u-1))
+                + gAAAA2*(s-4/3)^2 /. {u -> 4-s-t};              *)
+
+Mlow[s_, t_, Nmax_Integer] :=
+    gAAB^2 * (1/s + 1/t + 1/u) +
+    gAAA^2 * (1/(s-1) + 1/(t-1) + 1/(u-1)) +
     Total[
-        Function[{abc},
-            al[ abc[[1]], abc[[2]], abc[[3]] ]
-            * r1[s, 4/3]^abc[[1]]
-            * r1[t, 4/3]^abc[[2]]
-            * r1[u, 4/3]^abc[[3]]
+        Function[{ab},
+            del[ab[[1]], ab[[2]]]
+            * (s - 4/3)^ab[[1]]
+            * (t - 4/3)^ab[[2]]
         ] /@ validTriples[Nmax]
-    ]
+    ] /. {u -> 4 - s - t};
 
+(* ============================================================
+   Apr 24th Test
+   ============================================================ *)
 
-TABAB[s_, t_, u_, Nmax_Integer] :=
-    - 2/(s - 1)
-    - 2/(u - 1)
-    + Total[
-        Function[{abc},
-            be[ abc[[1]], abc[[2]], abc[[3]] ]
-            * r2[s, 2/3]^abc[[1]]
-            * r1[t, 2/3]^abc[[2]]
-            * r2[u, 2/3]^abc[[3]]
-        ] /@ validTriples[Nmax]
-    ]
+res3 = Residue[Mlow[s',t, 3]/(s'-s)/(s'-1)/(s'-3+t), {s', s}] +
+      Residue[Mlow[s',t, 3]/(s'-s)/(s'-1)/(s'-3+t), {s', 1}] +
+      Residue[Mlow[s',t, 3]/(s'-s)/(s'-1)/(s'-3+t), {s', 3-t}] +
+      Residue[Mlow[s',t, 3]/(s'-s)/(s'-1)/(s'-3+t), {s', 0}] +
+      Residue[Mlow[s',t, 3]/(s'-s)/(s'-1)/(s'-3+t), {s', 4-t}];
 
-TBBBB[s_, t_, u_, Nmax_Integer] :=
-    Total[
-        Function[{abc},
-            ga[ abc[[1]], abc[[2]], abc[[3]] ]
-            * r1[s, 0]^abc[[1]]
-            * r1[t, 0]^abc[[2]]
-            * r1[u, 0]^abc[[3]]
-        ] /@ validTriples[Nmax]
-    ]
+Print["res3 = ", res3 // FullSimplify]
+
+res2 = Residue[Mlow[s',t, 2]/(s'-s)/(s'-1)/(s'-3+t), {s', s}] +
+      Residue[Mlow[s',t, 2]/(s'-s)/(s'-1)/(s'-3+t), {s', 1}] +
+      Residue[Mlow[s',t, 2]/(s'-s)/(s'-1)/(s'-3+t), {s', 3-t}] +
+      Residue[Mlow[s',t, 2]/(s'-s)/(s'-1)/(s'-3+t), {s', 0}] +
+      Residue[Mlow[s',t, 2]/(s'-s)/(s'-1)/(s'-3+t), {s', 4-t}];
+
+Print["res2 = ", res2 // FullSimplify]
+
+newRes3 = Residue[Mlow[s',t, 3]/(s'-s)/(s'-t)/(s'-4+s+t), {s', s}] +
+      Residue[Mlow[s',t, 3]/(s'-s)/(s'-t)/(s'-4+s+t), {s', 1}] +
+      Residue[Mlow[s',t, 3]/(s'-s)/(s'-t)/(s'-4+s+t), {s', 3-t}] +
+      Residue[Mlow[s',t, 3]/(s'-s)/(s'-t)/(s'-4+s+t), {s', 0}] +
+      Residue[Mlow[s',t, 3]/(s'-s)/(s'-t)/(s'-4+s+t), {s', 4-t}] + 
+      Residue[Mlow[s',t, 3]/(s'-s)/(s'-t)/(s'-4+s+t), {s', t}] + 
+      Residue[Mlow[s',t, 3]/(s'-s)/(s'-t)/(s'-4+s+t), {s', 4-s-t}];
+
+Print["newRes3 = ", newRes3 // FullSimplify]
+
+(* UV partial waves *)
+f[sp_, s_, t_]:= (1/(sp-s) + 1/(sp-4+s+t)) * Sqrt[sp/(sp-4)] * LegendreP[J, 1 + 2*t/(sp-4)];
 
