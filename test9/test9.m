@@ -9,44 +9,49 @@ validTriples[Nmax_Integer] :=
 
 (* Commented-out single-term prototype kept for reference *)
 
+(* AAAA scattering *)
 Mlow[s_, t_, Nmax_Integer] :=
     gAAB^2 * (1/s + 1/t + 1/u) +
     gAAA^2 * (1/(s-1) + 1/(t-1) + 1/(u-1)) +
     Total[
         Function[{ab},
             del[ab[[1]], ab[[2]]]
-            * (s - 4/3)^ab[[1]]
-            * (t - 4/3)^ab[[2]]
+            * (s)^ab[[1]]
+            * (t)^ab[[2]]
         ] /@ validTriples[Nmax]
     ] /. {u -> 4 - s - t};
 
-integrand[sp_, t_, s_, s1_, s2_, Nmax_Integer] := Mlow[sp, t, Nmax]/(sp-s)/(sp-s1)/(sp-s2);
 
-(* Apr 25th Test *)
-(* k must be even and larger than or equal to 2 *)
-Chigh[sp_, t_, s_, s1_, s2_, Nmax_Integer, k_Integer] := Mlow[sp, t, Nmax]/(sp-s)/((sp-s1)*(sp-s2))^(k/2);
+(* dispersion representation of Wilson coefficients *)
 
-C2 = Limit[-Residue[Chigh[sp, t, s, t, 4-s-t, 6, 2], {sp, Infinity}], {s -> 0}];
-Print["Nmax = 6, s1 = t, s2 = 4-s-t, k=2: ", C2 // FullSimplify]
+v[l_, q_] := Product[l*(l + 1) - a*(a - 1), {a, 1, q}] / (Factorial[q])^2;
 
-(* result: delCoeff[0, 2] + (16/3 + (-4 + t)*t)*delCoeff[0, 4] + ((-4 + 3*t)*(3*delCoeff[1, 2] + (-4 + 3*t)*delCoeff[2, 2]))/9 *)
-(* 16/9 - 4/3 * (t-4/3) +  (t-4/3)^2 *)
+Print["v[l,0] = ", v[l, 0]//FullSimplify];
+(* 1 *)
 
-C4 = Limit[-Residue[Chigh[sp, t, s, t, 4-s-t, 6, 4], {sp, Infinity}], {s -> 0}];
-(* Print["Nmax = 6, s1 = t, s2 = 4-s-t, k=4: ", C4 // FullSimplify] *)
+Print["v[l,1] = ", v[l, 1]//FullSimplify];
+(* l(l+1) *)
 
-Print["Improved, Nmax = 6, s1 = t, s2 = 4-s-t, k=2: ", C2 - ( 16/9 - 4/3*(t-4/3) )*C4 // FullSimplify]
+(* let the mass be m = 0.2 so that 4m^2 < M^2 = 1 where M  = 1 to infinity *)
 
-(* UV partial waves *)
+ma = 0.2;
 
-f[sp_, s_, t_]:= (1/(sp-t) + 1/(sp-4+2t)) * Sqrt[sp/(sp-4)] * 1/(sp-s)/(sp-u)/.{u->4-s-t};
+f1[x_?NumericQ, J_?IntegerQ] := Sqrt[ M^2/ (M^2-4*mA^2) ] * v[J, 0] * (1/M^2)^2/.{M^2 -> 1/(1-x), mA -> ma};
 
-(* Expansion of Legendre polynomials *)
+f1[x_?NumericQ, J_?IntegerQ] := Sqrt[ M^2/ (M^2-4*mA^2) ] * v[J, 1] * (1/M^2)^2 * 1/(M^2-4*mA^2)/.{M^2 -> 1/(1-x), mA -> ma};
 
-series[k_Integer] := Series[LegendreP[J, 1+x], {x, 0, k}];
+(* Null constraints *)
 
-(* Print["LegendreP[J, x] series expansion: ", series[3] // Normal]; *)
+Jmax = 40;
 
-g = (1 + (J*(1 + J)*x)/2 + ((-1 + J)*J*(1 + J)*(2 + J)*x^2)/16)*(1/(sp-t) + 1/(sp-4+2t)) * Sqrt[sp/(sp-4)] * 1/(sp-s)/(sp-u)/.{u->4-s-t}/.{x->2t/(sp-4)};
+null1[q_Integer, t_, J_, sp_, mA_] := 1/t^{q+1} * LegendreP[J, 1 + 2 * t / (sp - 4mA^2)];
 
-(* Print["g function: ", SeriesCoefficient[Limit[g, {s->0}], {t, 0, 0}] // FullSimplify]; *)
+Print["null1[0] = ", Normal @ Series[null1[0, t, J, sp, mA], {t, 0, 0}]//FullSimplify];
+
+Print["null1[0] = ", Assuming[J ∈ Integers && J >= 0,
+  FullSimplify[
+    SeriesCoefficient[null1[0, t, J, sp, mA], {t, 0, -1}]
+  ]
+]];
+
+null2[k_Integer, q_Integer, t_, J_, sp_, mA_] := -1/t^{k-q+1} * LegendreP[J, 1 + 2 * sp / (t - 4mA^2)];
