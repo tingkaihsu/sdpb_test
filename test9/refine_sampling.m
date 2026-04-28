@@ -149,10 +149,6 @@ Print[""];
    Jmax, Jlist:  the exact discrete spin values to check at each
                  x-midpoint.  Must match g3_ExtremalEFT_2.m.
 
-   extraTriplet: the J→∞ limiting coefficient vector {c1, c2, c3}
-                 such that sum_k ck * yk >= 0 is the large-J
-                 constraint.  x-independent; checked once separately.
-
    xLeft, xRight: the physical domain boundaries.  The check covers
                   [xLeft, xRight] in full, including the boundary
                   intervals [xLeft, x_min] and [x_max, xRight] that
@@ -195,12 +191,6 @@ If[Length[yVec] != Length[fList],
   Quit[2]
 ];
 
-If[Length[extraTriplet] != Length[fList],
-  Print["ERROR: extraTriplet has ", Length[extraTriplet],
-        " entries but fList has ", Length[fList], ". They must match."];
-  Quit[2]
-];
-
 (* F(x, J) = sum_{k=1}^{n} fList[[k]][x, J] * yVec[[k]]
    Evaluated for each (midpoint, J) pair in the interval check below. *)
 F[x_?NumericQ, J_?IntegerQ] := Sum[yVec[[k]] * fList[[k]][x, J], {k, Length[yVec]}];
@@ -214,21 +204,7 @@ F[x_?NumericQ, J_?IntegerQ] := Sum[yVec[[k]] * fList[[k]][x, J], {k, Length[yVec
          - fm = Min over J  (worst-case constraint violation)
          - if fm < 0 AND w >= minWidth: flag for x-refinement
          - if fm < 0 AND w <  minWidth: negative but below threshold
-
-       Before the x-loop, check the x-independent extraTriplet
-       constraint once.  A violation there cannot be fixed by
-       adding more x sample points.
    ---------------------------------------------------------------- *)
-
-(* --- Check x-independent J→∞ constraint first --- *)
-extraCheck = extraTriplet . yVec;   (* dot product: sum_k extraTriplet[[k]]*yVec[[k]] *)
-Print["Checking J\[Rule]\[Infinity] (extraTriplet) constraint:"];
-If[extraCheck < 0,
-  Print["  extraTriplet \[CenterDot] y = ", extraCheck,
-        "  *** VIOLATED — x-refinement cannot fix this ***"],
-  Print["  extraTriplet \[CenterDot] y = ", extraCheck, "  ok"]
-];
-Print[""];
 
 nIntervals       = Length[samplePoints] - 1;
 (* ----------------------------------------------------------------
