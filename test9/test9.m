@@ -55,6 +55,10 @@ WritePmpJsonNumerical[
 
 ma = 0.2;
 
+(* dispersion representation of Wilson coefficients *)
+
+v[l_, q_] := Product[l*(l + 1) - a*(a - 1), {a, 1, q}] / (Factorial[q])^2;
+
 f1[x_?NumericQ, J_?IntegerQ] := Sqrt[ M^2/ (M^2-4*mA^2) ] * v[J, 0] * (1/M^2)^2/.{M -> Sqrt[1/(1-x)], mA -> ma};
 
 f2[x_?NumericQ, J_?IntegerQ] := Sqrt[ M^2/ (M^2-4*mA^2) ] * v[J, 1] * (1/M^2)^2 * 1/(M^2-4*mA^2)/.{M -> Sqrt[1/(1-x)], mA -> ma};

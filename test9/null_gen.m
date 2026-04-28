@@ -23,10 +23,6 @@ Mlow[s_, t_, Nmax_Integer] :=
     ] /. {u -> 4 - s - t};
 
 
-(* dispersion representation of Wilson coefficients *)
-
-v[l_, q_] := Product[l*(l + 1) - a*(a - 1), {a, 1, q}] / (Factorial[q])^2;
-
 (* Print["v[l,0] = ", v[l, 0]//FullSimplify]; *)
 (* 1 *)
 
