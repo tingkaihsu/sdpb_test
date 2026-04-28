@@ -2,50 +2,6 @@
 
 <<"../SDPB.m";
 
-(* The following is the example in the manual *)
-(* Maximize {a,b}.{0,-1} = -b over {a,b} such that {a,b}.{1,0}=a=1 and 
-
-E^(-x)(a(1+x^4) + b(x^4/12 + x^2)) >= 0 for all x>=0
-
-with DampedRational[1, {}, 1/E, x] as the prefactor.
-
-Equivalently,
-
-1+x^4 + b(x^4/12 + x^2) >= 0 for all x >= 0
-
-The prefactor DampedRational[1,{},1/E,x] doesn't affect the answer,
-but does affect the choice of sample scalings and bilinear basis.
-
-*)
-
-
-polynomial[J_] := {
-  (1 + x)^2,
-  (1 + x)*(3 - 2*(J + 1)*J),
-  2*J*(J + 1)*(J*(J + 1) - 8)
-};
-
-polynomialsList = Table[polynomial[J], {J, 0, 40, 2}]; (* length 21 *)
-
-(* extra triplet to add *)
-(* Extremal large J limit *)
-extraTriplet = {0, 0, 2};
-
-(* extended list (length 22) *)
-extendedList = Append[polynomialsList, extraTriplet];
-
-(* construct 22×22 symmetric matrix from extendedList *)
-matrix = Table[
-  If[i <= j,
-    extendedList[[i + 1]],
-    extendedList[[j + 1]]
-  ],
-  {i, 0, 21}, {j, 0, 21}
-];
-
-
-(* Print[matrix] *)
-
 (* Main definition *)
 test2SDP[jsonFile_, prec_:200] := Module[
     {
@@ -59,14 +15,14 @@ test2SDP[jsonFile_, prec_:200] := Module[
       PositiveMatrixWithPrefactor[<|
         "prefactor"   -> DampedRational[1, {}, 1/E, x],
         "polynomials" -> {{
-          { ( 1 + x )^2, ( 1 + x )*( 3 - 2*( J + 1 )*J ), 2 * J * ( J + 1 )*( J*( J + 1 ) - 8 ) }
+          {( 1 + x )^2, ( 1 + x )*( 3 - 2*( J + 1 )*J ), -1/36*(J*(1 + J)*(150 + J*(1 + J)*(-43 + 2*J*(1 + J)))), -1/288*((-3 + J)*J*(1 + J)*(4 + J)*(204 + J*(1 + J)*(-32 + J + J^2))), -1/14400*(J*(1 + J)*(246960 + J*(1 + J)*(-67908 + J*(1 + J)*(4916 + J*(1 + J)*(-155 + 2*J*(1 + J)))))), -1/36*((-2 + J)*J*(1 + J)*(3 + J)*(-49 + 2*J*(1 + J)))}
         }}
       |>],
       {J, Jlist}
     ];
     
-    norm = {0, 1, 0};
-    obj  = {-1, 0, 0};
+    norm = {0, 1, 0, 0, 0, 0};
+    obj  = {-1, 0, 0, 0, 0, 0};
     
     WritePmpJson[
       jsonFile,

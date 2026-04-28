@@ -85,6 +85,3 @@ Print["null[4, 0] = ", null[4, 0, J, mA, sp]//FullSimplify];
 
 (* null constraint for k = 4, q = 0 *)
 (* sp^(-5) + 2/(-4*mA^2 + sp)^5 - ((-2 + J)*J*(1 + J)*(3 + J)*((-3 + J)*(-1 + J)*(2 + J)*(4 + J)*mA^2 - 4*(-11 + J + J^2)*sp))/(144*(4*mA^2 - sp)^5*sp) *)
-
-
-(* Test of the double contour approach: Extremal EFT *)
