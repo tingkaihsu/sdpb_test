@@ -57,6 +57,7 @@ combined = FullSimplify[directRes - crossRes];
 
 Print["Combined Piece: ", combined];
 
+(* to be safe, we should ONLY use q >= 2, and k - (k-3)/2 >= 0 -> k >= 6 *)
 (* k, q *)
 (* 5, 2 *)
 (* (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6) *)
