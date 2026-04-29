@@ -125,8 +125,10 @@ X62[x_?NumericQ, J_?IntegerQ] := -1/288*((-3 + J)*J*(1 + J)*(4 + J)*(204 + J*(1 
 X72[x_?NumericQ, J_?IntegerQ] := -1/14400*(J*(1 + J)*(246960 + J*(1 + J)*(-67908 + J*(1 + J)*(4916 + J*(1 + J)*(-155 + 2*J*(1 + J))))));
 X82[x_?NumericQ, J_?IntegerQ] := -1/259200*(J*(1 + J)*(-6808320 + J*(1 + J)*(1906416 + J*(1 + J)*(-170976 + J*(1 + J)*(6568 + J*(1 + J)*(-124 + J + J^2))))));
 X92[x_?NumericQ, J_?IntegerQ] := -1/25401600*(J*(1 + J)*(1015701120 + J*(1 + J)*(-306848736 + J*(1 + J)*(28977336 + J*(1 + J)*(-1293996 + J*(1 + J)*(30170 + J*(1 + J)*(-371 + 2*J*(1 + J))))))));
+X102[x_?NumericQ, J_?IntegerQ] := -1/812851200*(J*(1 + J)*(-44242329600 + J*(1 + J)*(13817329920 + J*(1 + J)*(-1475388288 + J*(1 + J)*(74195472 + J*(1 + J)*(-2018816 + J*(1 + J)*(31080 + J*(1 + J)*(-264 + J + J^2))))))));
 
-fList = {f1, f2, X52, X62, X72, X82, X92};   (* one entry per component of y; must match Length[norm] *)
+
+fList = {f1, f2, X52, X62, X72, X82, X92, X102};   (* one entry per component of y; must match Length[norm] *)
 
 Jmax  = 40;
 Jlist = Range[0, Jmax, 2];   (* J = 0, 2, 4, …, 40 — exact discrete constraints *)
@@ -134,10 +136,10 @@ Jlist = Range[0, Jmax, 2];   (* J = 0, 2, 4, …, 40 — exact discrete constrai
 (* Extremal-J limit: leading J^4 coefficient vector of {f1, f2, f3}.
    x-independent, so the same vector is used for all sample points xi. *)
 
-extraTriplet = {0, 0, 0, 0, 0, 0, -1/12700800};
+extraTriplet = {0, 0, 0, 0, 0, 0, 0, -1/812851200};
 
-norm = {0, 1, 0, 0, 0, 0, 0};    (* normalisation: y2 = 1                *)
-obj  = {-1, 0, 0, 0, 0, 0, 0};   (* objective: maximise -y1 = minimise y1 *)
+norm = {0, 1, 0, 0, 0, 0, 0, 0};    (* normalisation: y2 = 1                *)
+obj  = {-1, 0, 0, 0, 0, 0, 0, 0};   (* objective: maximise -y1 = minimise y1 *)
 
 (* ================================================================
    END OF PROBLEM-SPECIFIC SECTION

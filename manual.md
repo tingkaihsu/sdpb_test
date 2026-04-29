@@ -13,5 +13,10 @@
 
 3. run `sdpb`
 ```bash
-    docker run --shm-size=16384m -v "$(pwd):/data" bootstrapcollaboration/sdpb:master mpirun --allow-run-as-root -n 24 sdpb --writeSolution="x,y,z,X,Y" --maxComplementarity=1e1000 --dualityGapThreshold=1e-30 --stepLengthReduction=0.7 --primalErrorThreshold=1e-30 --dualErrorThreshold=1e-30 --precision=2048 --procsPerNode=32 --maxIterations=50000 -s /data/out
+    docker run --shm-size=16384m -v "$(pwd):/data" bootstrapcollaboration/sdpb:master mpirun --allow-run-as-root -n 24 sdpb --writeSolution="x,y,z,X,Y" --maxComplementarity=1e1000 --dualityGapThreshold=1e-30 --stepLengthReduction=0.7 --primalErrorThreshold=1e-30 --dualErrorThreshold=1e-30 --precision=2048 --procsPerNode=32 --maxIterations=50000 --noFinalCheckpoint -s /data/out
+```
+
+4. Turn off the checkpoint generation
+```bash
+    --noFinalCheckpoint
 ```
