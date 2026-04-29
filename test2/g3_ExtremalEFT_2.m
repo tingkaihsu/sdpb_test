@@ -116,8 +116,8 @@ WritePmpJsonNumerical[
      This enforces  0·y1 + 0·y2 + 2·y3 ≥ 0  in the J→∞ limit.
    ================================================================ *)
 
-f1[x_?NumericQ, J_?IntegerQ] := (1 + x)^2;
-f2[x_?NumericQ, J_?IntegerQ] := (1 + x) * (3 - 2*J*(J + 1));
+f1[x_?NumericQ, J_?IntegerQ] := 2*((1-x))^3;
+f2[x_?NumericQ, J_?IntegerQ] := -(3 - 2*J*(J + 1))*((1-x))^4;
 
 
 X52[x_?NumericQ, J_?IntegerQ] := -1/36*(J*(1 + J)*(150 + J*(1 + J)*(-43 + 2*J*(1 + J))));

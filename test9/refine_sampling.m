@@ -159,9 +159,9 @@ Print[""];
 
 ma = 0.2;
 
-f1[x_?NumericQ, J_?IntegerQ] := Sqrt[ M^2/ (M^2-4*mA^2) ] * v[J, 0] * (1/M^2)^2/.{M -> Sqrt[1/(1-x)], mA -> ma};
+g20[x_?NumericQ, J_?IntegerQ] := 1/2*Sqrt[ sp/ (sp-4*mA^2) ] * (sp^(-3) + (-4*mA^2 + sp)^(-3))/.{sp -> 1/(1-x), mA -> ma};
 
-f2[x_?NumericQ, J_?IntegerQ] := Sqrt[ M^2/ (M^2-4*mA^2) ] * v[J, 1] * (1/M^2)^2 * 1/(M^2-4*mA^2)/.{M -> Sqrt[1/(1-x)], mA -> ma};
+g31[x_?NumericQ, J_?IntegerQ] := -Sqrt[ sp/ (sp-4*mA^2) ] * ((-3 + J*(1 + J)*(-4*mA^2 + sp)^3*(sp^(-3) + (-4*mA^2 + sp)^(-3)))/(-4*mA^2 + sp)^4)/.{sp -> 1/(1-x), mA -> ma};
 
 X52[x_?NumericQ, J_?IntegerQ] := (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6)/.{mA -> ma}/.{sp -> 1/(1-x)};
 X62[x_?NumericQ, J_?IntegerQ] := (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(-2304*mA^4 + 1152*mA^2*sp + (-72 + J*(1 + J)*(-18 + J + J^2))*sp^2))/sp^5))/(576*(-4*mA^2 + sp)^7)/.{mA -> ma}/.{sp -> 1/(1-x)};
@@ -169,10 +169,15 @@ X72[x_?NumericQ, J_?IntegerQ] := (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-(((-6 + J)
 X82[x_?NumericQ, J_?IntegerQ] := (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(((-8 + J)*(-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)*(9 + J)*(-38 + J + J^2))/(4*mA^2 - sp)^9 + ((-1 + J)*(2 + J)*(-(((-5 + J)*(-4 + J)*(-3 + J)*(-2 + J)*(3 + J)*(4 + J)*(5 + J)*(6 + J)*sp^4)/(-4*mA^2 + sp)^6) + 129600/(-4*mA^2 + sp)^2))/sp^7))/518400/.{mA -> ma}/.{sp -> 1/(1-x)};
 X92[x_?NumericQ, J_?IntegerQ] := (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-(((-8 + J)*(-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)*(9 + J)*(2754 + J*(1 + J)*(-119 + J + J^2)))/(-4*mA^2 + sp)^10) + ((-1 + J)*(2 + J)*(((-6 + J)*(-5 + J)*(-4 + J)*(-3 + J)*(-2 + J)*(3 + J)*(4 + J)*(5 + J)*(6 + J)*(7 + J)*sp^5)/(4*mA^2 - sp)^7 + 6350400/(-4*mA^2 + sp)^2))/sp^8))/25401600/.{mA -> ma}/.{sp -> 1/(1-x)};
 
-fList        = {f1, f2, X52, X62, X72, X82, X92};        (* ← must match fList in the pmp generator *)
+fList        = {g20, g31, X52, X62, X72, X82, X92};        (* ← must match fList in the pmp generator *)
 
 Jmax         = 40;
 Jlist        = Range[0, Jmax, 2];   (* J = 0, 2, 4, …, 40 — exact constraints  *)
+
+(* Large J limit *)
+LargeJ[x_?NumericQ] := (Sqrt[sp/(-4*mA^2 + sp)]*(1/((4*mA^2 - sp)^7*sp^3) - (-4*mA^2 + sp)^(-10)))/25401600/.{mA -> ma}/.{sp -> 1/(1-x)};
+
+extraTriplet = {0&, 0&, 0&, 0&, 0&, 0&, LargeJ};
 
 xLeft  = 0;   (* physical domain left endpoint  — check includes [xLeft,  x_min] *)
 xRight = 1;   (* physical domain right endpoint — check includes [x_max, xRight] *)
@@ -191,10 +196,46 @@ If[Length[yVec] != Length[fList],
   Quit[2]
 ];
 
+
+If[Length[extraTriplet] != Length[fList],
+  Print["ERROR: extraTriplet has ", Length[extraTriplet],
+        " entries but fList has ", Length[fList], ". They must match."];
+  Quit[2]
+];
+
+
+
 (* F(x, J) = sum_{k=1}^{n} fList[[k]][x, J] * yVec[[k]]
    Evaluated for each (midpoint, J) pair in the interval check below. *)
 F[x_?NumericQ, J_?IntegerQ] := Sum[yVec[[k]] * fList[[k]][x, J], {k, Length[yVec]}];
 
+(* large J limit check *)
+X[x_?NumericQ] := Sum[yVec[[k]] * extraTriplet[[k]][x], {k, Length[yVec]}];
+
+(* Safety: clamp midpoints near known singularity at x -> 1 (sp = 1/(1-x))
+   and provide a robust numeric evaluator that returns $Failed on
+   non-finite or exceptional results. *)
+singularTol = 10^-12;   (* distance from x=1 to avoid sp singularity *)
+safeF[x_?NumericQ, J_?IntegerQ] := Module[{x0 = x, val},
+  If[Abs[1 - x0] < singularTol, x0 = 1 - singularTol];
+  val = Quiet[Check[N[F[x0, J]], $Failed]];
+  If[val === $Failed || !NumberQ[val] ||
+     MemberQ[{Infinity, -Infinity, ComplexInfinity, Indeterminate, DirectedInfinity}, val],
+    $Failed,
+    val
+  ]
+];
+
+(* Safe evaluator for large-J functional X[x] *)
+safeX[x_?NumericQ] := Module[{x0 = x, val},
+  If[Abs[1 - x0] < singularTol, x0 = 1 - singularTol];
+  val = Quiet[Check[N[X[x0]], $Failed]];
+  If[val === $Failed || !NumberQ[val] ||
+     MemberQ[{Infinity, -Infinity, ComplexInfinity, Indeterminate, DirectedInfinity}, val],
+    $Failed,
+    val
+  ]
+];
 
 (* ----------------------------------------------------------------
    5.  MIDPOINT CHECK OVER CONSECUTIVE INTERVALS
@@ -205,6 +246,7 @@ F[x_?NumericQ, J_?IntegerQ] := Sum[yVec[[k]] * fList[[k]][x, J], {k, Length[yVec
          - if fm < 0 AND w >= minWidth: flag for x-refinement
          - if fm < 0 AND w <  minWidth: negative but below threshold
    ---------------------------------------------------------------- *)
+
 
 nIntervals       = Length[samplePoints] - 1;
 (* ----------------------------------------------------------------
@@ -250,27 +292,72 @@ Do[
   width = xb - xa;
   mid   = (xa + xb) / 2;
 
-  (* Evaluate F(mid, J) for every J in Jlist; record the worst (minimum) value *)
-  fmByJ  = Table[F[mid, Jlist[[j]]], {j, Length[Jlist]}];
-  fm     = Min[fmByJ];
-  worstJ = Jlist[[ First[Ordering[fmByJ, 1]] ]];   (* J that achieves the minimum *)
-  AppendTo[midpointValues, {mid, fm}];
+  (* Evaluate F(mid, J) safely for every J in Jlist; handle failures gracefully *)
+  fmByJ = Table[safeF[mid, Jlist[[j]]], {j, Length[Jlist]}];
+  failedCount = Count[fmByJ, $Failed];
+  If[failedCount > 0,
+    Print["  WARNING: ", failedCount,
+          " non-finite F(mid,J) evaluation(s) at mid=", mid,
+          " — proceeding with available J values (if any)."]
+  ];
+
+  (* evaluate large-J functional X at midpoint *)
+  xVal = safeX[mid];
+  If[xVal === $Failed,
+    Print["  NOTE: X(mid) evaluation failed at mid=", mid]
+  ];
+
+  validPairs = Select[Transpose[{Jlist, fmByJ}], Last[#] =!= $Failed &];
+
+  If[validPairs == {} && xVal === $Failed,
+    Print["  ERROR: F(mid,J) failed for all J and X(mid) failed at mid=", mid, "; flagging interval for refinement."];
+    AppendTo[flaggedIntervals, {xa, xb}];
+    AppendTo[midpointValues, {mid, $Failed, "all_failed"}];
+    Continue[];
+  ];
+
+  (* compute minima from available sources *)
+  If[validPairs == {},
+    fmJ = $Failed,
+    vals = Last /@ validPairs;
+    js = First /@ validPairs;
+    fmJ = Min[vals];
+    worstJIndex = First[Ordering[vals, 1]];
+    worstJcandidate = js[[worstJIndex]];
+  ];
+
+  (* combine fmJ and xVal to get overall worst-case value and source *)
+  Which[
+    fmJ === $Failed && xVal =!= $Failed,
+      fm = xVal; worstSource = "X"; worstJ = None,
+
+    fmJ =!= $Failed && xVal === $Failed,
+      fm = fmJ; worstSource = "J"; worstJ = worstJcandidate,
+
+    fmJ =!= $Failed && xVal =!= $Failed,
+      If[xVal <= fmJ, fm = xVal; worstSource = "X"; worstJ = None,
+         fm = fmJ; worstSource = "J"; worstJ = worstJcandidate
+      ]
+  ];
+
+  AppendTo[midpointValues, {mid, fm, worstSource}];
 
   Which[
     fm >= 0,
       Print["  [", xa, ", ", xb, "]  w=", width,
-            "  min_J F(mid,J)=", fm, "  ok"],
+            "  min value=", fm, "  ok (source=", worstSource, ")"],
 
     fm < 0 && width < minWidth,
       AppendTo[tinyNegative, {xa, xb}];
       Print["  [", xa, ", ", xb, "]  w=", width,
-            "  min_J F(mid,J)=", fm, "  (worst J=", worstJ, ")",
+            "  min value=", fm, "  (source=", worstSource, ")",
             "  negative but w < ", minWidth, " — below threshold, skipping"],
 
     fm < 0 && width >= minWidth,
       AppendTo[flaggedIntervals, {xa, xb}];
       Print["  [", xa, ", ", xb, "]  w=", width,
-            "  min_J F(mid,J)=", fm, "  (worst J=", worstJ, ")",
+            "  min value=", fm, "  (source=", worstSource, If[worstSource=="J", ", worst J=", ""],
+            If[worstSource=="J", worstJ, ""], ")",
             "  *** NEGATIVE, will refine ***"]
   ],
   {i, nAllIntervals}
@@ -336,6 +423,9 @@ newPoints = Flatten[
 Print[""];
 Print["New candidate points (before dedup): ", Length[newPoints]];
 
+(* deduplication tolerance (absolute) — configurable *)
+dedupTol = 10^-10;
+
 
 (* ----------------------------------------------------------------
    8.  MERGE ORIGINAL AND NEW POINTS, THEN DEDUPLICATE AND SORT
@@ -376,7 +466,7 @@ allPoints = Sort[Join[samplePoints, newPoints]];
 
 dedupPoints = Fold[
   Function[{kept, pt},
-    If[Abs[pt - Last[kept]] < 10^-10, kept, Append[kept, pt]]
+    If[Abs[pt - Last[kept]] < dedupTol, kept, Append[kept, pt]]
   ],
   {First[allPoints]},
   Rest[allPoints]

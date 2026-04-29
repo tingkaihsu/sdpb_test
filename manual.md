@@ -6,7 +6,7 @@
 ```bash
 
 ```
-2. run `pmp2adp`
+2. run `pmp2sdp`
 ```bash
     docker run --shm-size=16384m -v "$(pwd):/data" bootstrapcollaboration/sdpb:master pmp2sdp 2048 -i /data/n_pmp.json -o /data/out
 ```
