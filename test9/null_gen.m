@@ -46,11 +46,11 @@ crossPiece[k_Integer, q_Integer, J_, t_, sp_, mA_] :=
   kernelCross[k, q, t, sp, mA] * Sqrt[sp/(sp-4mA^2)] * LegendreP[J, 1 + 2 t/(sp-4mA^2)];
 
 directRes = Assuming[J ∈ Integers && J >= 0,
-  FullSimplify @ SeriesCoefficient[directPiece[8, 2, J, t, sp, mA], {t, 0, -1}]
+  FullSimplify @ SeriesCoefficient[directPiece[10, 2, J, t, sp, mA], {t, 0, -1}]
 ];
 
 crossRes = Assuming[J ∈ Integers && J >= 0,
-  FullSimplify @ SeriesCoefficient[crossPiece[8, 2, J, t, sp, mA], {t, 0, -1}]
+  FullSimplify @ SeriesCoefficient[crossPiece[10, 2, J, t, sp, mA], {t, 0, -1}]
 ];
 
 combined = FullSimplify[directRes - crossRes];
@@ -73,6 +73,8 @@ Print["Combined Piece: ", combined];
 
 (* 9, 2 *)
 (* (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-(((-8 + J)*(-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)*(9 + J)*(2754 + J*(1 + J)*(-119 + J + J^2)))/(-4*mA^2 + sp)^10) + ((-1 + J)*(2 + J)*(((-6 + J)*(-5 + J)*(-4 + J)*(-3 + J)*(-2 + J)*(3 + J)*(4 + J)*(5 + J)*(6 + J)*(7 + J)*sp^5)/(4*mA^2 - sp)^7 + 6350400/(-4*mA^2 + sp)^2))/sp^8))/25401600 *)
+
+(* 10, 2 *)
 
 (* large J limit *)
 

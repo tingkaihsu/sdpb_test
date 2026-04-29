@@ -20,3 +20,8 @@
 ```bash
     --noFinalCheckpoint
 ```
+
+5. Use Docker to remove the checkpoint file
+```bash
+    docker run --rm   -v "$(pwd):/data"   bootstrapcollaboration/sdpb:master   sh -lc "rm -rf /data/out.ck"
+```
