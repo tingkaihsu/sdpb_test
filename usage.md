@@ -33,7 +33,7 @@ In this case, `<options>` will be used to mount your directory in a place that d
     
 `mpirun` runs as root inside the docker container.  Running `mpirun` as root is normally dangerous, but it is safe to do so inside the container. To allow `mpirun` to run as root, we add the option `--allow-run-as-root`. This uses 4 cores when running pmp2sdp. You can change that number to match your own machine.  Putting it all together on a single line
 
-    sudo docker run -v /my/project/:/usr/local/share/sdpb bootstrapcollaboration/sdpb:master mpirun --allow-run-as-root -n 4 pmp2sdp --precision 1024 -i /usr/local/share/sdpb/input.json -o /usr/local/share/sdpb/sdp 
+    sudo docker run -v /my/project/:/usr/local/share/sdpb bootstrapcollaboration/sdpb:master mpirun --allow-run-as-root -n 4 pmp2sdp --precision 1024 -i /usr/local/share/sdpb/n_pmp.json -o /usr/local/share/sdpb/sdp
 
 Running this command will create directory `/my/project/sdp`. To search for primal-dual solutions
 

@@ -53,7 +53,7 @@ WritePmpJsonNumerical[
 (* problem-specific *)
 (* let the mass be m = 0.2 so that 4m^2 < M^2 = 1 where M  = 1 to infinity *)
 
-ma = 0.2;
+ma = 0;
 
 (* dispersion representation of Wilson coefficients *)
 
@@ -69,6 +69,8 @@ X72[x_?NumericQ, J_?IntegerQ] := (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-(((-6 + J)
 X82[x_?NumericQ, J_?IntegerQ] := (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(((-8 + J)*(-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)*(9 + J)*(-38 + J + J^2))/(4*mA^2 - sp)^9 + ((-1 + J)*(2 + J)*(-(((-5 + J)*(-4 + J)*(-3 + J)*(-2 + J)*(3 + J)*(4 + J)*(5 + J)*(6 + J)*sp^4)/(-4*mA^2 + sp)^6) + 129600/(-4*mA^2 + sp)^2))/sp^7))/518400/.{mA -> ma}/.{sp -> 1/(1-x)};
 X92[x_?NumericQ, J_?IntegerQ] := (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-(((-8 + J)*(-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)*(9 + J)*(2754 + J*(1 + J)*(-119 + J + J^2)))/(-4*mA^2 + sp)^10) + ((-1 + J)*(2 + J)*(((-6 + J)*(-5 + J)*(-4 + J)*(-3 + J)*(-2 + J)*(3 + J)*(4 + J)*(5 + J)*(6 + J)*(7 + J)*sp^5)/(4*mA^2 - sp)^7 + 6350400/(-4*mA^2 + sp)^2))/sp^8))/25401600/.{mA -> ma}/.{sp -> 1/(1-x)};
 
+n4[x_?NumericQ, J_?IntegerQ] := 2*J*(J+1)*(J*(J+1)-8);
+
 (* Large J limit *)
 LargeJ[x_?NumericQ] := (Sqrt[sp/(-4*mA^2 + sp)]*(1/((4*mA^2 - sp)^7*sp^3) - (-4*mA^2 + sp)^(-10)))/25401600/.{mA -> ma}/.{sp -> 1/(1-x)};
 
@@ -77,9 +79,13 @@ Jlist = Range[0, Jmax, 2];
 
 fList = {g20, g31, X52, X62, X72, X82, X92};
 
+(* fList = {g20, g31, n4}; *)
+
 (* large J limit *)
 (* 0& is a constant function of 0 *)
 extraTriplet = {0&, 0&, 0&, 0&, 0&, 0&, LargeJ};
+
+(* extraTriplet = {0&, 0&, 2&}; *)
 
 norm = {0, 1, 0, 0, 0, 0, 0};
 obj = {-1, 0, 0, 0, 0, 0, 0};

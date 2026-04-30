@@ -157,7 +157,7 @@ Print[""];
                   these outer regions are invisible to it otherwise.
    ================================================================ *)
 
-ma = 0.2;
+ma = 0;
 
 g20[x_?NumericQ, J_?IntegerQ] := 1/2*Sqrt[ sp/ (sp-4*mA^2) ] * (sp^(-3) + (-4*mA^2 + sp)^(-3))/.{sp -> 1/(1-x), mA -> ma};
 
