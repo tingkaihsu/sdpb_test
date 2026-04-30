@@ -53,15 +53,15 @@ WritePmpJsonNumerical[
 (* problem-specific *)
 (* let the mass be m = 0.2 so that 4m^2 < M^2 = 1 where M  = 1 to infinity *)
 
-ma = 0;
+ma = 0`200;
 
 (* dispersion representation of Wilson coefficients *)
 
 v[l_, q_] := Product[l*(l + 1) - a*(a - 1), {a, 1, q}] / (Factorial[q])^2;
 
-g20[x_?NumericQ, J_?IntegerQ] := 1/2*Sqrt[ sp/ (sp-4*mA^2) ] * (sp^(-3) + (-4*mA^2 + sp)^(-3))/.{sp -> 1/(1-x), mA -> ma};
+g20[x_?NumericQ, J_?IntegerQ] := (1/(1-x)^5)*1/2*Sqrt[ sp/ (sp-4*mA^2) ] * (sp^(-3) + (-4*mA^2 + sp)^(-3))/.{sp -> 1/(1-x), mA -> ma};
 
-g31[x_?NumericQ, J_?IntegerQ] := -Sqrt[ sp/ (sp-4*mA^2) ] * ((-3 + J*(1 + J)*(-4*mA^2 + sp)^3*(sp^(-3) + (-4*mA^2 + sp)^(-3)))/(-4*mA^2 + sp)^4)/.{sp -> 1/(1-x), mA -> ma};
+g31[x_?NumericQ, J_?IntegerQ] := (1/(1-x)^5)*(-Sqrt[ sp/ (sp-4*mA^2) ] * ((-3 + J*(1 + J)*(-4*mA^2 + sp)^3*(sp^(-3) + (-4*mA^2 + sp)^(-3)))/(-4*mA^2 + sp)^4))/.{sp -> 1/(1-x), mA -> ma};
 
 X52[x_?NumericQ, J_?IntegerQ] := (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6)/.{mA -> ma}/.{sp -> 1/(1-x)};
 X62[x_?NumericQ, J_?IntegerQ] := (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(-2304*mA^4 + 1152*mA^2*sp + (-72 + J*(1 + J)*(-18 + J + J^2))*sp^2))/sp^5))/(576*(-4*mA^2 + sp)^7)/.{mA -> ma}/.{sp -> 1/(1-x)};
@@ -77,18 +77,20 @@ LargeJ[x_?NumericQ] := (Sqrt[sp/(-4*mA^2 + sp)]*(1/((4*mA^2 - sp)^7*sp^3) - (-4*
 Jmax = 40;
 Jlist = Range[0, Jmax, 2];
 
-fList = {g20, g31, X52, X62, X72, X82, X92};
+(* fList = {g20, g31, X52, X62, X72, X82, X92}; *)
 
-(* fList = {g20, g31, n4}; *)
+fList = {g20, g31, n4};
 
 (* large J limit *)
 (* 0& is a constant function of 0 *)
-extraTriplet = {0&, 0&, 0&, 0&, 0&, 0&, LargeJ};
+(* extraTriplet = {0&, 0&, 0&, 0&, 0&, 0&, LargeJ}; *)
 
-(* extraTriplet = {0&, 0&, 2&}; *)
+extraTriplet = {0&, 0&, 2&};
 
-norm = {0, 1, 0, 0, 0, 0, 0};
-obj = {-1, 0, 0, 0, 0, 0, 0};
+(* norm = {0, 1, 0, 0, 0, 0, 0}; *)
+norm = {0, 1, 0};
+(* obj = {-1, 0, 0, 0, 0, 0, 0}; *)
+obj = {-1, 0, 0};
 
 testNumericalSDP[spFile_String, jsonFile_String, prec_:200] := Module[
   {rawLines, spLines, samplePoints, sampleScalings, polsRegular},

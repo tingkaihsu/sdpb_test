@@ -157,11 +157,15 @@ Print[""];
                   these outer regions are invisible to it otherwise.
    ================================================================ *)
 
-ma = 0;
+ma = 0`200;
 
-g20[x_?NumericQ, J_?IntegerQ] := 1/2*Sqrt[ sp/ (sp-4*mA^2) ] * (sp^(-3) + (-4*mA^2 + sp)^(-3))/.{sp -> 1/(1-x), mA -> ma};
+(* dispersion representation of Wilson coefficients *)
 
-g31[x_?NumericQ, J_?IntegerQ] := -Sqrt[ sp/ (sp-4*mA^2) ] * ((-3 + J*(1 + J)*(-4*mA^2 + sp)^3*(sp^(-3) + (-4*mA^2 + sp)^(-3)))/(-4*mA^2 + sp)^4)/.{sp -> 1/(1-x), mA -> ma};
+v[l_, q_] := Product[l*(l + 1) - a*(a - 1), {a, 1, q}] / (Factorial[q])^2;
+
+g20[x_?NumericQ, J_?IntegerQ] := (1/(1-x)^5)*1/2*Sqrt[ sp/ (sp-4*mA^2) ] * (sp^(-3) + (-4*mA^2 + sp)^(-3))/.{sp -> 1/(1-x), mA -> ma};
+
+g31[x_?NumericQ, J_?IntegerQ] := (1/(1-x)^5)*(-Sqrt[ sp/ (sp-4*mA^2) ] * ((-3 + J*(1 + J)*(-4*mA^2 + sp)^3*(sp^(-3) + (-4*mA^2 + sp)^(-3)))/(-4*mA^2 + sp)^4))/.{sp -> 1/(1-x), mA -> ma};
 
 X52[x_?NumericQ, J_?IntegerQ] := (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6)/.{mA -> ma}/.{sp -> 1/(1-x)};
 X62[x_?NumericQ, J_?IntegerQ] := (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(-2304*mA^4 + 1152*mA^2*sp + (-72 + J*(1 + J)*(-18 + J + J^2))*sp^2))/sp^5))/(576*(-4*mA^2 + sp)^7)/.{mA -> ma}/.{sp -> 1/(1-x)};
@@ -169,15 +173,23 @@ X72[x_?NumericQ, J_?IntegerQ] := (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-(((-6 + J)
 X82[x_?NumericQ, J_?IntegerQ] := (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(((-8 + J)*(-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)*(9 + J)*(-38 + J + J^2))/(4*mA^2 - sp)^9 + ((-1 + J)*(2 + J)*(-(((-5 + J)*(-4 + J)*(-3 + J)*(-2 + J)*(3 + J)*(4 + J)*(5 + J)*(6 + J)*sp^4)/(-4*mA^2 + sp)^6) + 129600/(-4*mA^2 + sp)^2))/sp^7))/518400/.{mA -> ma}/.{sp -> 1/(1-x)};
 X92[x_?NumericQ, J_?IntegerQ] := (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-(((-8 + J)*(-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)*(9 + J)*(2754 + J*(1 + J)*(-119 + J + J^2)))/(-4*mA^2 + sp)^10) + ((-1 + J)*(2 + J)*(((-6 + J)*(-5 + J)*(-4 + J)*(-3 + J)*(-2 + J)*(3 + J)*(4 + J)*(5 + J)*(6 + J)*(7 + J)*sp^5)/(4*mA^2 - sp)^7 + 6350400/(-4*mA^2 + sp)^2))/sp^8))/25401600/.{mA -> ma}/.{sp -> 1/(1-x)};
 
-fList        = {g20, g31, X52, X62, X72, X82, X92};        (* ← must match fList in the pmp generator *)
-
-Jmax         = 40;
-Jlist        = Range[0, Jmax, 2];   (* J = 0, 2, 4, …, 40 — exact constraints  *)
+n4[x_?NumericQ, J_?IntegerQ] := 2*J*(J+1)*(J*(J+1)-8);
 
 (* Large J limit *)
 LargeJ[x_?NumericQ] := (Sqrt[sp/(-4*mA^2 + sp)]*(1/((4*mA^2 - sp)^7*sp^3) - (-4*mA^2 + sp)^(-10)))/25401600/.{mA -> ma}/.{sp -> 1/(1-x)};
 
-extraTriplet = {0&, 0&, 0&, 0&, 0&, 0&, LargeJ};
+Jmax = 40;
+Jlist = Range[0, Jmax, 2];
+
+(* fList = {g20, g31, X52, X62, X72, X82, X92}; *)
+
+fList = {g20, g31, n4};
+
+(* large J limit *)
+(* 0& is a constant function of 0 *)
+(* extraTriplet = {0&, 0&, 0&, 0&, 0&, 0&, LargeJ}; *)
+
+extraTriplet = {0&, 0&, 2&};
 
 xLeft  = 0;   (* physical domain left endpoint  — check includes [xLeft,  x_min] *)
 xRight = 1;   (* physical domain right endpoint — check includes [x_max, xRight] *)
