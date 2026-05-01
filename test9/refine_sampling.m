@@ -157,25 +157,25 @@ Print[""];
                   these outer regions are invisible to it otherwise.
    ================================================================ *)
 
-ma = 0`200;
+ma = 0.002`200;
 
 (* dispersion representation of Wilson coefficients *)
 
-g20[x_?NumericQ, J_?IntegerQ] := 1/((1 - x)^5)*1/2*Sqrt[ sp/ (sp-4*mA^2) ] * (sp^(-3) + (-4*mA^2 + sp)^(-3))/.{sp -> 1/(1-x), mA -> ma};
+g20[x_?NumericQ, J_?IntegerQ] := 1/2*Sqrt[ sp/ (sp-4*mA^2) ] * (sp^(-3) + (-4*mA^2 + sp)^(-3))/.{sp -> 1/(1-x), mA -> ma};
 
-g31[x_?NumericQ, J_?IntegerQ] := 1/((1 - x)^5)*(-Sqrt[ sp/ (sp-4*mA^2) ] * ((-3 + J*(1 + J)*(-4*mA^2 + sp)^3*(sp^(-3) + (-4*mA^2 + sp)^(-3)))/(-4*mA^2 + sp)^4))/.{sp -> 1/(1-x), mA -> ma};
+g31[x_?NumericQ, J_?IntegerQ] := (-Sqrt[ sp/ (sp-4*mA^2) ] * ((-3 + J*(1 + J)*(-4*mA^2 + sp)^3*(sp^(-3) + (-4*mA^2 + sp)^(-3)))/(-4*mA^2 + sp)^4))/.{sp -> 1/(1-x), mA -> ma};
 
-n4[x_?NumericQ, J_?IntegerQ] := 1/((1 - x)^5)*J*(1 + J)*(-8 + J + J^2)/sp^5/.{sp -> 1/(1-x)};
+n4[x_?NumericQ, J_?IntegerQ] := (4*mA - sp)^(-5) + (4 - (-2 + J)*J*(1 + J)*(3 + J))/(4*sp^5) + (2*J*(1 + J))/(sp*(-4*mA + sp)^4) - ((-1 + J)*J*(1 + J)*(2 + J))/(4*sp^2*(-4*mA + sp)^3)/.{sp -> 1/(1-x), mA -> ma};
 
 (* Large J limit *)
-LargeJ[x_?NumericQ] := (Sqrt[sp/(-4*mA^2 + sp)]*(1/((4*mA^2 - sp)^7*sp^3) - (-4*mA^2 + sp)^(-10)))/25401600/.{mA -> ma}/.{sp -> 1/(1-x)};
+LargeJ[x_?NumericQ] := ((1 + (1 + 4*mA*(-1 + x))^(-3))*(-1 + x)^5)/4/.{mA -> ma};
 
 Jmax = 40;
 Jlist = Range[0, Jmax, 2];
 
 fList = {g20, g31, n4};
 
-extraTriplet = {0&, 0&, 2&};
+extraTriplet = {0&, 0&, LargeJ};
 
 xLeft  = 0;   (* physical domain left endpoint  — check includes [xLeft,  x_min] *)
 xRight = 1;   (* physical domain right endpoint — check includes [x_max, xRight] *)
@@ -408,9 +408,12 @@ newPoints = Flatten[
     Module[{xa, xb, xStar, s},
       xa    = interval[[1]];
       xb    = interval[[2]];
+      (* Clamp boundary intervals away from singularities at x=0 and x=1 *)
+      If[Abs[xa - xLeft] < singularTol, xa = xLeft + singularTol];
+      If[Abs[xb - xRight] < singularTol, xb = xRight - singularTol];
       xStar = (xa + xb) / 2;
       s     = (xb - xa) / nPts;
-      Print["  Flagged interval [", xa, ", ", xb, "]:"];
+      Print["  Flagged interval [", interval[[1]], ", ", interval[[2]], "] (clamped to [", xa, ", ", xb, "]):"];
       Print["    x* = ", xStar, "  s = ", s];
       Table[SetPrecision[xStar + (k - nPts/2) * s, 50], {k, 0, nPts}]
     ],
@@ -470,6 +473,11 @@ dedupPoints = Fold[
   Rest[allPoints]
 ];
 
+(* Safety filter: remove any points exactly at x=0 or x=1 to avoid singularities *)
+dedupPoints = Select[dedupPoints, 
+  Function[x, Abs[x - xLeft] >= singularTol && Abs[x - xRight] >= singularTol]
+];
+
 Print["Original points          : ", Length[samplePoints]];
 Print["New refined points       : ", Length[newPoints]];
 Print["Combined before dedup    : ", Length[allPoints]];
@@ -484,7 +492,7 @@ Print[""];
    ---------------------------------------------------------------- *)
 
 outLines = StringRiffle[
-  ToString[NumberForm[#, {50, 45}]] & /@ dedupPoints,
+  ToString[N[#, 50]] & /@ dedupPoints,
   "\n"
 ];
 

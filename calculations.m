@@ -124,7 +124,7 @@ Print["massless delCoeff[0, 4] - delCoeff[1, 3] + delCoeff[2, 2] = ", g22[sp, 0]
 
 (* differed by a factor of 2, see the following analysis *)
 
-Print["n4 = ", 2*g40[sp, 0] - g22[sp, 0]//FullSimplify];
+Print["n4 = ", 2*g40[sp, mA] - g22[sp, mA]//FullSimplify];
 
 
 (* this tells us they should differ by a factor of 2 *)

@@ -53,7 +53,7 @@ WritePmpJsonNumerical[
 (* problem-specific *)
 (* let the mass be m = 0.2 so that 4m^2 < M^2 = 1 where M  = 1 to infinity *)
 
-ma = 0`200;
+ma = 0.02`200;
 
 (* dispersion representation of Wilson coefficients *)
 
@@ -63,7 +63,7 @@ g31[x_?NumericQ, J_?IntegerQ] := (-Sqrt[ sp/ (sp-4*mA^2) ] * ((-3 + J*(1 + J)*(-
 
 (* n4[x_?NumericQ, J_?IntegerQ] := 1/((1 - x)^5)*Sqrt[sp/(-4*mA^2 + sp)]*(4*mA - sp)^(-5) + (4 - (-2 + J)*J*(1 + J)*(3 + J))/(4*sp^5) + (2*J*(1 + J))/(sp*(-4*mA + sp)^4) - ((-1 + J)*J*(1 + J)*(2 + J))/(4*sp^2*(-4*mA + sp)^3)/.{mA -> ma}/.{sp -> 1/(1-x)}; *)
 
-n4[x_?NumericQ, J_?IntegerQ] := -1/2*(J*(1 + J)*(-8 + J + J^2))/sp^5/.{sp -> 1/(1-x)};
+n4[x_?NumericQ, J_?IntegerQ] := (4*mA - sp)^(-5) + (4 - (-2 + J)*J*(1 + J)*(3 + J))/(4*sp^5) + (2*J*(1 + J))/(sp*(-4*mA + sp)^4) - ((-1 + J)*J*(1 + J)*(2 + J))/(4*sp^2*(-4*mA + sp)^3)/.{sp -> 1/(1-x), mA -> ma};
 
 (* Large J limit *)
 LargeJ[x_?NumericQ] := ((1 + (1 + 4*mA*(-1 + x))^(-3))*(-1 + x)^5)/4/.{mA -> ma};
