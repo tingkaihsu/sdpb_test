@@ -61,30 +61,27 @@ g20[x_?NumericQ, J_?IntegerQ] := 1/2*Sqrt[ sp/ (sp-4*mA^2) ] * (sp^(-3) + (-4*mA
 
 g31[x_?NumericQ, J_?IntegerQ] := (-Sqrt[ sp/ (sp-4*mA^2) ] * ((-3 + J*(1 + J)*(-4*mA^2 + sp)^3*(sp^(-3) + (-4*mA^2 + sp)^(-3)))/(-4*mA^2 + sp)^4))/.{sp -> 1/(1-x), mA -> ma};
 
-(* n4[x_?NumericQ, J_?IntegerQ] := 1/((1 - x)^5)*Sqrt[sp/(-4*mA^2 + sp)]*(4*mA - sp)^(-5) + (4 - (-2 + J)*J*(1 + J)*(3 + J))/(4*sp^5) + (2*J*(1 + J))/(sp*(-4*mA + sp)^4) - ((-1 + J)*J*(1 + J)*(2 + J))/(4*sp^2*(-4*mA + sp)^3)/.{mA -> ma}/.{sp -> 1/(1-x)}; *)
-
 n4[x_?NumericQ, J_?IntegerQ] := (4*mA - sp)^(-5) + (4 - (-2 + J)*J*(1 + J)*(3 + J))/(4*sp^5) + (2*J*(1 + J))/(sp*(-4*mA + sp)^4) - ((-1 + J)*J*(1 + J)*(2 + J))/(4*sp^2*(-4*mA + sp)^3)/.{sp -> 1/(1-x), mA -> ma};
 
+X52[x_?NumericQ, J_?IntegerQ] := (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6)/.{sp -> 1/(1-x), mA -> ma};
 (* Large J limit *)
-LargeJ[x_?NumericQ] := ((1 + (1 + 4*mA*(-1 + x))^(-3))*(-1 + x)^5)/4/.{mA -> ma};
+LargeJ[x_?NumericQ] := (Sqrt[sp/(-4*mA^2 + sp)]*(-1 - (-4*mA^2 + sp)^3/sp^3))/(36*(-4*mA^2 + sp)^6)/.{mA -> ma, sp -> 1/(1-x)};
 
 Jmax = 40;
 Jlist = Range[0, Jmax, 2];
 
-(* fList = {g20, g31, X52, X62, X72, X82, X92}; *)
-
-fList = {g20, g31, n4};
+fList = {g20, g31, n4, X52};
 
 (* large J limit *)
 (* 0& is a constant function of 0 *)
 (* extraTriplet = {0&, 0&, 0&, 0&, 0&, 0&, LargeJ}; *)
 
-extraTriplet = {0&, 0&, LargeJ};
+extraTriplet = {0&, 0&, 0&, LargeJ};
 
 (* norm = {0, 1, 0, 0, 0, 0, 0}; *)
-norm = {0, 1, 0};
+norm = {0, 1, 0, 0};
 (* obj = {-1, 0, 0, 0, 0, 0, 0}; *)
-obj = {-1, 0, 0};
+obj = {-1, 0, 0, 0};
 
 testNumericalSDP[spFile_String, jsonFile_String, prec_:200] := Module[
   {rawLines, spLines, samplePoints, sampleScalings, polsRegular},
