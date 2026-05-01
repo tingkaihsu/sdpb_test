@@ -46,11 +46,11 @@ crossPiece[k_Integer, q_Integer, J_, t_, sp_, mA_] :=
   kernelCross[k, q, t, sp, mA] * Sqrt[sp/(sp-4mA^2)] * LegendreP[J, 1 + 2 t/(sp-4mA^2)];
 
 directRes = Assuming[J ∈ Integers && J >= 0,
-  FullSimplify @ SeriesCoefficient[directPiece[7, 2, J, t, sp, mA], {t, 0, -1}]
+  FullSimplify @ SeriesCoefficient[directPiece[10, 2, J, t, sp, mA], {t, 0, -1}]
 ];
 
 crossRes = Assuming[J ∈ Integers && J >= 0,
-  FullSimplify @ SeriesCoefficient[crossPiece[7, 2, J, t, sp, mA], {t, 0, -1}]
+  FullSimplify @ SeriesCoefficient[crossPiece[10, 2, J, t, sp, mA], {t, 0, -1}]
 ];
 
 combined = FullSimplify[directRes - crossRes];
@@ -78,4 +78,4 @@ Print["Combined Piece: ", combined];
 
 (* large J limit *)
 
-Print["Large J limit: ", SeriesCoefficient[combined, {J, 0, 10}]];
+Print["Large J limit: ", SeriesCoefficient[combined, {J, 0, 16}]];
