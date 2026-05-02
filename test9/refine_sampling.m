@@ -106,8 +106,17 @@ spRaw = Select[
 If[Length[spRaw] == 0,
   Print["ERROR: no sample points found in ", spFile]; Quit[2]];
 
+(* Fix C/Fortran-style scientific notation: e.g. "1.5e+02" → "1.5*^+02"
+   Mathematica does not recognise lowercase 'e' or uppercase 'E' as an
+   exponent marker; it treats them as the symbol e or Euler's E.
+   This regex converts  e±digits  /  E±digits  to  *^±digits  before
+   ToExpression is called. *)
+fixSciNotation[s_String] := StringReplace[s,
+  RegularExpression["[eE]([+-]?\\d+)"] :> "*^$1"
+];
+
 (* Parse and sort; keep high precision *)
-samplePoints = Sort[SetPrecision[ToExpression /@ spRaw, 50]];
+samplePoints = Sort[SetPrecision[ToExpression /@ (fixSciNotation /@ spRaw), 50]];
 
 Print["Loaded ", Length[samplePoints], " sampling points:"];
 Print["  ", samplePoints];
@@ -133,7 +142,29 @@ yRaw = Select[
 If[Length[yRaw] == 0,
   Print["ERROR: z.txt is empty: ", yFile]; Quit[2]];
 
-yVec = SetPrecision[ToExpression /@ yRaw, 50];
+yVec = SetPrecision[ToExpression /@ (fixSciNotation /@ yRaw), 50];
+
+(* Validate: every component of yVec must be numeric.
+   A non-numeric entry (e.g. containing symbolic 'e') means the
+   scientific-notation fix missed a case or the file is malformed. *)
+Do[
+  If[!NumberQ[yVec[[k]]],
+    Print["ERROR: y component ", k, " is not numeric: ", yVec[[k]]];
+    Print["  Raw line was: ", yRaw[[k]]];
+    Print["  After fixSciNotation: ", fixSciNotation[yRaw[[k]]]];
+    Quit[2]
+  ],
+  {k, Length[yVec]}
+];
+
+(* Same validation for sample points *)
+Do[
+  If[!NumberQ[samplePoints[[k]]],
+    Print["ERROR: sample point ", k, " is not numeric: ", samplePoints[[k]]];
+    Quit[2]
+  ],
+  {k, Length[samplePoints]}
+];
 
 Print["y vector (", Length[yVec], " component(s)): ", yVec];
 Print[""];
