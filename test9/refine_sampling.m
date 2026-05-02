@@ -187,7 +187,11 @@ Print[""];
                   SDPB only enforces positivity AT the sample points;
                   these outer regions are invisible to it otherwise.
    ================================================================ *)
+<<<<<<< HEAD
 maVal = SetPrecision[0.010, 50];
+=======
+maVal = SetPrecision[0.001, 50];
+>>>>>>> 01ae2ad1cac93ad6c66726b8eea6c19ea2dc107e
 
 (* dispersion representation of Wilson coefficients *)
 (* All functions now precompute sp and mA numerically with N[...,50] *)
