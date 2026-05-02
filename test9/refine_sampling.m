@@ -156,7 +156,7 @@ Print[""];
                   SDPB only enforces positivity AT the sample points;
                   these outer regions are invisible to it otherwise.
    ================================================================ *)
-ma = 0.200`200;
+ma = 0.001`200;
 
 (* dispersion representation of Wilson coefficients *)
 

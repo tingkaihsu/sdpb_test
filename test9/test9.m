@@ -53,7 +53,7 @@ WritePmpJsonNumerical[
 (* problem-specific *)
 (* let the mass be m = 0.2 so that 4m^2 < M^2 = 1 where M  = 1 to infinity *)
 
-ma = 0.200`200;
+ma = 0.001`200;
 
 (* dispersion representation of Wilson coefficients *)
 
