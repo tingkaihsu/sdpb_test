@@ -187,7 +187,7 @@ Print[""];
                   SDPB only enforces positivity AT the sample points;
                   these outer regions are invisible to it otherwise.
    ================================================================ *)
-maVal = SetPrecision[0.003, 50];
+maVal = SetPrecision[0.010, 50];
 
 (* dispersion representation of Wilson coefficients *)
 (* All functions now precompute sp and mA numerically with N[...,50] *)
@@ -574,11 +574,45 @@ Print[""];
 (* ----------------------------------------------------------------
    9.  WRITE MERGED SAMPLING POINTS TO FILE
        Original samplePoints + new refined points, deduplicated.
-       One high-precision number per line, 50 significant digits.
+       One high-precision number per line, plain decimal notation
+       (no scientific notation) with 50 significant digits.
    ---------------------------------------------------------------- *)
 
+(* Format a number as a plain decimal string — NEVER scientific notation.
+   Uses RealDigits to decompose the number, then manually assembles the
+   string with leading zeros or integer part as needed.
+     0.001      → "0.0010000000000000000000000000000000000000000000000000"
+     1.0*10^-12 → "0.0000000000010000000000000000000000000000000000000000"
+   This avoids ToString[N[...]] which renders exponents as multi-line
+   superscripts in plain text output. *)
+formatPlainDecimal[x_?NumericQ] := Module[
+  {ax, sign, digits, dpos, ndig = 50, dstr, result},
+  If[x == 0, Return["0." <> StringJoin[Table["0", {ndig}]]]];
+  sign = If[Negative[x], "-", ""];
+  ax   = SetPrecision[Abs[x], ndig];
+  {digits, dpos} = RealDigits[ax, 10, ndig];
+  (* RealDigits can return negative entries at the tail for
+     numbers that don't fill ndig digits; replace with 0 *)
+  dstr = StringJoin[ToString /@ Replace[digits, n_ /; n < 0 :> 0, {1}]];
+  result = Which[
+    dpos >= ndig,
+      (* All digits are before the decimal point *)
+      dstr <> StringJoin[Table["0", {dpos - ndig}]] <> ".0",
+    dpos > 0,
+      (* Decimal point falls within the digit string *)
+      StringTake[dstr, dpos] <> "." <> StringDrop[dstr, dpos],
+    dpos == 0,
+      (* 0.d1d2d3... *)
+      "0." <> dstr,
+    dpos < 0,
+      (* 0.000...d1d2d3... — need -dpos leading zeros after "0." *)
+      "0." <> StringJoin[Table["0", {-dpos}]] <> dstr
+  ];
+  sign <> result
+];
+
 outLines = StringRiffle[
-  ToString[N[#, 50]] & /@ dedupPoints,
+  formatPlainDecimal /@ dedupPoints,
   "\n"
 ];
 
