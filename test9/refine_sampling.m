@@ -156,40 +156,81 @@ Print[""];
                   SDPB only enforces positivity AT the sample points;
                   these outer regions are invisible to it otherwise.
    ================================================================ *)
-ma = 0.001`200;
+maVal = SetPrecision[0.001, 50];
 
 (* dispersion representation of Wilson coefficients *)
+(* All functions now precompute sp and mA numerically with N[...,50] *)
 
-g20[x_?NumericQ, J_?IntegerQ] := 1/2*Sqrt[ sp/ (sp-4*mA^2) ] * (sp^(-3) + (-4*mA^2 + sp)^(-3))/.{sp -> 1/(1-x), mA -> ma};
+g20[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 50];
+  mA = N[maVal, 50];
+  N[1/2*Sqrt[sp/(sp - 4*mA^2)] * (sp^(-3) + (-4*mA^2 + sp)^(-3)), 50]
+];
 
-g31[x_?NumericQ, J_?IntegerQ] := (-Sqrt[ sp/ (sp-4*mA^2) ] * ((-3 + J*(1 + J)*(-4*mA^2 + sp)^3*(sp^(-3) + (-4*mA^2 + sp)^(-3)))/(-4*mA^2 + sp)^4))/.{sp -> 1/(1-x), mA -> ma};
+g31[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 50];
+  mA = N[maVal, 50];
+  N[(-Sqrt[sp/(sp - 4*mA^2)] * ((-3 + J*(1 + J)*(-4*mA^2 + sp)^3*(sp^(-3) + (-4*mA^2 + sp)^(-3)))/(-4*mA^2 + sp)^4)), 50]
+];
 
-n4[x_?NumericQ, J_?IntegerQ] := (4*mA - sp)^(-5) + (4 - (-2 + J)*J*(1 + J)*(3 + J))/(4*sp^5) + (2*J*(1 + J))/(sp*(-4*mA + sp)^4) - ((-1 + J)*J*(1 + J)*(2 + J))/(4*sp^2*(-4*mA + sp)^3)/.{sp -> 1/(1-x), mA -> ma};
+n4[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 50];
+  mA = N[maVal, 50];
+  N[(4*mA - sp)^(-5) + (4 - (-2 + J)*J*(1 + J)*(3 + J))/(4*sp^5) + (2*J*(1 + J))/(sp*(-4*mA + sp)^4) - ((-1 + J)*J*(1 + J)*(2 + J))/(4*sp^2*(-4*mA + sp)^3), 50]
+];
 
-X52[x_?NumericQ, J_?IntegerQ] := (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6)/.{sp -> 1/(1-x), mA -> ma};
+X52[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 50];
+  mA = N[maVal, 50];
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 50]
+];
 
-X62[x_?NumericQ, J_?IntegerQ] := (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(-2304*mA^4 + 1152*mA^2*sp + (-72 + J*(1 + J)*(-18 + J + J^2))*sp^2))/sp^5))/(576*(-4*mA^2 + sp)^7)/.{sp -> 1/(1-x), mA -> ma};
+X62[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 50];
+  mA = N[maVal, 50];
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(-2304*mA^4 + 1152*mA^2*sp + (-72 + J*(1 + J)*(-18 + J + J^2))*sp^2))/sp^5))/(576*(-4*mA^2 + sp)^7), 50]
+];
 
-X72[x_?NumericQ, J_?IntegerQ] := (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-(((-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)*(-47 + J + J^2))/(-4*mA^2 + sp)^8) + ((-1 + J)*(2 + J)*(((-4 + J)*(-3 + J)*(-2 + J)*(3 + J)*(4 + J)*(5 + J)*sp^3)/(4*mA^2 - sp)^5 + 3600/(-4*mA^2 + sp)^2))/sp^6))/14400/.{sp -> 1/(1-x), mA -> ma};
+X72[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 50];
+  mA = N[maVal, 50];
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-(((-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)*(-47 + J + J^2))/(-4*mA^2 + sp)^8) + ((-1 + J)*(2 + J)*(((-4 + J)*(-3 + J)*(-2 + J)*(3 + J)*(4 + J)*(5 + J)*sp^3)/(4*mA^2 - sp)^5 + 3600/(-4*mA^2 + sp)^2))/sp^6))/14400, 50]
+];
 
-X82[x_?NumericQ, J_?IntegerQ] := (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(((-8 + J)*(-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)*(9 + J)*(-38 + J + J^2))/(4*mA^2 - sp)^9 + ((-1 + J)*(2 + J)*(-(((-5 + J)*(-4 + J)*(-3 + J)*(-2 + J)*(3 + J)*(4 + J)*(5 + J)*(6 + J)*sp^4)/(-4*mA^2 + sp)^6) + 129600/(-4*mA^2 + sp)^2))/sp^7))/518400/.{sp -> 1/(1-x), mA -> ma};
+X82[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 50];
+  mA = N[maVal, 50];
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(((-8 + J)*(-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)*(9 + J)*(-38 + J + J^2))/(4*mA^2 - sp)^9 + ((-1 + J)*(2 + J)*(-(((-5 + J)*(-4 + J)*(-3 + J)*(-2 + J)*(3 + J)*(4 + J)*(5 + J)*(6 + J)*sp^4)/(-4*mA^2 + sp)^6) + 129600/(-4*mA^2 + sp)^2))/sp^7))/518400, 50]
+];
 
-X92[x_?NumericQ, J_?IntegerQ] := (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-(((-8 + J)*(-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)*(9 + J)*(2754 + J*(1 + J)*(-119 + J + J^2)))/(-4*mA^2 + sp)^10) + ((-1 + J)*(2 + J)*(((-6 + J)*(-5 + J)*(-4 + J)*(-3 + J)*(-2 + J)*(3 + J)*(4 + J)*(5 + J)*(6 + J)*(7 + J)*sp^5)/(4*mA^2 - sp)^7 + 6350400/(-4*mA^2 + sp)^2))/sp^8))/25401600/.{sp -> 1/(1-x), mA -> ma};
+X92[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 50];
+  mA = N[maVal, 50];
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-(((-8 + J)*(-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)*(9 + J)*(2754 + J*(1 + J)*(-119 + J + J^2)))/(-4*mA^2 + sp)^10) + ((-1 + J)*(2 + J)*(((-6 + J)*(-5 + J)*(-4 + J)*(-3 + J)*(-2 + J)*(3 + J)*(4 + J)*(5 + J)*(6 + J)*(7 + J)*sp^5)/(4*mA^2 - sp)^7 + 6350400/(-4*mA^2 + sp)^2))/sp^8))/25401600, 50]
+];
 
-X102[x_?NumericQ, J_?IntegerQ] := (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-(((-10 + J)*(-8 + J)*(-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)*(9 + J)*(11 + J)*(2232 + (-10 + J)*J*(1 + J)*(11 + J)))/(-4*mA^2 + sp)^11) + ((-1 + J)*(2 + J)*(-(((-7 + J)*(-6 + J)*(-5 + J)*(-4 + J)*(-3 + J)*(-2 + J)*(3 + J)*(4 + J)*(5 + J)*(6 + J)*(7 + J)*(8 + J)*sp^6)/(-4*mA^2 + sp)^8) + 406425600/(-4*mA^2 + sp)^2))/sp^9))/1625702400/.{sp -> 1/(1-x), mA -> ma};
+X102[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 50];
+  mA = N[maVal, 50];
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-(((-10 + J)*(-8 + J)*(-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)*(9 + J)*(11 + J)*(2232 + (-10 + J)*J*(1 + J)*(11 + J)))/(-4*mA^2 + sp)^11) + ((-1 + J)*(2 + J)*(-(((-7 + J)*(-6 + J)*(-5 + J)*(-4 + J)*(-3 + J)*(-2 + J)*(3 + J)*(4 + J)*(5 + J)*(6 + J)*(7 + J)*(8 + J)*sp^6)/(-4*mA^2 + sp)^8) + 406425600/(-4*mA^2 + sp)^2))/sp^9))/1625702400, 50]
+];
 
 (* Large J limit *)
-LargeJ[x_?NumericQ] := (Sqrt[sp/(-4*mA^2 + sp)]*(-(-4*mA^2 + sp)^(-11) - 1/(sp^3*(-4*mA^2 + sp)^8)))/1625702400/.{mA -> ma, sp -> 1/(1-x)};
+LargeJ[x_?NumericQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 50];
+  mA = N[maVal, 50];
+  N[(Sqrt[sp/(-4*mA^2 + sp)]*(-(-4*mA^2 + sp)^(-11) - 1/(sp^3*(-4*mA^2 + sp)^8)))/1625702400, 50]
+];
 
 Jmax = 40;
 Jlist = Range[0, Jmax, 2];
 
-fList = {g20, g31, n4, X52, X62, X72};
+fList = {g20, g31, n4, X52, X62, X72, X82, X92, X102};
 
 (* large J limit *)
 (* 0& is a constant function of 0 *)
 
-extraTriplet = {0&, 0&, 0&, 0&, 0&, LargeJ};
+extraTriplet = {0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, LargeJ};
 
 xLeft  = 0;   (* physical domain left endpoint  — check includes [xLeft,  x_min] *)
 xRight = 1;   (* physical domain right endpoint — check includes [x_max, xRight] *)
