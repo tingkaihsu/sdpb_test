@@ -21,8 +21,9 @@ test2SDP[jsonFile_, prec_:200] := Module[
       {J, Jlist}
     ];
     
-    norm = {0, 1, 0};
-    obj  = {-1, 0, 0};
+    (* Find upper bound of g3 *)
+    norm = {0, -1, 0};
+    obj  = {1, 0, 0};
     
     WritePmpJson[
       jsonFile,
