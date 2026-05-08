@@ -98,8 +98,8 @@ yRaw = Select[
 If[Length[yRaw] == 0,
   Print["ERROR: y file is empty: ", yFile]; Quit[2]];
 
-yVec = SetPrecision[ToExpression /@ (fixSciNotation /@ yRaw), 50];
-Print["y vector (", Length[yVec], " components): ", yVec];
+(* yVec = SetPrecision[ToExpression /@ (fixSciNotation /@ yRaw), 50]; *)
+Print["y vector (", Length[yVec], " components): ", yRaw];
 Print[""];
 
 
