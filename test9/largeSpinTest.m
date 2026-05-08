@@ -234,12 +234,6 @@ If[Length[yVec] != Length[fList],
 ];
 
 
-If[Length[extraTriplet] != Length[fList],
-  Print["ERROR: extraTriplet has ", Length[extraTriplet],
-        " entries but fList has ", Length[fList], ". They must match."];
-  Quit[2]
-];
-
 (* ----------------------------------------------------------------
    4. BUILD SMART J GRID FOR SCANNING
    ---------------------------------------------------------------- *)
