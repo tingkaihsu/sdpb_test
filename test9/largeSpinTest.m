@@ -49,18 +49,24 @@
 myArgs = If[Length[$ScriptCommandLine] >= 2, Rest[$ScriptCommandLine], {}];
 
 If[Length[myArgs] < 2,
-  Print["USAGE: wolframscript -file check_large_J.m ",
-        "<sp_file> <y_file> [J_scan_max]"];
+  Print["USAGE: wolframscript -file negative_region.m ",
+        "<sp_file> <y_file> [N_pts] [out_sp_file]"];
   Quit[2]
 ];
 
 spFile    = myArgs[[1]];
 yFile     = myArgs[[2]];
-jScanMax  = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 10000];
+nPts      = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 10];
+minWidth  = If[Length[myArgs] >= 5, ToExpression[myArgs[[5]]], 10^-6];
+
+(* spin grid *)
+jScanMax  = If[Length[myArgs] >= 4, ToExpression[myArgs[[4]]], 10000];
 
 Print["=== check_large_J.m  (Large-J Positivity Diagnostic) ==="];
 Print["  sp_file     = ", spFile];
 Print["  y_file      = ", yFile];
+Print["  N_pts      = ", nPts];
+Print["  min_width  = ", minWidth];
 Print["  J_scan_max  = ", jScanMax];
 Print[""];
 
@@ -68,7 +74,11 @@ Print[""];
 (* ----------------------------------------------------------------
    2. READ FILES
    ---------------------------------------------------------------- *)
-
+(* Fix C/Fortran-style scientific notation: e.g. "1.5e+02" → "1.5*^+02"
+   Mathematica does not recognise lowercase 'e' or uppercase 'E' as an
+   exponent marker; it treats them as the symbol e or Euler's E.
+   This regex converts  e±digits  /  E±digits  to  *^±digits  before
+   ToExpression is called. *)
 fixSciNotation[s_String] := StringReplace[s,
   RegularExpression["[eE]([+-]?\\d+)"] :> "*^$1"
 ];
@@ -81,33 +91,72 @@ spRaw = Select[
   ReadList[spFile, String],
   StringLength[StringTrim[#]] > 0 && !StringStartsQ[StringTrim[#], "#"] &
 ];
+
 If[Length[spRaw] == 0,
   Print["ERROR: no sample points found in ", spFile]; Quit[2]];
 
-samplePoints = Sort[SetPrecision[ToExpression /@ (fixSciNotation /@ spRaw), 50]];
+(* Parse and sort; keep high precision *)
+samplePoints = Sort[SetPrecision[ToExpression /@ (fixSciNotation /@ spRaw), 200]];
 Print["Loaded ", Length[samplePoints], " sampling points."];
 
-(* Dual vector y *)
+(* ----------------------------------------------------------------
+   3.  READ z.txt
+       SDPB writes all n components of y, one per line; blank lines
+       and lines starting with "#" are skipped.
+       The length of yVec must equal the number of functions in fVec.
+       A mismatch is caught by the dimensional check below.
+   ---------------------------------------------------------------- *)
+
 If[!FileExistsQ[yFile],
-  Print["ERROR: y file not found: ", yFile]; Quit[2]];
+  Print["ERROR: z.txt not found: ", yFile]; Quit[2]];
 
 yRaw = Select[
   ReadList[yFile, String],
   StringLength[StringTrim[#]] > 0 && !StringStartsQ[StringTrim[#], "#"] &
 ];
-If[Length[yRaw] == 0,
-  Print["ERROR: y file is empty: ", yFile]; Quit[2]];
 
-yVec = SetPrecision[ToExpression /@ (fixSciNotation /@ yRaw), 50];
-Print["y vector (", Length[yVec], " components): ", yVec];
+If[Length[yRaw] == 0,
+  Print["ERROR: z.txt is empty: ", yFile]; Quit[2]];
+
+yVec = SetPrecision[ToExpression /@ (fixSciNotation /@ yRaw), 200];
+
+(* Validate: every component of yVec must be numeric.
+   A non-numeric entry (e.g. containing symbolic 'e') means the
+   scientific-notation fix missed a case or the file is malformed. *)
+Do[
+  If[!NumberQ[yVec[[k]]],
+    Print["ERROR: y component ", k, " is not numeric: ", yVec[[k]]];
+    Print["  Raw line was: ", yRaw[[k]]];
+    Print["  After fixSciNotation: ", fixSciNotation[yRaw[[k]]]];
+    Quit[2]
+  ],
+  {k, Length[yVec]}
+];
+
+(* Same validation for sample points *)
+Do[
+  If[!NumberQ[samplePoints[[k]]],
+    Print["ERROR: sample point ", k, " is not numeric: ", samplePoints[[k]]];
+    Quit[2]
+  ],
+  {k, Length[samplePoints]}
+];
+
+Print["y vector (", Length[yVec], " component(s)): ", yVec];
 Print[""];
 
-
 (* ----------------------------------------------------------------
-   3. PROBLEM-SPECIFIC DEFINITIONS  (must match test9.m / refine_sampling.m)
+   4. PROBLEM-SPECIFIC DEFINITIONS  (must match test9.m / refine_sampling.m)
    ---------------------------------------------------------------- *)
 
 maVal = SetPrecision[0.300, 50];
+
+Print["mA = ", maVal]
+
+(* dispersion representation of Wilson coefficients *)
+(* All functions now precompute sp and mA numerically with N[...,50] *)
+
+(* forward limit *)
 
 g20[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   sp = N[1/(1-x), 50];
@@ -127,6 +176,43 @@ n4[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   N[-1/2*(J*(1 + J)*Sqrt[-(sp/(4*mA^2 - sp))]*(2*(-14 + J + J^2)*mA^2 - (-8 + J + J^2)*sp))/((-4*mA^2 + sp)^2*(-2*mA^2 + sp)^4), 50]
 ];
 
+X52[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 50];
+  mA = N[maVal, 50];
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 50]
+];
+
+X62[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 50];
+  mA = N[maVal, 50];
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(-2304*mA^4 + 1152*mA^2*sp + (-72 + J*(1 + J)*(-18 + J + J^2))*sp^2))/sp^5))/(576*(-4*mA^2 + sp)^7), 50]
+];
+
+X72[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 50];
+  mA = N[maVal, 50];
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-(((-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)*(-47 + J + J^2))/(-4*mA^2 + sp)^8) + ((-1 + J)*(2 + J)*(((-4 + J)*(-3 + J)*(-2 + J)*(3 + J)*(4 + J)*(5 + J)*sp^3)/(4*mA^2 - sp)^5 + 3600/(-4*mA^2 + sp)^2))/sp^6))/14400, 50]
+];
+
+X82[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 50];
+  mA = N[maVal, 50];
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(((-8 + J)*(-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)*(9 + J)*(-38 + J + J^2))/(4*mA^2 - sp)^9 + ((-1 + J)*(2 + J)*(-(((-5 + J)*(-4 + J)*(-3 + J)*(-2 + J)*(3 + J)*(4 + J)*(5 + J)*(6 + J)*sp^4)/(-4*mA^2 + sp)^6) + 129600/(-4*mA^2 + sp)^2))/sp^7))/518400, 50]
+];
+
+X92[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 50];
+  mA = N[maVal, 50];
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-(((-8 + J)*(-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)*(9 + J)*(2754 + J*(1 + J)*(-119 + J + J^2)))/(-4*mA^2 + sp)^10) + ((-1 + J)*(2 + J)*(((-6 + J)*(-5 + J)*(-4 + J)*(-3 + J)*(-2 + J)*(3 + J)*(4 + J)*(5 + J)*(6 + J)*(7 + J)*sp^5)/(4*mA^2 - sp)^7 + 6350400/(-4*mA^2 + sp)^2))/sp^8))/25401600, 50]
+];
+
+X102[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 50];
+  mA = N[maVal, 50];
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-(((-10 + J)*(-8 + J)*(-6 + J)*(-4 + J)*(-2 + J)*(3 + J)*(5 + J)*(7 + J)*(9 + J)*(11 + J)*(2232 + (-10 + J)*J*(1 + J)*(11 + J)))/(-4*mA^2 + sp)^11) + ((-1 + J)*(2 + J)*(-(((-7 + J)*(-6 + J)*(-5 + J)*(-4 + J)*(-3 + J)*(-2 + J)*(3 + J)*(4 + J)*(5 + J)*(6 + J)*(7 + J)*(8 + J)*sp^6)/(-4*mA^2 + sp)^8) + 406425600/(-4*mA^2 + sp)^2))/sp^9))/1625702400, 50]
+];
+
+(* Large J limit *)
 LargeJ[x_?NumericQ] := Module[{sp, mA},
   sp = N[1/(1-x), 50];
   mA = N[maVal, 50];
@@ -135,12 +221,24 @@ LargeJ[x_?NumericQ] := Module[{sp, mA},
 
 fList = {g20, g31, n4};
 
+xLeft  = 0;   (* physical domain left endpoint  — check includes [xLeft,  x_min] *)
+xRight = 1;   (* physical domain right endpoint — check includes [x_max, xRight] *)
+
+(* --- Dimensional consistency check ---
+   y.txt must have exactly as many lines as there are functions in
+   fList.  A mismatch means the wrong y.txt or fList was supplied. *)
 If[Length[yVec] != Length[fList],
-  Print["ERROR: y has ", Length[yVec], " components but fList has ",
-        Length[fList], " functions."];
+  Print["ERROR: y.txt has ", Length[yVec], " component(s) but fList has ",
+        Length[fList], " function(s). They must match."];
   Quit[2]
 ];
 
+
+If[Length[extraTriplet] != Length[fList],
+  Print["ERROR: extraTriplet has ", Length[extraTriplet],
+        " entries but fList has ", Length[fList], ". They must match."];
+  Quit[2]
+];
 
 (* ----------------------------------------------------------------
    4. BUILD SMART J GRID FOR SCANNING
@@ -172,12 +270,15 @@ Print[""];
 
 F[x_?NumericQ, J_?IntegerQ] := Sum[yVec[[k]] * fList[[k]][x, J], {k, Length[yVec]}];
 
-singularTol = 10^-12;
+(* Safety: clamp midpoints near known singularity at x -> 1 (sp = 1/(1-x))
+   and provide a robust numeric evaluator that returns $Failed on
+   non-finite or exceptional results. *)
+singularTol = 10^-12; (* distance from x=1 to avoid sp singularity *)
 
 safeF[x_?NumericQ, J_?IntegerQ] := Module[{x0 = x, val},
   If[Abs[1 - x0] < singularTol, x0 = 1 - singularTol];
   If[Abs[x0] < singularTol, x0 = singularTol];
-  val = Quiet[Check[N[F[x0, J], 30], $Failed]];
+  val = Quiet[Check[N[F[x0, J], 200], $Failed]];
   If[val === $Failed || !NumberQ[val] ||
      MemberQ[{Infinity, -Infinity, ComplexInfinity, Indeterminate}, Head[val]],
     $Failed,
@@ -219,6 +320,7 @@ Do[
     {Jj, JlistLarge}
   ];
 
+  (* Negative values *)
   If[localMin < 0,
     AppendTo[phase1Violations, {xi, localWorstJ, localMin}];
   ];
@@ -278,14 +380,18 @@ Print["========================================"];
 nIntervals = Length[samplePoints] - 1;
 
 (* Include boundary intervals *)
-xLeft = 0; xRight = 1;
 allIntervals = Join[
-  If[samplePoints[[1]]  > xLeft  + 10^-8, {{xLeft + singularTol, samplePoints[[1]]}}, {}],
+  If[samplePoints[[1]]  > xLeft  + 10^-12, {{xLeft + singularTol, samplePoints[[1]]}}, {}],
   Table[{samplePoints[[i]], samplePoints[[i+1]]}, {i, nIntervals}],
-  If[samplePoints[[-1]] < xRight - 10^-8, {{samplePoints[[-1]], xRight - singularTol}}, {}]
+  If[samplePoints[[-1]] < xRight - 10^-12, {{samplePoints[[-1]], xRight - singularTol}}, {}]
 ];
 
 Print["  ", Length[allIntervals], " intervals  ×  ", Length[JlistLarge], " J-values"];
+Print["  Left boundary  : [", xLeft, ", ", samplePoints[[1]], "]  ",
+      If[samplePoints[[1]] > xLeft  + 10^-12, "(active)", "(skipped — x_min = xLeft)"]];
+Print["  Right boundary : [", samplePoints[[-1]], ", ", xRight, "]  ",
+      If[samplePoints[[-1]] < xRight - 10^-12, "(active)", "(skipped — x_max = xRight)"]];
+Print["  (stopping threshold: min_width = ", minWidth, ")"];
 Print[""];
 
 phase2Violations = {};
@@ -296,6 +402,7 @@ phase2WorstJ = None;
 Do[
   xa = allIntervals[[i, 1]];
   xb = allIntervals[[i, 2]];
+  width = xb - xa;
   mid = (xa + xb) / 2;
 
   (* Clamp away from singularities *)
@@ -339,7 +446,7 @@ Print["  Violations (F < 0):  ", Length[phase2Violations]];
 
 If[Length[phase2Violations] > 0,
   Print[""];
-  Print["  *** VIOLATIONS FOUND AT MIDPOINTS ***"];
+  Print["  *** VIOLATIONS FOUND AT MIDPOINTS OF SAMPLING POINTS ***"];
   Print[""];
   Print["  Worst violations:"];
   sorted2 = SortBy[phase2Violations, #[[3]] &];
@@ -401,11 +508,11 @@ Print[""];
 
 
 (* ----------------------------------------------------------------
-   9. FINAL VERDICT
+   9. FINAL SUMMARY
    ---------------------------------------------------------------- *)
 
 Print["========================================"];
-Print["  FINAL VERDICT"];
+Print["  FINAL SUMMARY"];
 Print["========================================"];
 
 totalViolations = Length[phase1Violations] + Length[phase2Violations];
