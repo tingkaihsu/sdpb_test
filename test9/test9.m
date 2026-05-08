@@ -55,6 +55,8 @@ WritePmpJsonNumerical[
 
 maVal = SetPrecision[0.001, 50];
 
+Print["mA = ", maVal]
+
 (* dispersion representation of Wilson coefficients *)
 (* All functions now precompute sp and mA numerically with N[...,50] *)
 
