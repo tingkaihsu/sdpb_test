@@ -74,7 +74,7 @@ Print[""];
 (* ----------------------------------------------------------------
    2. READ FILES
    ---------------------------------------------------------------- *)
-(* Fix C/Fortran-style scientific notation: e.g. "1.5e+02" → "1.5*^+02"
+(* Fix C/Fortran-style scientific notation: e.g. "1.5e+02" -> "1.5*^+02"
    Mathematica does not recognise lowercase 'e' or uppercase 'E' as an
    exponent marker; it treats them as the symbol e or Euler's E.
    This regex converts  e±digits  /  E±digits  to  *^±digits  before
@@ -238,7 +238,7 @@ If[Length[yVec] != Length[fList],
    4. BUILD SMART J GRID FOR SCANNING
    ---------------------------------------------------------------- *)
 
-(* The SDPB run constrained J = 0, 2, ..., 60 and J→∞.
+(* The SDPB run constrained J = 0, 2, ..., 60 and J->infty.
    We need to check J = 62, 64, ..., J_scan_max. *)
 
 JlistDense    = Range[62, Min[120, jScanMax], 2];         (* every even spin near Jmax *)
@@ -290,7 +290,7 @@ safeF[x_?NumericQ, J_?IntegerQ] := Module[{x0 = x, val},
 Print["========================================"];
 Print["  PHASE 1: Checking at SAMPLE POINTS"];
 Print["========================================"];
-Print["  ", Length[samplePoints], " x-points  ×  ", Length[JlistLarge], " J-values"];
+Print["  ", Length[samplePoints], " x-points and ", Length[JlistLarge], "J-values"];
 Print[""];
 
 phase1Violations = {};
@@ -380,7 +380,7 @@ allIntervals = Join[
   If[samplePoints[[-1]] < xRight - 10^-12, {{samplePoints[[-1]], xRight - singularTol}}, {}]
 ];
 
-Print["  ", Length[allIntervals], " intervals  ×  ", Length[JlistLarge], " J-values"];
+Print["  ", Length[allIntervals], " intervals and ", Length[JlistLarge], "J-values"];
 Print["  Left boundary  : [", xLeft, ", ", samplePoints[[1]], "]  ",
       If[samplePoints[[1]] > xLeft  + 10^-12, "(active)", "(skipped — x_min = xLeft)"]];
 Print["  Right boundary : [", samplePoints[[-1]], ", ", xRight, "]  ",
@@ -488,14 +488,14 @@ Do[
   Do[
     val = safeF[xi, Jp];
     ratio = If[val =!= $Failed && Jp > 0, val / Jp^4, "N/A"];
-    Print["    ", Jp, "     |  ", If[val =!= $Failed, ToExpression @ ScientificForm[val, 6], "$Failed"],
-          "    |  ", If[NumberQ[ratio], ToExpression @ ScientificForm[ratio, 6], ratio]],
+    Print["    ", Jp, "     |  ", If[val =!= $Failed, SetPrecision[ToExpression /@ (fixSciNotation /@ val), 200], "$Failed"],
+          "    |  ", If[NumberQ[ratio], SetPrecision[ToExpression /@ (fixSciNotation /@ ratio), 200], ratio]],
     {Jp, JprobeList}
   ];
-  (* Also show the J→∞ limit for comparison *)
+  (* Also show the J->infty limit for comparison *)
   extraFuncs = {0&, 0&, LargeJ};
   xInfVal = Sum[yVec[[k]] * extraFuncs[[k]][xi], {k, 3}];
-  Print["    inf     |  (LargeJ limit)  |  ", ToExpression @ScientificForm[xInfVal, 6]],
+  Print["    inf     |  (LargeJ limit)  |  ", SetPrecision[ToExpression /@ (fixSciNotation /@ xInfVal), 200]],
   {r, Length[repXvals]}
 ];
 Print[""];
@@ -513,18 +513,19 @@ totalViolations = Length[phase1Violations] + Length[phase2Violations];
 
 If[totalViolations == 0,
   Print[""];
-  Print["  ✓  NO VIOLATIONS FOUND for J up to ", jScanMax];
-  Print["  ✓  The current Jmax = 60 appears SUFFICIENT."];
-  Print["  ✓  The SDPB bound is consistent with large-J positivity."];
+  Print["  O  NO VIOLATIONS FOUND for J up to ", jScanMax];
+  Print["  O  The current Jmax = 60 appears SUFFICIENT."];
+  Print["  O  The SDPB bound is consistent with large-J positivity."];
   Print[""];
   Print["  Note: This does not prove positivity for ALL J > 60 at ALL x,"];
   Print["  but the smart grid provides strong evidence. The asymptotic"];
-  Print["  analysis above shows the convergence pattern toward J→∞."];
+  Print["  analysis above shows the convergence pattern toward J -> infty."];
+  Print[""];
   Quit[0],
 
   (* Violations found *)
   Print[""];
-  Print["  ✗  VIOLATIONS FOUND: ", totalViolations, " total"];
+  Print["  X  VIOLATIONS FOUND: ", totalViolations, " total"];
   Print["     Phase 1 (sample points): ", Length[phase1Violations]];
   Print["     Phase 2 (midpoints):     ", Length[phase2Violations]];
   Print[""];
@@ -542,7 +543,7 @@ If[totalViolations == 0,
     Print["  1. Add these J values to Jlist in test9.m:"];
     Print["     JlistLarge = ", allViolatedJs, ";"];
     Print["     Jlist = Join[Range[0, 60, 2], JlistLarge];"];
-    Print["  2. Rerun test9.m → pmp2sdp → sdpb"];
+    Print["  2. Rerun test9.m -> pmp2sdp -> sdpb"];
     Print["  3. Rerun this diagnostic to verify"],
 
     Print["  1. Violations are widespread (", Length[allViolatedJs], " J values)."];
@@ -552,5 +553,6 @@ If[totalViolations == 0,
     Print["  2. As a quick fix, increase Jmax in test9.m to ", Max[allViolatedJs]];
   ];
 
+  Print[""];
   Quit[1]
 ];
