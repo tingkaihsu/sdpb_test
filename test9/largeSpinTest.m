@@ -387,14 +387,14 @@ Do[
   Do[
     val = safeF[xi, Jp];
     ratio = If[val =!= $Failed && Jp > 0, val / Jp^4, "N/A"];
-    Print["    ", Jp, "     |  ", If[val =!= $Failed, ToString @ ScientificForm[val, 6], "$Failed"],
-          "    |  ", If[NumberQ[ratio], ToString @ ScientificForm[ratio, 6], ratio]],
+    Print["    ", Jp, "     |  ", If[val =!= $Failed, ToExpression @ ScientificForm[val, 6], "$Failed"],
+          "    |  ", If[NumberQ[ratio], ToExpression @ ScientificForm[ratio, 6], ratio]],
     {Jp, JprobeList}
   ];
   (* Also show the J→∞ limit for comparison *)
   extraFuncs = {0&, 0&, LargeJ};
   xInfVal = Sum[yVec[[k]] * extraFuncs[[k]][xi], {k, 3}];
-  Print["    inf     |  (LargeJ limit)  |  ", ToString @ScientificForm[xInfVal, 6]],
+  Print["    inf     |  (LargeJ limit)  |  ", ToExpression @ScientificForm[xInfVal, 6]],
   {r, Length[repXvals]}
 ];
 Print[""];
