@@ -17,7 +17,7 @@
      Phase 1: Check F(x_i, J) at existing sample points x_i for
               J = 62, 64, ..., up to J_scan_max.
               (At sample points, SDPB guarantees F ≥ 0 for J ≤ 60.
-               Violations here mean the bound is INVALID at higher spins.)
+               Violations here mean the bound is INVALID.)
 
      Phase 2: Check F(mid, J) at midpoints between sample points
               for the same large J range.
@@ -98,10 +98,8 @@ yRaw = Select[
 If[Length[yRaw] == 0,
   Print["ERROR: y file is empty: ", yFile]; Quit[2]];
 
-(* yVec = SetPrecision[ToExpression /@ (fixSciNotation /@ yRaw), 50]; *)
 yVec = SetPrecision[ToExpression /@ (fixSciNotation /@ yRaw), 50];
-Print["y vector (", Length[yVec], " components): (", 
-      StringRiffle[toCleanStr[#, 50] & /@ yVec, ", "], ")"];
+Print["y vector (", Length[yVec], " components): ", yVec];
 Print[""];
 
 
@@ -396,7 +394,7 @@ Do[
   (* Also show the J→∞ limit for comparison *)
   extraFuncs = {0&, 0&, LargeJ};
   xInfVal = Sum[yVec[[k]] * extraFuncs[[k]][xi], {k, 3}];
-  Print["    inf     |  (LargeJ limit)  |  ", ToString @ ScientificForm[xInfVal, 6]],
+  Print["    inf     |  (LargeJ limit)  |  ", ToString @ScientificForm[xInfVal, 6]],
   {r, Length[repXvals]}
 ];
 Print[""];
