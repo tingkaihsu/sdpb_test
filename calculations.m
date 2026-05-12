@@ -51,7 +51,8 @@ fwdMlow[s_, t_, mA_, Nmax_Integer] :=
     ] /. {u -> 4mA^2 - s - t};
 
 (* Kernel with subtraction points at s1 and s2 *)
-KerMlow[sp_, s_, t_, mA_, s1_, s2_, k_, Nmax_Integer] := Mlow[sp, t, mA, Nmax] /(sp-4mA^2/3) /((sp-s1)*(sp-s2))^(k/2);
+
+(* KerMlow[sp_, s_, t_, mA_, s1_, s2_, k_, Nmax_Integer] := Mlow[sp, t, mA, Nmax] /(sp-4mA^2/3) /((sp-s1)*(sp-s2))^(k/2);
 
 s1 = 4mA^2/3;
 s2 = 8mA^2/3-t;
@@ -61,22 +62,11 @@ Print["(twice-subtracted) stu-symmetric ansatz at s1 = 4mA^2, and s2 = -(t-4mA^2
 s1p = 4mA^2/3;
 s2p = 8mA^2/3-t;
 
-Print["(fourth-subtracted) stu-symmetric ansatz at s1 = 4mA^2, and s2 = -(t-4mA^2/3) = ", SeriesCoefficient[-Residue[KerMlow[sp, s, t, mA, s1p, s2p, 4, 8], {sp, Infinity}], {t, 4mA^2/3, 0}]//FullSimplify];
+Print["(fourth-subtracted) stu-symmetric ansatz at s1 = 4mA^2, and s2 = -(t-4mA^2/3) = ", SeriesCoefficient[-Residue[KerMlow[sp, s, t, mA, s1p, s2p, 4, 8], {sp, Infinity}], {t, 4mA^2/3, 0}]//FullSimplify]; *)
 
+(* stu sum rule *)
 
-KerfwdMlow[sp_, s_, t_, mA_, s1_, s2_, k_, Nmax_Integer] := fwdMlow[sp, t, mA, Nmax] /(sp-2mA^2) /((sp-s1)*(sp-s2))^(k/2);
-
-(* forward limit *)
-s1 = 2mA^2;
-s2 = 2mA^2 - t;
-
-Print["(twice-subtracted) forward ansatz at s1 = 2mA^2, and s2 = 2mA^2-t = ", SeriesCoefficient[-Residue[KerfwdMlow[sp, s, t, mA, s1, s2, 2, 8], {sp, Infinity}], {t, 0, 2}]//FullSimplify];
-
-Print["(twice-subtracted) forward ansatz at s1 = 2mA^2, and s2 = 2mA^2-t = ", SeriesCoefficient[-Residue[KerfwdMlow[sp, s, t, mA, s1, s2, 4, 8], {sp, Infinity}], {t, 0, 0}]//FullSimplify];
-
-(* Sum rule *)
-
-KerMsum[sp_, t_, mA_, s1_, s2_, k_, J_] := ( 1/((sp-4mA^2/3)*((sp-s1)*(sp-s2))^(k/2)) - 1/(((4mA^2-sp-t)-4mA^2/3)*(((4mA^2-sp-t)-s1)*((4mA^2-sp-t)-s2))^(k/2)) ) * Sqrt[sp/(sp-4mA^2)] * LegendreP[J, 1+2*t/(sp-4mA^2)];
+(* KerMsum[sp_, t_, mA_, s1_, s2_, k_, J_] := ( 1/((sp-4mA^2/3)*((sp-s1)*(sp-s2))^(k/2)) - 1/(((4mA^2-sp-t)-4mA^2/3)*(((4mA^2-sp-t)-s1)*((4mA^2-sp-t)-s2))^(k/2)) ) * Sqrt[sp/(sp-4mA^2)] * LegendreP[J, 1+2*t/(sp-4mA^2)];
 
 Print[""]
 
@@ -94,7 +84,19 @@ G3 = SeriesCoefficient[KerMsum[sp, t, mA, 4mA^2/3, 8mA^2/3-t, 2, J], {t, 4mA^2/3
 Print["(twice-subtracted) sum rule at stu = ", SeriesCoefficient[KerMsum[sp, t, mA, 4mA^2/3, 8mA^2/3-t, 2, J], {t, 4mA^2/3, 1}]//FullSimplify]
 Print["Above under the massless limit = ", Limit[G3, mA->0]//FullSimplify]
 
-Print[""]
+Print[""] *)
+
+(* --------------------------------------------------------------------------------------------- *)
+
+KerfwdMlow[sp_, s_, t_, mA_, s1_, s2_, k_, Nmax_Integer] := fwdMlow[sp, t, mA, Nmax] /(sp-2mA^2) /((sp-s1)*(sp-s2))^(k/2);
+
+(* forward limit *)
+s1 = 2mA^2;
+s2 = 2mA^2 - t;
+
+Print["(twice-subtracted) forward ansatz at s1 = 2mA^2, and s2 = 2mA^2-t = ", SeriesCoefficient[-Residue[KerfwdMlow[sp, s, t, mA, s1, s2, 2, 8], {sp, Infinity}], {t, 0, 2}]//FullSimplify];
+
+Print["(twice-subtracted) forward ansatz at s1 = 2mA^2, and s2 = 2mA^2-t = ", SeriesCoefficient[-Residue[KerfwdMlow[sp, s, t, mA, s1, s2, 4, 8], {sp, Infinity}], {t, 0, 0}]//FullSimplify];
 
 (* forward dispersive sum rule *)
 KerfwdMsum[sp_, t_, mA_, s1_, s2_, k_, J_] := ( 1/((sp-2mA^2)*((sp-s1)*(sp-s2))^(k/2)) - 1/(((4mA^2-sp-t)-2mA^2)*(((4mA^2-sp-t)-s1)*((4mA^2-sp-t)-s2))^(k/2)) ) * Sqrt[sp/(sp-4mA^2)] * LegendreP[J, 1+2*t/(sp-4mA^2)];
@@ -115,6 +117,16 @@ G3p = SeriesCoefficient[KerfwdMsum[sp, t, mA, 2mA^2, 2mA^2-t, 2, J], {t, 0, 1}]/
 Print["(twice-subtracted) sum rule at fwd = ", SeriesCoefficient[KerfwdMsum[sp, t, mA, 2mA^2, 2mA^2-t, 2, J], {t, 0, 1}]//FullSimplify]
 
 Print["Above under the massless limit = ", Limit[G3p, mA->0]//FullSimplify]
+
+Print[""]
+
+Print["at fwd expansion points, g[4,0] = ", SeriesCoefficient[-Residue[KerfwdMlow[sp, s, t, mA, 2mA^2, 2mA^2-t, 4, 8], {sp, Infinity}], {t, 0, 0}]//FullSimplify]
+
+G4 = SeriesCoefficient[KerfwdMsum[sp, t, mA, 2mA^2, 2mA^2-t, 4, J], {t, 0, 0}];
+
+Print["at fwd expansion points, the sum rule of g[4,0] = ", G4//FullSimplify];
+
+Print["Above under the massless limit = ", Limit[G4, mA->0]//FullSimplify]
 
 Print[""]
 
