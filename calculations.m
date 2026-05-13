@@ -9,6 +9,8 @@ del[a_, b_] := delCoeff @@ Sort[{a, b}];
    For a=/=b this includes BOTH {a,b} and {b,a}, giving the
    s<->t-symmetric polynomial automatically via the del sort above. *)
 
+(* This might be a problem since in the forward-limit expansion, we do NOT assume s <-> t symmetry. *)
+
 validTriples[Nmax_Integer] :=
     Flatten[Table[{a, b}, {a, 0, Nmax}, {b, 0, Nmax - a}], 1];
 
@@ -38,15 +40,15 @@ Mlow[s_, t_, mA_, Nmax_Integer] :=
         ] /@ validTriples[Nmax]
     ] /. {u -> 4mA^2 - s - t};
 
-(* Forward amplitude ansatz *)
+(* Forward amplitude ansatz note that we choose s <-> u expansion points *)
 fwdMlow[s_, t_, mA_, Nmax_Integer] :=
     gAAB^2 * (1/s + 1/t + 1/u) +
     gAAA^2 * (1/(s-mA^2) + 1/(t-mA^2) + 1/(u-mA^2)) +
     Total[
         Function[{ab},
             del[ab[[1]], ab[[2]]]
-            * (s-2mA^2)^ab[[1]]
-            * (t-0)^ab[[2]]
+            * (u-2mA^2)^ab[[1]]
+            * (s-2mA^2)^ab[[2]]
         ] /@ validTriples[Nmax]
     ] /. {u -> 4mA^2 - s - t};
 
