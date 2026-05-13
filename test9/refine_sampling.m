@@ -187,25 +187,25 @@ Print[""];
                   SDPB only enforces positivity AT the sample points;
                   these outer regions are invisible to it otherwise.
    ================================================================ *)
-maVal = SetPrecision[0.010, 50];
+maVal = SetPrecision[0.000, 50];
 
 Print["mA = ", maVal]
 
 (* dispersion representation of Wilson coefficients *)
 (* All functions now precompute sp and mA numerically with N[...,50] *)
 
-(* forward limit *)
+(* forward limit: use our own convention *)
 
 g20[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   sp = N[1/(1-x), 50];
   mA = N[maVal, 50];
-  N[(-2*Sqrt[sp/(-4*mA^2 + sp)])/(2*mA^2 - sp)^3, 50]
+  N[-(2*Sqrt[sp/(-4*mA^2 + sp)])/(2*mA^2 - sp)^3, 50]
 ];
 
 g31[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   sp = N[1/(1-x), 50];
   mA = N[maVal, 50];
-  N[(Sqrt[sp/(-4*mA^2 + sp)]*(-3 - (2*J*(1 + J)*(2*mA^2 - sp))/(-4*mA^2 + sp)))/(-2*mA^2 + sp)^4, 50]
+  N[-(Sqrt[sp/(-4*mA^2 + sp)]*(-3 - (2*J*(1 + J)*(2*mA^2 - sp))/(-4*mA^2 + sp)))/(-2*mA^2 + sp)^4, 50]
 ];
 
 n4[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
@@ -267,10 +267,13 @@ fList = {g20, g31, n4};
 
 extraTriplet = {0&, 0&, LargeJ};
 
-(* y*g2+g3 >= 0, and max -y such that g3/g2 >= -y *)
 (* optimal lower bound *)
 norm = {0, 1, 0};
 obj = {-1, 0, 0};
+
+(* optimal upper bound *)
+(* norm = {0, -1, 0};
+obj = {-1, 0, 0}; *)
 
 xLeft  = 0;   (* physical domain left endpoint  — check includes [xLeft,  x_min] *)
 xRight = 1;   (* physical domain right endpoint — check includes [x_max, xRight] *)
