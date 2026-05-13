@@ -15,7 +15,7 @@ test2SDP[jsonFile_, prec_:200] := Module[
       PositiveMatrixWithPrefactor[<|
         "prefactor"   -> DampedRational[1, {}, 1/E, x],
         "polynomials" -> {{
-          {( 1 - x )^3, ( 1 - x )^4*( 3 - 2*( J + 1 )*J ), -1/36*(J*(1 + J)*(150 + J*(1 + J)*(-43 + 2*J*(1 + J))))*(1-x)^6}
+          {( 1 + x )^2, ( 1 + x )*( 3 - 2*( J + 1 )*J ), 2*J*(J+1)*( J*(J+1)-8 )}
         }}
       |>],
       {J, Jlist}
@@ -23,7 +23,7 @@ test2SDP[jsonFile_, prec_:200] := Module[
     
     (* Find upper bound of g3 *)
     norm = {0, -1, 0};
-    obj  = {1, 0, 0};
+    obj  = {-1, 0, 0};
     
     WritePmpJson[
       jsonFile,

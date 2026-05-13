@@ -53,7 +53,7 @@ WritePmpJsonNumerical[
 (* problem-specific *)
 (* let the mass be 4mA^2 < M^2 = 1 where M  = 1 to infinity *)
 
-maVal = SetPrecision[0.001, 50];
+maVal = SetPrecision[0.000, 50];
 
 Print["mA = ", maVal]
 
@@ -65,7 +65,7 @@ Print["mA = ", maVal]
 g20[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   sp = N[1/(1-x), 50];
   mA = N[maVal, 50];
-  N[(-2*Sqrt[sp/(-4*mA^2 + sp)])/(2*mA^2 - sp)^3, 50]
+  N[(2*Sqrt[sp/(-4*mA^2 + sp)])/(2*mA^2 - sp)^3, 50]
 ];
 
 g31[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
@@ -133,10 +133,14 @@ fList = {g20, g31, n4};
 
 extraTriplet = {0&, 0&, LargeJ};
 
-(* y*g2+g3 >= 0, and max -y such that g3/g2 >= -y *)
+(* g2<= 0, y*g2+g3 >= 0, and max y such that -g3/g2 >= y *)
 (* optimal lower bound *)
+
+(* optimal upper bound *)
 norm = {0, 1, 0};
-obj = {-1, 0, 0};
+obj = {1, 0, 0};
+
+
 
 testNumericalSDP[spFile_String, jsonFile_String, prec_:200] := Module[
   {rawLines, spLines, samplePoints, sampleScalings, polsRegular},
