@@ -187,7 +187,7 @@ Print[""];
                   SDPB only enforces positivity AT the sample points;
                   these outer regions are invisible to it otherwise.
    ================================================================ *)
-maVal = SetPrecision[0.100, 50];
+maVal = SetPrecision[0.150, 50];
 
 Print["mA = ", maVal]
 
