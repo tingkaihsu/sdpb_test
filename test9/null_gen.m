@@ -1,3 +1,5 @@
+(* ::Package:: *)
+
 (* null constraint generator for AAAA scattering *)
 (* ---------- coefficient helper ---------- *)
 
@@ -10,7 +12,7 @@ validTriples[Nmax_Integer] :=
 
 (* Commented-out single-term prototype kept for reference *)
 
-(* AAAA scattering *)
+(* AAAA scattering change the ansatz to be s-u symmetric *)
 Mfwdlow[s_, t_, mA_, Nmax_Integer] :=
     gAAB^2 * (1/s + 1/t + 1/u) +
     gAAA^2 * (1/(s-mA^2) + 1/(t-mA^2) + 1/(u-mA^2)) +
@@ -18,7 +20,7 @@ Mfwdlow[s_, t_, mA_, Nmax_Integer] :=
         Function[{ab},
             del[ab[[1]], ab[[2]]]
             * (s-2mA^2)^ab[[1]]
-            * (t)^ab[[2]]
+            * (u-2mA^2)^ab[[2]]
         ] /@ validTriples[Nmax]
     ] /. {u -> 4mA^2 - s - t};
 
@@ -45,11 +47,11 @@ directPiece[k_Integer, q_Integer, J_, t_, sp_, mA_] :=
 crossPiece[k_Integer, q_Integer, J_, t_, sp_, mA_] :=
   kernelCross[k, q, t, sp, mA] * Sqrt[sp/(sp-4mA^2)] * LegendreP[J, 1 + 2 t/(sp-4mA^2)];
 
-directRes[k_Integer, q_Integer] := Assuming[J ∈ Integers && J >= 0,
+directRes[k_Integer, q_Integer] := Assuming[J \[Element] Integers && J >= 0,
   FullSimplify @ SeriesCoefficient[directPiece[k, q, J, t, sp, mA], {t, 0, -1}]
 ];
 
-crossRes[k_Integer, q_Integer] := Assuming[J ∈ Integers && J >= 0,
+crossRes[k_Integer, q_Integer] := Assuming[J \[Element] Integers && J >= 0,
   FullSimplify @ SeriesCoefficient[crossPiece[k, q, J, t, sp, mA], {t, 0, -1}]
 ];
 
@@ -60,4 +62,13 @@ combined[k_Integer, q_Integer] := FullSimplify[directRes[k, q] - crossRes[k, q]]
 Print["Combined Piece: ", combined[kn, qn]];
 (* large J limit *)
 
-Print["Large J limit: ", Limit[combined[kn, qn]/J^6, {J -> Infinity}]];
+Print["Large J limit: ", Limit[combined[kn, qn]/J^6, {J -> Infinity}]//FullSimplify];
+
+kn = 5;
+qn = 3;
+combined[k_Integer, q_Integer] := FullSimplify[directRes[k, q] - crossRes[k, q]];
+
+Print["Combined Piece: ", combined[kn, qn]];
+(* large J limit *)
+
+Print["Large J limit: ", Limit[combined[kn, qn]/J^6, {J -> Infinity}]//FullSimplify];
