@@ -149,7 +149,7 @@ Print[""];
    4. PROBLEM-SPECIFIC DEFINITIONS  (must match test9.m / refine_sampling.m)
    ---------------------------------------------------------------- *)
 
-maVal = SetPrecision[0.350, 50];
+maVal = SetPrecision[0.400, 50];
 
 Print["mA = ", maVal]
 
