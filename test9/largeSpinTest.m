@@ -149,7 +149,7 @@ Print[""];
    4. PROBLEM-SPECIFIC DEFINITIONS  (must match test9.m / refine_sampling.m)
    ---------------------------------------------------------------- *)
 
-maVal = SetPrecision[0.400, 50];
+maVal = SetPrecision[0.350, 50];
 
 Print["mA = ", maVal]
 
@@ -230,12 +230,12 @@ fList = {g20, g31, n4};
 extraTriplet = {0&, 0&, LargeJ};
 
 (* optimal lower bound *)
-norm = {0, 1, 0};
-obj = {-1, 0, 0};
+(* norm = {0, 1, 0};
+obj = {-1, 0, 0}; *)
 
 (* optimal upper bound *)
-(* norm = {0, -1, 0};
-obj = {-1, 0, 0}; *)
+norm = {0, -1, 0};
+obj = {-1, 0, 0};
 
 xLeft  = 0;   (* physical domain left endpoint  — check includes [xLeft,  x_min] *)
 xRight = 1;   (* physical domain right endpoint — check includes [x_max, xRight] *)
