@@ -53,7 +53,7 @@ WritePmpJsonNumerical[
 (* problem-specific *)
 (* let the mass be 4mA^2 < M^2 = 1 where M  = 1 to infinity *)
 
-maVal = SetPrecision[0.150, 50];
+maVal = SetPrecision[0.400, 50];
 
 Print["mA = ", maVal]
 
