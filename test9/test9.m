@@ -53,7 +53,7 @@ WritePmpJsonNumerical[
 (* problem-specific *)
 (* let the mass be 4mA^2 < M^2 = 1 where M  = 1 to infinity *)
 
-maVal = SetPrecision[0.400, 50];
+maVal = SetPrecision[0.350, 50];
 
 Print["mA = ", maVal]
 
@@ -134,12 +134,12 @@ fList = {g20, g31, n4};
 extraTriplet = {0&, 0&, LargeJ};
 
 (* optimal lower bound *)
-(* norm = {0, 1, 0};
-obj = {-1, 0, 0}; *)
+norm = {0, 1, 0};
+obj = {-1, 0, 0};
 
 (* optimal upper bound *)
-norm = {0, -1, 0};
-obj = {-1, 0, 0};
+(* norm = {0, -1, 0};
+obj = {-1, 0, 0}; *)
 
 
 
