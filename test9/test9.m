@@ -134,12 +134,12 @@ fList = {g20, g31, n4};
 extraTriplet = {0&, 0&, LargeJ};
 
 (* optimal lower bound *)
-norm = {0, 1, 0};
-obj = {-1, 0, 0};
+(* norm = {0, 1, 0};
+obj = {-1, 0, 0}; *)
 
 (* optimal upper bound *)
-(* norm = {0, -1, 0};
-obj = {-1, 0, 0}; *)
+norm = {0, -1, 0};
+obj = {-1, 0, 0};
 
 
 
