@@ -116,3 +116,4 @@ Print["(fourth-subtracted) test ansatz = ", Series[Limit[-Residue[KerMtest[sp, s
 
 
 
+
