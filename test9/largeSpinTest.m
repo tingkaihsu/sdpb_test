@@ -152,7 +152,7 @@ Print[""];
 (* problem-specific *)
 (* let the mass be 4mA^2 < M^2 = 1 where M  = 1 to infinity *)
 
-maVal = SetPrecision[0.150, 200];
+maVal = SetPrecision[0.150, 600];
 
 Print["mA = ", maVal]
 
@@ -162,33 +162,33 @@ Print["mA = ", maVal]
 (* forward limit: use our own convention *)
 
 g20[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 200];
-  mA = N[maVal, 200];
-  N[-(2*Sqrt[sp/(-4*mA^2 + sp)])/(2*mA^2 - sp)^3, 200]
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  N[-(2*Sqrt[sp/(-4*mA^2 + sp)])/(2*mA^2 - sp)^3, 600]
 ];
 
 g31[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 200];
-  mA = N[maVal, 200];
-  N[-(Sqrt[sp/(-4*mA^2 + sp)]*(-3 - (2*J*(1 + J)*(2*mA^2 - sp))/(-4*mA^2 + sp)))/(-2*mA^2 + sp)^4, 200]
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  N[-(Sqrt[sp/(-4*mA^2 + sp)]*(-3 - (2*J*(1 + J)*(2*mA^2 - sp))/(-4*mA^2 + sp)))/(-2*mA^2 + sp)^4, 600]
 ];
 
 n4[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 200];
-  mA = N[maVal, 200];
-  N[(81*Sqrt[sp/(-4*mA^2 + sp)]*(8*mA^4*(14*mA^2 - 15*sp)*(-8*mA^2 + 3*sp)^(3/2)*Hypergeometric2F1[-J, 1 + J, 1, (4*mA^2)/(12*mA^2 - 3*sp)] + (8*mA^4 - 18*mA^2*sp + 9*sp^2)*((-2*I)*mA*(10*mA^2 - 9*sp)*(8*mA^2 - 3*sp)*LegendreP[J, 1, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))] + Sqrt[-8*mA^2 + 3*sp]*(-8*mA^4 + 18*mA^2*sp - 9*sp^2)*LegendreP[J, 2, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))])))/(4*mA^2*(-2*mA^2 + sp)*(-8*mA^2 + 3*sp)^(3/2)*(8*mA^4 - 18*mA^2*sp + 9*sp^2)^3), 200]
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  N[(81*Sqrt[sp/(-4*mA^2 + sp)]*(8*mA^4*(14*mA^2 - 15*sp)*(-8*mA^2 + 3*sp)^(3/2)*Hypergeometric2F1[-J, 1 + J, 1, (4*mA^2)/(12*mA^2 - 3*sp)] + (8*mA^4 - 18*mA^2*sp + 9*sp^2)*((-2*I)*mA*(10*mA^2 - 9*sp)*(8*mA^2 - 3*sp)*LegendreP[J, 1, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))] + Sqrt[-8*mA^2 + 3*sp]*(-8*mA^4 + 18*mA^2*sp - 9*sp^2)*LegendreP[J, 2, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))])))/(4*mA^2*(-2*mA^2 + sp)*(-8*mA^2 + 3*sp)^(3/2)*(8*mA^4 - 18*mA^2*sp + 9*sp^2)^3), 600]
 ];
 
 X52[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 200];
-  mA = N[maVal, 200];
-  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 200]
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
 ];
 
 X53[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 200];
-  mA = N[maVal, 200];
-  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*((-4 + J)*(-2 + J)*(3 + J)*(5 + J) + ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 200]
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*((-4 + J)*(-2 + J)*(3 + J)*(5 + J) + ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
 ];
 
 (* X62[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
@@ -223,9 +223,9 @@ X102[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
 
 (* Large J limit *)
 LargeJ[x_?NumericQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 200];
-  mA = N[maVal, 200];
-  N[(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(18*sp^3*(-4*mA^2 + sp)^6), 200]
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  N[(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(18*sp^3*(-4*mA^2 + sp)^6), 600]
 ];
 
 Jmax = 60;
@@ -247,8 +247,8 @@ obj = {-1, 0, 0, 0, 0}; *)
 norm = {0, -1, 0, 0, 0};
 obj = {-1, 0, 0, 0, 0};
 
-xLeft  = 0;   (* physical domain left endpoint  — check includes [xLeft,  x_min] *)
-xRight = 1;   (* physical domain right endpoint — check includes [x_max, xRight] *)
+xLeft  = SetPrecision[0, 600];   (* physical domain left endpoint  — check includes [xLeft,  x_min] *)
+xRight = SetPrecision[1, 600];   (* physical domain right endpoint — check includes [x_max, xRight] *)
 
 (* --- Dimensional consistency check ---
    y.txt must have exactly as many lines as there are functions in
@@ -293,12 +293,12 @@ F[x_?NumericQ, J_?IntegerQ] := Sum[yVec[[k]] * fList[[k]][x, J], {k, Length[yVec
 (* Safety: clamp midpoints near known singularity at x -> 1 (sp = 1/(1-x))
    and provide a robust numeric evaluator that returns $Failed on
    non-finite or exceptional results. *)
-singularTol = 10^-12; (* distance from x=1 to avoid sp singularity *)
+singularTol = SetPrecision[10^-12, 600]; (* distance from x=1 to avoid sp singularity *)
 
 safeF[x_?NumericQ, J_?IntegerQ] := Module[{x0 = x, val},
   If[Abs[1 - x0] < singularTol, x0 = 1 - singularTol];
   If[Abs[x0] < singularTol, x0 = singularTol];
-  val = Quiet[Check[N[F[x0, J], 200], $Failed]];
+  val = Quiet[Check[N[F[x0, J], 600], $Failed]];
   If[val === $Failed || !NumberQ[val] ||
      MemberQ[{Infinity, -Infinity, ComplexInfinity, Indeterminate}, Head[val]],
     $Failed,
