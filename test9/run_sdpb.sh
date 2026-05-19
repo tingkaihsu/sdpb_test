@@ -20,6 +20,8 @@ docker run --shm-size=16384m \
   pmp2sdp 2048 -i "${N_PMP_JSON}" -o "${OUT_PREFIX}"
 
 # 3) Run SDPB
+# NOTE: --procsPerNode was removed — it is obsolete in SDPB 3.x and the MPI
+# process layout is determined automatically from the MPI environment.
 docker run --shm-size=16384m \
   -v "${WORKDIR}:${DATA_DIR}" \
   "${IMAGE}" \
@@ -31,7 +33,6 @@ docker run --shm-size=16384m \
     --primalErrorThreshold=1e-30 \
     --dualErrorThreshold=1e-30 \
     --precision=2048 \
-    --procsPerNode=32 \
     --maxIterations=50000 \
     --noFinalCheckpoint \
     -s "${OUT_PREFIX}"
