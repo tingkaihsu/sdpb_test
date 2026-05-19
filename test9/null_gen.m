@@ -29,7 +29,17 @@ Mfwdlow[s_, t_, mA_, Nmax_Integer] :=
 
 DblCtrTest[mA_, k_Integer, q_Integer, Nmax_Integer] := Residue[ Residue[ 1/(s*t) ( Mfwdlow[s, t, mA, Nmax]/(s^(k-q)*t^q) - Mfwdlow[t, s, mA, Nmax]/(t^(k-q)*s^q) ), {s, Infinity}], {t, 0}];
 
+Print["M(s,t)/((s)^(k-q+1)*(t)^(q+1)) = ", Residue[Residue[1/(s*t)*Mfwdlow[s,t,mA,10]/(s^(5-2)*t^(2)),{s,Infinity}],{t,0}]//FullSimplify]
+Print["M(t,s)/((t)^(k-q+1)*(s)^(q+1)) = ", Residue[Residue[1/(s*t)*Mfwdlow[t,s,mA,10]/(t^(5-2)*s^(2)),{s,Infinity}],{t,0}]//FullSimplify]
+
+
 Print["Double contour test: ", DblCtrTest[mA, 5, 2, 10] ];
+
+Print["M(s,t)/((s)^(k-q+1)*(t)^(q+1)) = ", Residue[Residue[1/(s*t)*Mfwdlow[s,t,mA,10]/(s^(5-3)*t^(3)),{s,Infinity}],{t,0}]//FullSimplify]
+Print["M(t,s)/((t)^(k-q+1)*(s)^(q+1)) = ", Residue[Residue[1/(s*t)*Mfwdlow[t,s,mA,10]/(t^(5-3)*s^(3)),{s,Infinity}],{t,0}]//FullSimplify]
+
+
+Print["Double contour test: ", DblCtrTest[mA, 5, 3, 10] ];
 
 (* Null constraints *)
 
@@ -100,7 +110,7 @@ Block[{$MaxExtraPrecision=2 wp},Chop[N[expr,wp] ] ] ];
 Print["n4 = ",KerstuCoeffStable[sp,mA,2,J,2]-2*KerstuCoeffStable[sp,mA,4,J,0]//FullSimplify];
 
 (* Large J limit *)
-Print["Large J limit of n4 = ", Limit[(KerstuCoeffStable[sp,mA,2,J,2]-2*KerstuCoeffStable[sp,mA,4,J,0])/J^4, J -> Infinity]//FullSimplify];
+(* Print["Large J limit of n4 = ", Limit[(KerstuCoeffStable[sp,mA,2,J,2]-2*KerstuCoeffStable[sp,mA,4,J,0])/J^4, J -> Infinity]//FullSimplify]; *)
 
 (* take the massless limit *)
 Limit[KerstuCoeffStable[sp,mA,2,J,2],mA->0,Direction->"FromAbove",Assumptions->{J\[Element]Integers,sp>0,sp\[Element]Reals}]
@@ -108,3 +118,6 @@ Limit[KerstuCoeffStable[sp,mA,4,J,0],mA->0]
 
 (* KerstuCoeffStable[sp,mA,2,J,2]-2*KerstuCoeffStable[sp,mA,4,J,0] *)
 (8-8 J-7 J^2+2 J^3+J^4)/(2 sp^5)-2*2/sp^5//FullSimplify
+
+
+
