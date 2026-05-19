@@ -152,7 +152,7 @@ Print[""];
 (* problem-specific *)
 (* let the mass be 4mA^2 < M^2 = 1 where M  = 1 to infinity *)
 
-maVal = SetPrecision[0.001, 50];
+maVal = SetPrecision[0.350, 50];
 
 Print["mA = ", maVal]
 
@@ -508,11 +508,11 @@ Do[
   xi = repXvals[[r]];
   Print[""];
   Print["  x = ", xi, "  (sp = ", N[1/(1-xi), 6], ")"];
-  Print["    J       |  F(x,J)          |  F/J^4"];
+  Print["    J       |  F(x,J)          |  F/J^6"];
   Print["    --------|------------------|----------------"];
   Do[
     val = safeF[xi, Jp];
-    ratio = If[val =!= $Failed && Jp > 0, val / Jp^4, "N/A"];
+    ratio = If[val =!= $Failed && Jp > 0, val / Jp^6, "N/A"];
     Print["    ", Jp, "     |  ", If[val =!= $Failed, SetPrecision[ToExpression /@ (fixSciNotation /@ val), 200], "$Failed"],
           "    |  ", If[NumberQ[ratio], SetPrecision[ToExpression /@ (fixSciNotation /@ ratio), 200], ratio]],
     {Jp, JprobeList}
