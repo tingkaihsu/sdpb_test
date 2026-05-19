@@ -29,7 +29,7 @@ Mfwdlow[s_, t_, mA_, Nmax_Integer] :=
 
 DblCtrTest[mA_, k_Integer, q_Integer, Nmax_Integer] := Residue[ Residue[ 1/(s*t) ( Mfwdlow[s, t, mA, Nmax]/(s^(k-q)*t^q) - Mfwdlow[t, s, mA, Nmax]/(t^(k-q)*s^q) ), {s, Infinity}], {t, 0}];
 
-Print["Double contour test: ", DblCtrTest[mA, 5, 2, 10]];
+Print["Double contour test: ", DblCtrTest[mA, 5, 2, 10] ];
 
 (* Null constraints *)
 
@@ -57,18 +57,18 @@ crossRes[k_Integer, q_Integer] := Assuming[J \[Element] Integers && J >= 0,
 
 kn = 5;
 qn = 2;
-combined[k_Integer, q_Integer] := FullSimplify[directRes[k, q] - crossRes[k, q]];
+combined[k_Integer, q_Integer] := FullSimplify[directRes[k, q] - crossRes[k, q] ];
 
-Print["Combined Piece: ", combined[kn, qn]];
+Print["Combined Piece: ", combined[kn, qn] ];
 (* large J limit *)
 
 Print["Large J limit: ", Limit[combined[kn, qn]/J^6, {J -> Infinity}]//FullSimplify];
 
 kn = 5;
 qn = 3;
-combined[k_Integer, q_Integer] := FullSimplify[directRes[k, q] - crossRes[k, q]];
+combined[k_Integer, q_Integer] := FullSimplify[directRes[k, q] - crossRes[k, q] ];
 
-Print["Combined Piece: ", combined[kn, qn]];
+Print["Combined Piece: ", combined[kn, qn] ];
 (* large J limit *)
 
 Print["Large J limit: ", Limit[combined[kn, qn]/J^6, {J -> Infinity}]//FullSimplify];
@@ -91,14 +91,16 @@ pref*(1/a+1/c)/(b*(b+\[Delta]))^(k/2)];
 (*Series coefficient about t=4/3 mA^2,using the shifted variable \[Delta]*)
 KerstuCoeffStable[sp_,mA_,k_Integer?((#==2||#==4)&),J_,n_Integer?NonNegative]:=Module[{\[Delta],expr,assm},expr=KerstuMsumStable[sp,t0[mA]+\[Delta],mA,k,J];
 assm=sp>4 mA^2&&0<=mA<=2/5&&Element[J,Integers]&&J>=0;
-Assuming[assm,FullSimplify[SeriesCoefficient[expr,{\[Delta],0,n}]]]];
+Assuming[assm,FullSimplify[SeriesCoefficient[expr,{\[Delta],0,n}] ] ] ];
 
 (*High-precision numerical evaluation*)
 KerstuMsumStableN[sp_?NumericQ,t_?NumericQ,mA_?NumericQ,k_Integer?((#==2||#==4)&),J_Integer?NonNegative,wp_:80]:=Module[{expr},expr=KerstuMsumStable[SetPrecision[sp,wp],SetPrecision[t,wp],SetPrecision[mA,wp],k,J];
-Block[{$MaxExtraPrecision=2 wp},Chop[N[expr,wp]]]];
+Block[{$MaxExtraPrecision=2 wp},Chop[N[expr,wp] ] ] ];
 
-KerstuCoeffStable[sp,mA,2,J,2]
-KerstuCoeffStable[sp,mA,4,J,0]
+Print["n4 = ",KerstuCoeffStable[sp,mA,2,J,2]-2*KerstuCoeffStable[sp,mA,4,J,0]//FullSimplify];
+
+(* Large J limit *)
+Print["Large J limit of n4 = ", Limit[(KerstuCoeffStable[sp,mA,2,J,2]-2*KerstuCoeffStable[sp,mA,4,J,0])/J^4, J -> Infinity]//FullSimplify];
 
 (* take the massless limit *)
 Limit[KerstuCoeffStable[sp,mA,2,J,2],mA->0,Direction->"FromAbove",Assumptions->{J\[Element]Integers,sp>0,sp\[Element]Reals}]
