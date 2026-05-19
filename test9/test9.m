@@ -84,7 +84,7 @@ WritePmpJsonNumerical[
 (* let the mass be 4mA^2 < M^2 = 1 where M  = 1 to infinity *)
 
 
-maVal = SetPrecision[0.150, 600];
+maVal = SetPrecision[0.200, 600];
 
 Print["mA = ", maVal]
 
@@ -160,8 +160,8 @@ LargeJ[x_?NumericQ] := Module[{sp, mA},
 
 Jmax = 60;
 (* Jlist = Range[0, Jmax, 2]; *)
-JlistLarge = {10000};
-Jlist = Join[Range[0, 60, 2], JlistLarge];
+JlistLarge = {3000};
+Jlist = Join[Range[0, Jmax, 2], JlistLarge];
 
 (* NOTE: n4 is replaced by n4Safe (returns 0 for J > ~3654, exact for J <= 3654).
    All other functions are unchanged; they grow polynomially in J and are
