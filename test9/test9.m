@@ -152,7 +152,7 @@ obj = {-1, 0, 0, 0, 0};
 
 
 
-testNumericalSDP[spFile_String, jsonFile_String, prec_:200] := Module[
+testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
   {rawLines, spLines, samplePoints, sampleScalings, polsRegular},
 
   (* --- Read and parse sampling_points.txt --- *)
@@ -228,7 +228,7 @@ Module[{myArgs, spFile, jsonFile, prec},
   If[Length[myArgs] >= 1,
     spFile   = myArgs[[1]];
     jsonFile = If[Length[myArgs] >= 2, myArgs[[2]], "numeric_pmp.json"];
-    prec     = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 200];
+    prec     = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 600];
 
     Print["=== text9.m ==="];
     Print["  sample_points = ", spFile];
