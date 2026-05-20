@@ -1,33 +1,6 @@
+(* ::Package:: *)
+
 (* pmp generator for AAAA scattering *)
-(* ============================================================
-   FIX (2026-05):  n4[x, J] contains three special-function terms
-   (Hypergeometric2F1 and two associated Legendre functions) that are each
-   of order A(x)^J ~ 10^{J * log10(A)}, where A(x) > 1 for all physical x.
-   These terms must cancel to produce the true value ~0 (large-J limit).
-   The required precision is  prec_needed ≈ J * max_x log10[A(x)] + margin
-                                          ≈ J * 0.156 + 30.
-   At J = 10000, this is ~1590 decimal digits.  Using only prec = 600 leaves
-   ~960 digits of cancellation unresolved, producing a garbage result ~10^960
-   instead of ~0.  When written to the JSON and loaded by SDPB, this creates
-   constraint-matrix entries B_{ij} ~ 10^960, making the affine residual
-   p = b - B^T x ~ 10^980 from the very first Newton step → p-err = +inf.
-
-   FIX:  replace n4 in fList with n4Safe, which returns
-   SetPrecision[0, prec] for any J > J_SAFE_THRESHOLD.
-   Justification: extraTriplet already encodes the large-J limit of n4 as 0,
-   so using 0 at J = 10000 is the correct large-J approximation and is fully
-   consistent with the existing SDP formulation.
-
-   J_SAFE_THRESHOLD is chosen so that the cancellation residual is below one
-   unit in the last place of the requested precision:
-     J_SAFE_THRESHOLD = floor((prec - 30) / 0.156) ≈ 3654  for prec = 600.
-   Since only J = 10000 in Jlist exceeds this threshold the change is
-   minimal and surgical.
-
-   ADDITIONAL FIX:  raise default prec from 600 to 650 so it exceeds
-   SDPB's 2048-bit working precision (2048 * log10(2) ≈ 616.5 decimal digits)
-   by a comfortable margin.
-   ============================================================ *)
 
 ClearAll[NumericalPositiveMatrixWithPrefactor];
 
@@ -53,7 +26,7 @@ Module[
     "reducedPrefactor" -> toJsonDampedRational[reducedPrefactor, prec],
     "samplePoints"     -> toJsonNumberArray[samplePoints,   prec],
     "sampleScalings"   -> toJsonNumberArray[sampleScalings, prec],
-    (* functionValues has structure {{{ {f1(xᵢ)}, {f2(xᵢ)} }}} — 3 structural
+    (* functionValues has structure {{{ {f1(x\:1d62)}, {f2(x\:1d62)} }}} \[LongDash] 3 structural
        wrapper levels, with depth-3 entries being the degree-0 coefficient lists.
        toJsonNestedNumberArray stringifies all numeric leaves in-place. *)
     "polynomials"      -> If[MissingQ[functionValues], Missing[],
@@ -108,15 +81,15 @@ g31[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
 (* --- n4: safe precision guard -------------------------------------------
    n4 contains LegendreP[J, 1, z] and LegendreP[J, 2, z] with z > 1, and
    Hypergeometric2F1[-J, 1+J, 1, z1] which equals P_J(1.066) at typical
-   sample points.  All three grow as A^J where A ~ 1.436 (at x ≈ 0),
+   sample points.  All three grow as A^J where A ~ 1.436 (at x \[TildeTilde] 0),
    requiring ~1560 decimal digits at J = 10000 just to represent individual
    terms before cancellation.  With prec = 600 the computed result is pure
    numerical noise of magnitude ~10^960.
 
    Physical justification for returning 0 at large J:
      extraTriplet = {0&, 0&, 0&, 0&, LargeJ}
-   explicitly encodes n4 → 0 as J → ∞ (index 3 in fList = n4).
-   The safe threshold is  J_SAFE = floor((prec - 30) / 0.156) ≈ 3654.
+   explicitly encodes n4 \[RightArrow] 0 as J \[RightArrow] \[Infinity] (index 3 in fList = n4).
+   The safe threshold is  J_SAFE = floor((prec - 30) / 0.156) \[TildeTilde] 3654.
    Since the only super-threshold spin in Jlist is J = 10000, this guard
    affects exactly the J = 10000 blocks.
    --------------------------------------------------------------------- *)
@@ -127,9 +100,9 @@ n4MaxLog10A = 0.156;
 
 n4Safe[x_?NumericQ, J_?IntegerQ] :=
   If[J > Floor[(600 - 30) / n4MaxLog10A],   (* J > ~3654 *)
-    (* Large-J limit: n4 → 0 (consistent with extraTriplet's 0& for n4) *)
+    (* Large-J limit: n4 \[RightArrow] 0 (consistent with extraTriplet's 0& for n4) *)
     SetPrecision[0, 600],
-    (* Normal evaluation for J ≤ 3654 *)
+    (* Normal evaluation for J \[LessEqual] 3654 *)
     n4[x, J]
   ];
 
@@ -199,7 +172,7 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:650] := Module[
   Print["Read ", Length[samplePoints], " x sample points from ", spFile];
   Print["  x-points    : ", samplePoints];
   Print["  J-values    : ", Jlist, "  (", Length[Jlist], " spins, exact)"];
-  Print["  extraTriplet: ", extraTriplet, "  (J\[Rule]\[Infinity] limit)"];
+  Print["  extraTriplet: ", extraTriplet, "  (J -> \[Infinity] limit)"];
   Print["  n4MaxLog10A : ", n4MaxLog10A, " => n4Safe threshold J > ", Floor[(prec-30)/n4MaxLog10A]];
 
   (* Scalings = prefactor DampedRational[1,{},1/E,x] evaluated at xi = e^{-xi} *)
@@ -207,9 +180,9 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:650] := Module[
 
   (* --- Regular blocks: one per (xi, Jj) pair.
      Polynomials nesting:  {{ Table[{fk(xi,Jj)}, {k,3}] }}
-       {{ ... }}  ← JSON levels 1 and 2  (column list / row, each size 1)
-       Table[...] ← JSON level 3: polynomial vector, one entry per fList[[k]]
-       {fk(xi,Jj)} ← JSON level 4: degree-0 coefficient list (1 element) --- *)
+       {{ ... }}  \[LeftArrow] JSON levels 1 and 2  (column list / row, each size 1)
+       Table[...] \[LeftArrow] JSON level 3: polynomial vector, one entry per fList[[k]]
+       {fk(xi,Jj)} \[LeftArrow] JSON level 4: degree-0 coefficient list (1 element) --- *)
   polsRegular = Table[
     NumericalPositiveMatrixWithPrefactor[<|
       "prefactor"      -> DampedRational[1, {}, 1/E, x],
@@ -244,7 +217,7 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:650] := Module[
   Print["  Extra blocks   : ", Length[polsExtra]];
   Print["  Total blocks   : ", Length[samplePoints] * Length[Jlist] + Length[polsExtra]];
 
-  (* Flatten polsRegular (2D Table → flat list) *)
+  (* Flatten polsRegular (2D Table \[RightArrow] flat list) *)
   WritePmpJsonNumerical[
     jsonFile,
     SDP[obj, norm, Join[Flatten[polsRegular], polsExtra]],
@@ -260,8 +233,8 @@ Module[{myArgs, spFile, jsonFile, prec},
   If[Length[myArgs] >= 1,
     spFile   = myArgs[[1]];
     jsonFile = If[Length[myArgs] >= 2, myArgs[[2]], "numeric_pmp.json"];
-    (* Default prec raised from 600 → 650 to exceed SDPB's 2048-bit working
-       precision (2048 * log10(2) ≈ 616.5 decimal digits) by a safe margin. *)
+    (* Default prec raised from 600 \[RightArrow] 650 to exceed SDPB's 2048-bit working
+       precision (2048 * log10(2) \[TildeTilde] 616.5 decimal digits) by a safe margin. *)
     prec     = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 650];
 
     Print["=== text9.m ==="];
@@ -272,7 +245,7 @@ Module[{myArgs, spFile, jsonFile, prec},
     testNumericalSDP[spFile, jsonFile, prec];
     Quit[0],
 
-    (* Loaded with << as a library — do nothing. *)
+    (* Loaded with << as a library \[LongDash] do nothing. *)
     Null
   ]
 ];
