@@ -144,4 +144,37 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:650] := Module[
     |>],
     {i, Length[samplePoints]}
   ];
+
+  (* Flatten polsRegular (2D Table \[RightArrow] flat list) *)
+  WritePmpJsonNumerical[
+    jsonFile,
+    SDP[obj, norm, Join[Flatten[polsRegular], polsExtra]],
+    prec
+  ];
+  Print["Wrote PMP JSON to ", jsonFile];
+];
+
+
+Module[{myArgs, spFile, jsonFile, prec},
+
+  myArgs = If[Length[$ScriptCommandLine] >= 2, Rest[$ScriptCommandLine], {}];
+
+  If[Length[myArgs] >= 1,
+    spFile   = myArgs[[1]];
+    jsonFile = If[Length[myArgs] >= 2, myArgs[[2]], "numeric_pmp.json"];
+    (* Default prec raised from 600 \[RightArrow] 650 to exceed SDPB's 2048-bit working
+       precision (2048 * log10(2) \[TildeTilde] 616.5 decimal digits) by a safe margin. *)
+    prec     = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 650];
+
+    Print["=== text9.m ==="];
+    Print["  sample_points = ", spFile];
+    Print["  output_json   = ", jsonFile];
+    Print["  precision     = ", prec];
+
+    testNumericalSDP[spFile, jsonFile, prec];
+    Quit[0],
+
+    (* Loaded with << as a library \[LongDash] do nothing. *)
+    Null
+  ]
 ];
