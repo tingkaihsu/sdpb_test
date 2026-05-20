@@ -112,47 +112,62 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:650] := Module[
   (* Scalings = prefactor DampedRational[1,{},1/E,x] evaluated at xi = e^{-xi} *)
   sampleScalings = SetPrecision[Exp[-#] & /@ samplePoints, prec];
 
-  (* --- Regular blocks: one per sample point xi.
-     Four-level nesting for the 2x2 matrix:
-       polynomials[[s]][[r]] = polynomial vector for matrix entry (r,s)
-       Level 1: 2 columns  (s = 1, 2)
-       Level 2: 2 rows per column  (r = 1, 2)
-       Level 3: polynomial vector {Q^0_{rs}(xi), Q^1_{rs}(xi)}  (N+1 = 2 entries)
-       Level 4: degree-0 coefficient list: {scalar}  (1 element each)
-     
-     fkList[[n+1]] = Function evaluating M^n(x)_(r,s) at a numeric x:
-       f1List -> entry (1,1),  f2List -> entry (2,1)
-       f3List -> entry (1,2),  f4List -> entry (2,2)
+  (* --- One PositiveMatrixWithPrefactor block per sample point xi.
+  
+     Each block encodes the 2x2 constraint matrix at ONE sample point as a
+     degree-0 (constant) polynomial matrix.  toJsonObject in SDPB.m dispatches
+     on the head PositiveMatrixWithPrefactor — using NumericalPositiveMatrixWithPrefactor
+     (an unknown head) causes toJsonObject to return unevaluated.
+
+     polynomials nesting for a 2x2 matrix (Listing 2, SDPB manual):
+       polynomials[[s]][[r]] = { Q^0_{rs}(x), Q^1_{rs}(x) }  -- polynomial vector
+       Level 1 (outermost): 2 columns  (s = 1, 2)
+       Level 2:             2 rows per column  (r = 1, 2)
+       Level 3 (innermost): N+1 = 2 polynomial expressions, one per matrix W^n
+
+     Each Q^n_{rs}(xi) is the scalar value M^n(xi)_{rs} -- a degree-0 polynomial.
+     toJsonObject calls CoefficientList[Q, x] on each entry, so entries MUST be
+     polynomial expressions (scalars here), NOT pre-wrapped coefficient lists {scalar}.
+
+     fkList mapping (both lists have 2 entries, k=1 -> n=0, k=2 -> n=1):
+       f1List -> M^n(x)_{1,1}   f2List -> M^n(x)_{2,1}
+       f3List -> M^n(x)_{1,2}   f4List -> M^n(x)_{2,2}
    --- *)
   polsRegular = Table[
-    NumericalPositiveMatrixWithPrefactor[<|
+    PositiveMatrixWithPrefactor[<|
       "prefactor"      -> DampedRational[1, {}, 1/E, x],
       "samplePoints"   -> {samplePoints[[i]]},
       "sampleScalings" -> {sampleScalings[[i]]},
+      (* polynomials[[s]][[r]] is the polynomial vector {Q^0_{rs}(xi), Q^1_{rs}(xi)}.
+         Each entry is a SCALAR (degree-0 polynomial expression), not a List.
+         toJsonObject extracts coefficients via CoefficientList[scalar, x] = {scalar}. *)
       "polynomials" -> {
         {  (* column s=1 *)
-          (* row r=1: matrix entry (1,1), functions in f1List *)
-          Table[{SetPrecision[f1List[[k]][samplePoints[[i]]], prec]}, {k, Length[f1List]}],
-          (* row r=2: matrix entry (2,1), functions in f2List *)
-          Table[{SetPrecision[f2List[[k]][samplePoints[[i]]], prec]}, {k, Length[f2List]}]
+          (* row r=1: entry (1,1), evaluated via f1List *)
+          Table[SetPrecision[f1List[[k]][samplePoints[[i]]], prec], {k, Length[f1List]}],
+          (* row r=2: entry (2,1), evaluated via f2List *)
+          Table[SetPrecision[f2List[[k]][samplePoints[[i]]], prec], {k, Length[f2List]}]
         },
         {  (* column s=2 *)
-          (* row r=1: matrix entry (1,2), functions in f3List *)
-          Table[{SetPrecision[f3List[[k]][samplePoints[[i]]], prec]}, {k, Length[f3List]}],
-          (* row r=2: matrix entry (2,2), functions in f4List *)
-          Table[{SetPrecision[f4List[[k]][samplePoints[[i]]], prec]}, {k, Length[f4List]}]
+          (* row r=1: entry (1,2), evaluated via f3List *)
+          Table[SetPrecision[f3List[[k]][samplePoints[[i]]], prec], {k, Length[f3List]}],
+          (* row r=2: entry (2,2), evaluated via f4List *)
+          Table[SetPrecision[f4List[[k]][samplePoints[[i]]], prec], {k, Length[f4List]}]
         }
       }
     |>],
     {i, Length[samplePoints]}
   ];
 
-  (* Flatten polsRegular (1D Table -> flat list) and write JSON.
-     BUG FIX: removed undefined symbol polsExtra from Join[..., polsExtra].
-     There are no extra blocks for this single-constraint problem. *)
+  (* polsRegular is a flat 1D list (one block per sample point).
+     BUG FIX 1: removed undefined symbol polsExtra from Join[Flatten[polsRegular], polsExtra].
+     BUG FIX 2: NumericalPositiveMatrixWithPrefactor changed to PositiveMatrixWithPrefactor
+                so toJsonObject in SDPB.m can dispatch on it.
+     BUG FIX 3: all four f*Lists used (not just f1List) for the full 2x2 matrix.
+     BUG FIX 4: coefficient-list wrapping {scalar} removed; bare scalar passed instead. *)
   WritePmpJsonNumerical[
     jsonFile,
-    SDP[obj, norm, Flatten[polsRegular]],
+    SDP[obj, norm, polsRegular],
     prec
   ];
   Print["Wrote PMP JSON to ", jsonFile];
@@ -176,7 +191,7 @@ Module[{myArgs, spFile, jsonFile, prec},
     testNumericalSDP[spFile, jsonFile, prec];
     Quit[0],
 
-    (* Loaded with << as a library — do nothing. *)
+    (* Loaded with << as a library -- do nothing. *)
     Null
   ]
 ];
