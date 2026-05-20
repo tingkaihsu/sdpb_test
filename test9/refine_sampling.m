@@ -130,7 +130,7 @@ Print["mA = ", maVal];
 n4PrecMin[J_?IntegerQ, x_?NumericQ, margin_Integer:60, stdPrec_Integer:650] :=
   Module[{sp0, z2, A, logA},
     sp0  = N[1/(1 - x), 50];
-    z2   = 1 + 8*(3/20)^2 / (3*(sp0 - 4*(3/20)^2));
+    z2   = 1 + 8*(maVal)^2 / (3*(sp0 - 4*(maVal)^2));
     A    = If[z2 > 1, z2 + Sqrt[z2^2 - 1], 1];
     logA = If[A > 1, N[Log[10, A], 50], 0];
     Max[stdPrec, Ceiling[J * logA] + margin]
@@ -138,13 +138,13 @@ n4PrecMin[J_?IntegerQ, x_?NumericQ, margin_Integer:60, stdPrec_Integer:650] :=
 
 g20[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   sp = N[1/(1-x), 650];
-  mA = N[3/20, 650];
+  mA = N[maVal, 650];
   N[-(2*Sqrt[sp/(-4*mA^2 + sp)])/(2*mA^2 - sp)^3, 650]
 ];
 
 g31[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   sp = N[1/(1-x), 650];
-  mA = N[3/20, 650];
+  mA = N[maVal, 650];
   N[-(Sqrt[sp/(-4*mA^2 + sp)]*(-3 - (2*J*(1 + J)*(2*mA^2 - sp))/(-4*mA^2 + sp)))/(-2*mA^2 + sp)^4, 650]
 ];
 
@@ -154,7 +154,7 @@ n4[x_?NumericQ, J_?IntegerQ] := Module[{prec, xp, sp, mA, result},
   prec = n4PrecMin[J, x];
   xp   = SetPrecision[x, prec];    (* promote x to avoid low-precision bottleneck *)
   sp   = N[1/(1 - xp), prec];
-  mA   = N[3/20, prec];            (* exact rational, independent of global maVal *)
+  mA   = N[maVal, prec];            (* exact rational, independent of global maVal *)
   result = (81*Sqrt[sp/(-4*mA^2 + sp)]*(
       8*mA^4*(14*mA^2 - 15*sp)*(-8*mA^2 + 3*sp)^(3/2)*
         Hypergeometric2F1[-J, 1 + J, 1, (4*mA^2)/(12*mA^2 - 3*sp)] +
@@ -170,19 +170,19 @@ n4[x_?NumericQ, J_?IntegerQ] := Module[{prec, xp, sp, mA, result},
 
 X52[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   sp = N[1/(1-x), 650];
-  mA = N[3/20, 650];
+  mA = N[maVal, 650];
   N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 650]
 ];
 
 X53[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   sp = N[1/(1-x), 650];
-  mA = N[3/20, 650];
+  mA = N[maVal, 650];
   N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*((-4 + J)*(-2 + J)*(3 + J)*(5 + J) + ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 650]
 ];
 
 LargeJ[x_?NumericQ] := Module[{sp, mA},
   sp = N[1/(1-x), 650];
-  mA = N[3/20, 650];
+  mA = N[maVal, 650];
   N[(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(18*sp^3*(-4*mA^2 + sp)^6), 650]
 ];
 
