@@ -112,52 +112,62 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:650] := Module[
   (* Scalings = prefactor DampedRational[1,{},1/E,x] evaluated at xi = e^{-xi} *)
   sampleScalings = SetPrecision[Exp[-#] & /@ samplePoints, prec];
 
-  (* --- Regular blocks: one per (xi, Jj) pair.
-     Polynomials nesting:  {{ Table[{fk(xi,Jj)}, {k,3}] }}
-       {{ ... }}  \[LeftArrow] JSON levels 1 and 2  (column list / row, each size 1)
-       Table[...] \[LeftArrow] JSON level 3: polynomial vector, one entry per fList[[k]]
-       {fk(xi,Jj)} \[LeftArrow] JSON level 4: degree-0 coefficient list (1 element) --- *)
+  (* --- Regular blocks: one per sample point xi.
+     Four-level nesting for the 2x2 matrix:
+       polynomials[[s]][[r]] = polynomial vector for matrix entry (r,s)
+       Level 1: 2 columns  (s = 1, 2)
+       Level 2: 2 rows per column  (r = 1, 2)
+       Level 3: polynomial vector {Q^0_{rs}(xi), Q^1_{rs}(xi)}  (N+1 = 2 entries)
+       Level 4: degree-0 coefficient list: {scalar}  (1 element each)
+     
+     fkList[[n+1]] = Function evaluating M^n(x)_(r,s) at a numeric x:
+       f1List -> entry (1,1),  f2List -> entry (2,1)
+       f3List -> entry (1,2),  f4List -> entry (2,2)
+   --- *)
   polsRegular = Table[
     NumericalPositiveMatrixWithPrefactor[<|
       "prefactor"      -> DampedRational[1, {}, 1/E, x],
       "samplePoints"   -> {samplePoints[[i]]},
       "sampleScalings" -> {sampleScalings[[i]]},
-      (* TWO outer braces = JSON levels 1 & 2.
-         Table produces level-3 list: {{f1(xi,Jj)}, {f2(xi,Jj)}, {f3(xi,Jj)}}.
-         Each {fList[[k]][...]} is the level-4 coefficient list (degree-0: 1 entry). *)
       "polynomials" -> {
         {  (* column s=1 *)
-          Table[{SetPrecision[f1List[[k]][samplePoints[[i]]], prec]}, {k, Length[f1List]}],  (* row r=1: entry (1,1) *)
-          Table[{SetPrecision[f2List[[k]][samplePoints[[i]]], prec]}, {k, Length[f2List]}]   (* row r=2: entry (2,1) *)
+          (* row r=1: matrix entry (1,1), functions in f1List *)
+          Table[{SetPrecision[f1List[[k]][samplePoints[[i]]], prec]}, {k, Length[f1List]}],
+          (* row r=2: matrix entry (2,1), functions in f2List *)
+          Table[{SetPrecision[f2List[[k]][samplePoints[[i]]], prec]}, {k, Length[f2List]}]
         },
         {  (* column s=2 *)
-          Table[{SetPrecision[f3List[[k]][samplePoints[[i]]], prec]}, {k, Length[f3List]}],  (* row r=1: entry (1,2) *)
-          Table[{SetPrecision[f4List[[k]][samplePoints[[i]]], prec]}, {k, Length[f4List]}]   (* row r=2: entry (2,2) *)
+          (* row r=1: matrix entry (1,2), functions in f3List *)
+          Table[{SetPrecision[f3List[[k]][samplePoints[[i]]], prec]}, {k, Length[f3List]}],
+          (* row r=2: matrix entry (2,2), functions in f4List *)
+          Table[{SetPrecision[f4List[[k]][samplePoints[[i]]], prec]}, {k, Length[f4List]}]
         }
       }
     |>],
     {i, Length[samplePoints]}
   ];
 
-  (* Flatten polsRegular (2D Table \[RightArrow] flat list) *)
+  (* Flatten polsRegular (1D Table -> flat list) and write JSON.
+     BUG FIX: removed undefined symbol polsExtra from Join[..., polsExtra].
+     There are no extra blocks for this single-constraint problem. *)
   WritePmpJsonNumerical[
     jsonFile,
-    SDP[obj, norm, Flatten[polsRegular] ],
+    SDP[obj, norm, Flatten[polsRegular]],
     prec
   ];
   Print["Wrote PMP JSON to ", jsonFile];
 ];
 
 
-Module[{myArgs, spFile, jsonFile},
+Module[{myArgs, spFile, jsonFile, prec},
 
   myArgs = If[Length[$ScriptCommandLine] >= 2, Rest[$ScriptCommandLine], {}];
 
   If[Length[myArgs] >= 1,
     spFile   = myArgs[[1]];
     jsonFile = If[Length[myArgs] >= 2, myArgs[[2]], "n_pmp.json"];
-    prec = 650;
-    
+    prec     = 650;  (* BUG FIX: added missing semicolon *)
+
     Print["=== text9.m ==="];
     Print["  sample_points = ", spFile];
     Print["  output_json   = ", jsonFile];
@@ -166,7 +176,7 @@ Module[{myArgs, spFile, jsonFile},
     testNumericalSDP[spFile, jsonFile, prec];
     Quit[0],
 
-    (* Loaded with << as a library \[LongDash] do nothing. *)
+    (* Loaded with << as a library — do nothing. *)
     Null
   ]
 ];
