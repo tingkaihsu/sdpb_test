@@ -1,12 +1,25 @@
-Print["st coefficient = ", SeriesCoefficient[SeriesCoefficient[g2*(s^2+t^2+u^2)+g3*(s*t*u)/.{u -> -s-t}, {s,0,1}], {t,0,1}]//FullSimplify ]
-Print["s^2 coefficient = ", SeriesCoefficient[SeriesCoefficient[g2*(s^2+t^2+u^2)+g3*(s*t*u)/.{u -> -s-t}, {s,0,2}], {t,0,0}]//FullSimplify ]
+maVal = SetPrecision[0.150, 1700];
 
+n4[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 1700];
+  mA = N[maVal, 1700];
+  N[(81*Sqrt[sp/(-4*mA^2 + sp)]*(8*mA^4*(14*mA^2 - 15*sp)*(-8*mA^2 + 3*sp)^(3/2)*Hypergeometric2F1[-J, 1 + J, 1, (4*mA^2)/(12*mA^2 - 3*sp)] + (8*mA^4 - 18*mA^2*sp + 9*sp^2)*((-2*I)*mA*(10*mA^2 - 9*sp)*(8*mA^2 - 3*sp)*LegendreP[J, 1, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))] + Sqrt[-8*mA^2 + 3*sp]*(-8*mA^4 + 18*mA^2*sp - 9*sp^2)*LegendreP[J, 2, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))])))/(4*mA^2*(-2*mA^2 + sp)*(-8*mA^2 + 3*sp)^(3/2)*(8*mA^4 - 18*mA^2*sp + 9*sp^2)^3), 1700]
+];
 
-Print["s^3 + t^3 + u^3 = ", s^3+t^3+u^3/.{t -> -s-u}//FullSimplify]
+X52[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 1700];
+  mA = N[maVal, 1700];
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 1700]
+];
 
-Print["u^3 coeff = ", SeriesCoefficient[-3*s*u*(s + u), {u,0,3}]//FullSimplify]
+X53[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 1700];
+  mA = N[maVal, 1700];
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*((-4 + J)*(-2 + J)*(3 + J)*(5 + J) + ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 1700]
+];
 
-Print["su^2 coeff = ", SeriesCoefficient[SeriesCoefficient[-3*s*u*(s + u), {u,0,2}], {s,0,1}]//FullSimplify]
+Print["n4[J = 10000] = ", n4[0.000001`1700, 10000]//FullSimplify]
 
-Print["su^2 coeff = ", SeriesCoefficient[SeriesCoefficient[-3*s*u*(s + u), {u,0,0}], {s,0,3}]//FullSimplify]
+Print["X52[J = 10000] = ", X52[0.000001`1700, 10000]//FullSimplify]
 
+Print["X53[J = 10000] = ", X53[0.000001`1700, 10000]//FullSimplify]
