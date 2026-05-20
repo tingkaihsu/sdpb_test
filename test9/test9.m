@@ -125,7 +125,7 @@ fList = {g20, g31, n4Safe, X52, X53};
 (* large J limit *)
 (* 0& is a constant function of 0 *)
 
-extraTriplet = {0&, 0&, 0&, LargeJ, LargeJX53};
+extraTriplet = {0&, 0&, 0&, LargeJX52, LargeJX53};
 
 (* optimal lower bound *)
 norm = {0, 1, 0, 0, 0};
