@@ -69,10 +69,7 @@ M1[x_?NumericQ] := {
 };
 
 
-f1List = {
-  Function[{x}, M0[x][[1, 1]]],
-  Function[{x}, M1[x][[1, 1]]]
-};
+f1List = {1+x^4, x^4/12 + x^2};  (* column 1: entries (1,1) of M0 and M1 *)
 
 Print["f1List = ", f1List];
 
