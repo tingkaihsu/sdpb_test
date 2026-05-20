@@ -1,7 +1,4 @@
-(* ::Package:: *)
-
 (* pmp generator for AAAA scattering *)
-
 ClearAll[NumericalPositiveMatrixWithPrefactor];
 
 toJsonNestedNumberArray[expr_, prec_] := expr /. n_?NumericQ :> toJsonNumber[n, prec];
@@ -26,7 +23,7 @@ Module[
     "reducedPrefactor" -> toJsonDampedRational[reducedPrefactor, prec],
     "samplePoints"     -> toJsonNumberArray[samplePoints,   prec],
     "sampleScalings"   -> toJsonNumberArray[sampleScalings, prec],
-    (* functionValues has structure {{{ {f1(x\:1d62)}, {f2(x\:1d62)} }}} \[LongDash] 3 structural
+    (* functionValues has structure {{{ {f1(xᵢ)}, {f2(xᵢ)} }}} — 3 structural
        wrapper levels, with depth-3 entries being the degree-0 coefficient lists.
        toJsonNestedNumberArray stringifies all numeric leaves in-place. *)
     "polynomials"      -> If[MissingQ[functionValues], Missing[],
@@ -56,110 +53,75 @@ WritePmpJsonNumerical[
 (* problem-specific *)
 (* let the mass be 4mA^2 < M^2 = 1 where M  = 1 to infinity *)
 
-
-maVal = SetPrecision[3/20, 600];
+maVal = SetPrecision[3/20, 650];
 
 Print["mA = ", maVal]
 
 (* dispersion representation of Wilson coefficients *)
-(* All functions now precompute sp and mA numerically with N[...,prec] *)
+(* All functions now precompute sp and mA numerically with N[...,650] *)
 
 (* forward limit: use our own convention *)
 
 g20[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
-  mA = N[maVal, 600];
-  N[-(2*Sqrt[sp/(-4*mA^2 + sp)])/(2*mA^2 - sp)^3, 600]
+  sp = N[1/(1-x), 650];
+  mA = N[maVal, 650];
+  N[-(2*Sqrt[sp/(-4*mA^2 + sp)])/(2*mA^2 - sp)^3, 650]
 ];
 
 g31[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
-  mA = N[maVal, 600];
-  N[-(Sqrt[sp/(-4*mA^2 + sp)]*(-3 - (2*J*(1 + J)*(2*mA^2 - sp))/(-4*mA^2 + sp)))/(-2*mA^2 + sp)^4, 600]
+  sp = N[1/(1-x), 650];
+  mA = N[maVal, 650];
+  N[-(Sqrt[sp/(-4*mA^2 + sp)]*(-3 - (2*J*(1 + J)*(2*mA^2 - sp))/(-4*mA^2 + sp)))/(-2*mA^2 + sp)^4, 650]
 ];
 
-(* --- n4: safe precision guard -------------------------------------------
-   n4 contains LegendreP[J, 1, z] and LegendreP[J, 2, z] with z > 1, and
-   Hypergeometric2F1[-J, 1+J, 1, z1] which equals P_J(1.066) at typical
-   sample points.  All three grow as A^J where A ~ 1.436 (at x \[TildeTilde] 0),
-   requiring ~1560 decimal digits at J = 10000 just to represent individual
-   terms before cancellation.  With prec = 600 the computed result is pure
-   numerical noise of magnitude ~10^960.
-
-   Physical justification for returning 0 at large J:
-     extraTriplet = {0&, 0&, 0&, 0&, LargeJ}
-   explicitly encodes n4 \[RightArrow] 0 as J \[RightArrow] \[Infinity] (index 3 in fList = n4).
-   The safe threshold is  J_SAFE = floor((prec - 30) / 0.156) \[TildeTilde] 3654.
-   Since the only super-threshold spin in Jlist is J = 10000, this guard
-   affects exactly the J = 10000 blocks.
-   --------------------------------------------------------------------- *)
-
-(* Maximum log10[A(x)] over physical x in (0,1): A = z + sqrt(z^2-1),
-   z = 1 + 8*mA^2/(3*(sp - 4*mA^2)).  Evaluated numerically: max ~ 0.156. *)
-n4MaxLog10A = 0.156;
-
-n4Safe[x_?NumericQ, J_?IntegerQ] :=
-  If[J > Floor[(600 - 30) / n4MaxLog10A],   (* J > ~3654 *)
-    (* Large-J limit: n4 \[RightArrow] 0 (consistent with extraTriplet's 0& for n4) *)
-    SetPrecision[0, 600],
-    (* Normal evaluation for J \[LessEqual] 3654 *)
-    n4[x, J]
-  ];
-
 n4[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
-  mA = N[maVal, 600];
-  N[(81*Sqrt[sp/(-4*mA^2 + sp)]*(8*mA^4*(14*mA^2 - 15*sp)*(-8*mA^2 + 3*sp)^(3/2)*Hypergeometric2F1[-J, 1 + J, 1, (4*mA^2)/(12*mA^2 - 3*sp)] + (8*mA^4 - 18*mA^2*sp + 9*sp^2)*((-2*I)*mA*(10*mA^2 - 9*sp)*(8*mA^2 - 3*sp)*LegendreP[J, 1, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))] + Sqrt[-8*mA^2 + 3*sp]*(-8*mA^4 + 18*mA^2*sp - 9*sp^2)*LegendreP[J, 2, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))])))/(4*mA^2*(-2*mA^2 + sp)*(-8*mA^2 + 3*sp)^(3/2)*(8*mA^4 - 18*mA^2*sp + 9*sp^2)^3), 600]
+  sp = N[1/(1-x), 650];
+  mA = N[maVal, 650];
+  N[(81*Sqrt[sp/(-4*mA^2 + sp)]*(8*mA^4*(14*mA^2 - 15*sp)*(-8*mA^2 + 3*sp)^(3/2)*Hypergeometric2F1[-J, 1 + J, 1, (4*mA^2)/(12*mA^2 - 3*sp)] + (8*mA^4 - 18*mA^2*sp + 9*sp^2)*((-2*I)*mA*(10*mA^2 - 9*sp)*(8*mA^2 - 3*sp)*LegendreP[J, 1, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))] + Sqrt[-8*mA^2 + 3*sp]*(-8*mA^4 + 18*mA^2*sp - 9*sp^2)*LegendreP[J, 2, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))])))/(4*mA^2*(-2*mA^2 + sp)*(-8*mA^2 + 3*sp)^(3/2)*(8*mA^4 - 18*mA^2*sp + 9*sp^2)^3), 650]
 ];
 
 X52[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
-  mA = N[maVal, 600];
-  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
+  sp = N[1/(1-x), 650];
+  mA = N[maVal, 650];
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 650]
 ];
 
 X53[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
-  mA = N[maVal, 600];
-  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*((-4 + J)*(-2 + J)*(3 + J)*(5 + J) + ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
+  sp = N[1/(1-x), 650];
+  mA = N[maVal, 650];
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*((-4 + J)*(-2 + J)*(3 + J)*(5 + J) + ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 650]
 ];
 
-(* Large J limit of X53 *)
-LargeJ[x_?NumericQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
-  mA = N[maVal, 600];
-  N[(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(18*sp^3*(-4*mA^2 + sp)^6), 600]
+(* Large J limit *)
+LargeJX53[x_?NumericQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 650];
+  mA = N[maVal, 650];
+  N[(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(18*sp^3*(-4*mA^2 + sp)^6), 650]
 ];
 
-(* Large J limit of X52 *)
-LargeJ2[x_?NumericQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
-  mA = N[maVal, 600];
-  N[-1/18*(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(sp^3*(-4*mA^2 + sp)^6), 600];
-]
+LargeJX52[x_?NumericQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 650];
+  mA = N[maVal, 650];
+  N[-1/18*(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(sp^3*(-4*mA^2 + sp)^6), 650]
+];
 
 Jmax = 60;
 Jlist = Range[0, Jmax, 2];
-(* JlistLarge = {10000};
-Jlist = Join[Range[0, 60, 2], JlistLarge]; *)
 
-(* NOTE: n4 is replaced by n4Safe (returns 0 for J > ~3654, exact for J <= 3654).
-   All other functions are unchanged; they grow polynomially in J and are
-   numerically accurate with prec = 600 even at J = 10000. *)
-fList = {g20, g31, n4Safe, X52, X53};
+fList = {g20, g31, n4, X52, X53};
 
 (* large J limit *)
 (* 0& is a constant function of 0 *)
 
-extraTriplet = {0&, 0&, 0&, LargeJ2, LargeJ};
+extraTriplet = {0&, 0&, 0&, LargeJ, LargeJX53};
 
 (* optimal lower bound *)
-(* norm = {0, 1, 0, 0, 0};
-obj = {-1, 0, 0, 0, 0}; *)
+norm = {0, 1, 0, 0, 0};
+obj = {-1, 0, 0, 0, 0};
 
 (* optimal upper bound *)
-norm = {0, -1, 0, 0, 0};
-obj = {-1, 0, 0, 0, 0};
+(* norm = {0, -1, 0, 0, 0};
+obj = {-1, 0, 0, 0, 0}; *)
 
 
 
@@ -179,17 +141,16 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:650] := Module[
   Print["Read ", Length[samplePoints], " x sample points from ", spFile];
   Print["  x-points    : ", samplePoints];
   Print["  J-values    : ", Jlist, "  (", Length[Jlist], " spins, exact)"];
-  Print["  extraTriplet: ", extraTriplet, "  (J -> \[Infinity] limit)"];
-  Print["  n4MaxLog10A : ", n4MaxLog10A, " => n4Safe threshold J > ", Floor[(prec-30)/n4MaxLog10A]];
+  Print["  extraTriplet: ", extraTriplet, "  (J\[Rule]\[Infinity] limit)"];
 
   (* Scalings = prefactor DampedRational[1,{},1/E,x] evaluated at xi = e^{-xi} *)
   sampleScalings = SetPrecision[Exp[-#] & /@ samplePoints, prec];
 
   (* --- Regular blocks: one per (xi, Jj) pair.
      Polynomials nesting:  {{ Table[{fk(xi,Jj)}, {k,3}] }}
-       {{ ... }}  \[LeftArrow] JSON levels 1 and 2  (column list / row, each size 1)
-       Table[...] \[LeftArrow] JSON level 3: polynomial vector, one entry per fList[[k]]
-       {fk(xi,Jj)} \[LeftArrow] JSON level 4: degree-0 coefficient list (1 element) --- *)
+       {{ ... }}  ← JSON levels 1 and 2  (column list / row, each size 1)
+       Table[...] ← JSON level 3: polynomial vector, one entry per fList[[k]]
+       {fk(xi,Jj)} ← JSON level 4: degree-0 coefficient list (1 element) --- *)
   polsRegular = Table[
     NumericalPositiveMatrixWithPrefactor[<|
       "prefactor"      -> DampedRational[1, {}, 1/E, x],
@@ -224,7 +185,7 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:650] := Module[
   Print["  Extra blocks   : ", Length[polsExtra]];
   Print["  Total blocks   : ", Length[samplePoints] * Length[Jlist] + Length[polsExtra]];
 
-  (* Flatten polsRegular (2D Table \[RightArrow] flat list) *)
+  (* Flatten polsRegular (2D Table → flat list) *)
   WritePmpJsonNumerical[
     jsonFile,
     SDP[obj, norm, Join[Flatten[polsRegular], polsExtra]],
@@ -240,8 +201,6 @@ Module[{myArgs, spFile, jsonFile, prec},
   If[Length[myArgs] >= 1,
     spFile   = myArgs[[1]];
     jsonFile = If[Length[myArgs] >= 2, myArgs[[2]], "numeric_pmp.json"];
-    (* Default prec raised from 600 \[RightArrow] 650 to exceed SDPB's 2048-bit working
-       precision (2048 * log10(2) \[TildeTilde] 616.5 decimal digits) by a safe margin. *)
     prec     = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 650];
 
     Print["=== text9.m ==="];
@@ -252,7 +211,7 @@ Module[{myArgs, spFile, jsonFile, prec},
     testNumericalSDP[spFile, jsonFile, prec];
     Quit[0],
 
-    (* Loaded with << as a library \[LongDash] do nothing. *)
+    (* Loaded with << as a library — do nothing. *)
     Null
   ]
 ];
