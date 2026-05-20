@@ -127,7 +127,7 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:650] := Module[
          Table produces level-3 list: {{f1(xi,Jj)}, {f2(xi,Jj)}, {f3(xi,Jj)}}.
          Each {fList[[k]][...]} is the level-4 coefficient list (degree-0: 1 entry). *)
       "polynomials" -> {{ Table[
-        {SetPrecision[f1List[[k]][samplePoints[[i]], Jlist[[j]]], prec]},
+        {SetPrecision[f1List[[k]][samplePoints[[i]]], prec]},
         {k, Length[f1List]}
       ] }}
     |>],
