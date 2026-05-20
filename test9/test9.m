@@ -50,29 +50,44 @@ WritePmpJsonNumerical[
 
 << "../SDPB.m";
 
-(* problem-specific *)
 (* let the mass be 4mA^2 < M^2 = 1 where M  = 1 to infinity *)
 
-maVal = SetPrecision[3/20, 650];
+maVal = SetPrecision[3/20, 600];
 
 Print["mA = ", maVal]
 
 (* dispersion representation of Wilson coefficients *)
-(* All functions now precompute sp and mA numerically with N[...,650] *)
+(* All functions now precompute sp and mA numerically with N[...,prec] *)
 
 (* forward limit: use our own convention *)
 
 g20[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 650];
-  mA = N[maVal, 650];
-  N[-(2*Sqrt[sp/(-4*mA^2 + sp)])/(2*mA^2 - sp)^3, 650]
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  N[-(2*Sqrt[sp/(-4*mA^2 + sp)])/(2*mA^2 - sp)^3, 600]
 ];
 
 g31[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 650];
-  mA = N[maVal, 650];
-  N[-(Sqrt[sp/(-4*mA^2 + sp)]*(-3 - (2*J*(1 + J)*(2*mA^2 - sp))/(-4*mA^2 + sp)))/(-2*mA^2 + sp)^4, 650]
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  N[-(Sqrt[sp/(-4*mA^2 + sp)]*(-3 - (2*J*(1 + J)*(2*mA^2 - sp))/(-4*mA^2 + sp)))/(-2*mA^2 + sp)^4, 600]
 ];
+
+(* --- n4: safe precision guard -------------------------------------------
+   n4 contains LegendreP[J, 1, z] and LegendreP[J, 2, z] with z > 1, and
+   Hypergeometric2F1[-J, 1+J, 1, z1] which equals P_J(1.066) at typical
+   sample points.  All three grow as A^J where A ~ 1.436 (at x \[TildeTilde] 0),
+   requiring ~1560 decimal digits at J = 10000 just to represent individual
+   terms before cancellation.  With prec = 600 the computed result is pure
+   numerical noise of magnitude ~10^960.
+
+   Physical justification for returning 0 at large J:
+     extraTriplet = {0&, 0&, 0&, 0&, LargeJ}
+   explicitly encodes n4 \[RightArrow] 0 as J \[RightArrow] \[Infinity] (index 3 in fList = n4).
+   The safe threshold is  J_SAFE = floor((prec - 30) / 0.156) \[TildeTilde] 3654.
+   Since the only super-threshold spin in Jlist is J = 10000, this guard
+   affects exactly the J = 10000 blocks.
+   --------------------------------------------------------------------- *)
 
 (* Maximum log10[A(x)] over physical x in (0,1): A = z + sqrt(z^2-1),
    z = 1 + 8*mA^2/(3*(sp - 4*mA^2)).  Evaluated numerically: max ~ 0.156. *)
@@ -93,51 +108,52 @@ n4[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
 ];
 
 X52[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 650];
-  mA = N[maVal, 650];
-  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 650]
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
 ];
 
+(* X53 differs X52 by a sign *)
 X53[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 650];
-  mA = N[maVal, 650];
-  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*((-4 + J)*(-2 + J)*(3 + J)*(5 + J) + ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 650]
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*((-4 + J)*(-2 + J)*(3 + J)*(5 + J) + ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
 ];
 
 (* Large J limit *)
 LargeJX53[x_?NumericQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 650];
-  mA = N[maVal, 650];
-  N[(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(18*sp^3*(-4*mA^2 + sp)^6), 650]
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  N[(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(18*sp^3*(-4*mA^2 + sp)^6), 600]
 ];
 
 LargeJX52[x_?NumericQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 650];
-  mA = N[maVal, 650];
-  N[-1/18*(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(sp^3*(-4*mA^2 + sp)^6), 650]
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  N[-1/18*(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(sp^3*(-4*mA^2 + sp)^6), 600]
 ];
 
 Jmax = 60;
 Jlist = Range[0, Jmax, 2];
 
-fList = {g20, g31, n4Safe, X52, X53};
+fList = {g20, g31, n4Safe, X52};
 
 (* large J limit *)
 (* 0& is a constant function of 0 *)
 
-extraTriplet = {0&, 0&, 0&, LargeJX52, LargeJX53};
+extraTriplet = {0&, 0&, 0&, LargeJX52};
 
 (* optimal lower bound *)
-norm = {0, 1, 0, 0, 0};
-obj = {-1, 0, 0, 0, 0};
+norm = {0, 1, 0, 0};
+obj = {-1, 0, 0, 0};
 
 (* optimal upper bound *)
-(* norm = {0, -1, 0, 0, 0};
-obj = {-1, 0, 0, 0, 0}; *)
+(* norm = {0, -1, 0, 0};
+obj = {-1, 0, 0, 0}; *)
 
 
 
-testNumericalSDP[spFile_String, jsonFile_String, prec_:650] := Module[
+testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
   {rawLines, spLines, samplePoints, sampleScalings, polsRegular},
 
   (* --- Read and parse sampling_points.txt --- *)
@@ -213,7 +229,7 @@ Module[{myArgs, spFile, jsonFile, prec},
   If[Length[myArgs] >= 1,
     spFile   = myArgs[[1]];
     jsonFile = If[Length[myArgs] >= 2, myArgs[[2]], "numeric_pmp.json"];
-    prec     = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 650];
+    prec     = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 600];
 
     Print["=== text9.m ==="];
     Print["  sample_points = ", spFile];

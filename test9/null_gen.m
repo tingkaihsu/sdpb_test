@@ -65,6 +65,8 @@ crossRes[k_Integer, q_Integer] := Assuming[J \[Element] Integers && J >= 0,
   FullSimplify @ SeriesCoefficient[crossPiece[k, q, J, t, sp, mA], {t, 0, -1}]
 ];
 
+
+Print["X52 differs X53 by a minus sign..."]
 kn = 5;
 qn = 2;
 combined[k_Integer, q_Integer] := FullSimplify[directRes[k, q] - crossRes[k, q] ];
@@ -121,3 +123,4 @@ Limit[KerstuCoeffStable[sp,mA,4,J,0],mA->0]
 
 
 
+81/4 Sqrt[sp/(-4 mA^2+sp)] (-((8 (22 mA^4-39 mA^2 sp+18 sp^2) LegendreP[J,1+(8 mA^2)/(3 (-4 mA^2+sp))])/((2 mA^2-sp) (8 mA^4-18 mA^2 sp+9 sp^2)^3))+(-2 Sqrt[(8 mA^4-3 mA^2 sp)/(-4 mA^2+sp)^2] (40 mA^4-46 mA^2 sp+9 sp^2) LegendreP[J,1,1+(8 mA^2)/(3 (-4 mA^2+sp))]+(-8 mA^4+18 mA^2 sp-9 sp^2) LegendreP[J,2,1+(8 mA^2)/(3 (-4 mA^2+sp))])/((16 mA^4-14 mA^2 sp+3 sp^2) (8 mA^5-18 mA^3 sp+9 mA sp^2)^2))//FullSimplify
