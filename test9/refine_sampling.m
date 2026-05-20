@@ -1,77 +1,35 @@
 (* ================================================================
-   negative_region.m
+   refine_sampling.m  (precision-propagation corrected version)
    ----------------------------------------------------------------
    PURPOSE
      After each SDPB run, read the current sampling points and the
      solver's y.txt, reconstruct the functional
 
-         F(x, J) = f₁(x,J)·y₁ + f₂(x,J)·y₂ + f₃(x,J)·y₃
+         F(x, J) = f₁(x,J)·y₁ + f₂(x,J)·y₂ + f₃(x,J)·y₃ + ...
 
      for EVERY J in Jlist (discrete spin, constrained exactly), and
      identify x-intervals where F is negative at the midpoint for
      any J.
 
-   WHY MIDPOINTS ONLY (not a fine grid scan)
-     SDPB already guarantees F(xᵢ, J) >= 0 at every sampling point
-     xᵢ and for every J in Jlist.  Therefore we do NOT need to scan
-     all x.  We probe each open interval (xᵢ, xᵢ₊₁) by evaluating
-     F(mid, J) for ALL J in Jlist.  If the minimum over J is negative
-     the interval is flagged.  This is faster and more principled
-     than a fine-grid sweep.
+   PRECISION FIXES (2026-05)
+     Applied consistently with test9.m and largeSpinTest.m:
+     1. maVal: N[3/20, 650] instead of SetPrecision[0.150, 600].
+     2. n4PrecMin: adaptive precision for n4 based on J and x.
+     3. n4: evaluates sp, mA at prec_local digits; Re[…] explicit.
+     4. All other functions: N[3/20, 650] for mA.
 
-   J IS NOT SAMPLED — IT IS EXACT
-     x is continuous and is discretised adaptively.
-     J is discrete; every J in Jlist is checked at each midpoint.
-     This is x-independent and is
-     checked once before the interval loop; x-refinement cannot
-     fix a violation of this constraint.
-
-   NEW POINTS (from observation.md)
-     For each flagged interval [xa, xb]:
-       x*  = (xa + xb) / 2          (midpoint = centre of interval)
-       s   = (xb - xa) / N_pts      (step size)
-       new = { x* + (k - N_pts/2)*s : k = 0, 1, ..., N_pts }
-           = { xa, xa+s, ..., x*, ..., xb-s, xb }
-     This places N_pts+1 points that span [xa, xb] exactly.
-     xa and xb are already sample points; after deduplication they
-     are dropped, leaving N_pts-1 new interior points.
-
-   STOPPING CRITERION
-     If F(midpoint) < 0 but the interval width  xb - xa < min_width
-     (default 10^-6), the interval is NOT flagged for refinement.
-     The functional is negative there, but the region is so narrow
-     that adding more points would not improve the bound meaningfully.
-     Convergence is declared when every interval with F(mid) < 0 has
-     width below min_width — i.e. no refinable negative intervals remain.
-
-   USAGE
-     wolframscript -file negative_region.m <sp_file> <y_file> \
-                   [N_pts] [min_width] [out_sp_file]
-
-     sp_file      path to current sampling_points.txt (one x per line)
-     y_file       path to SDPB output y.txt           (one yᵢ per line)
-     N_pts        new interior subdivisions per flagged interval (default: 10)
-     min_width    minimum interval width to bother refining  (default: 1e-6)
-     out_sp_file  where to write the augmented sample list
-                  (default: overwrites sp_file in place)
-
-   EXIT CODES
-     0  converged — no refinable negative intervals remain, out_sp_file unchanged
-     1  refined   — new points written to out_sp_file, loop continues
-     2  error     — bad arguments or unreadable files
+     For J ≤ 60 (normal Jlist): prec_local = 650, zero overhead.
    ================================================================ *)
 
 
 (* ----------------------------------------------------------------
    1.  ARGUMENT PARSING
-       $ScriptCommandLine = {scriptname, arg1, arg2, ...}
-       Works identically for  wolframscript -file  and  math -script.
    ---------------------------------------------------------------- *)
 
 myArgs = If[Length[$ScriptCommandLine] >= 2, Rest[$ScriptCommandLine], {}];
 
 If[Length[myArgs] < 2,
-  Print["USAGE: wolframscript -file negative_region.m ",
+  Print["USAGE: wolframscript -file refine_sampling.m ",
         "<sp_file> <y_file> [N_pts] [out_sp_file]"];
   Quit[2]
 ];
@@ -82,7 +40,7 @@ nPts      = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 10];
 minWidth  = If[Length[myArgs] >= 4, ToExpression[myArgs[[4]]], 10^-6];
 outFile   = If[Length[myArgs] >= 5, myArgs[[5]], spFile];
 
-Print["=== negative_region.m ==="];
+Print["=== refine_sampling.m ==="];
 Print["  sp_file    = ", spFile];
 Print["  y_file     = ", yFile];
 Print["  N_pts      = ", nPts];
@@ -106,16 +64,10 @@ spRaw = Select[
 If[Length[spRaw] == 0,
   Print["ERROR: no sample points found in ", spFile]; Quit[2]];
 
-(* Fix C/Fortran-style scientific notation: e.g. "1.5e+02" → "1.5*^+02"
-   Mathematica does not recognise lowercase 'e' or uppercase 'E' as an
-   exponent marker; it treats them as the symbol e or Euler's E.
-   This regex converts  e±digits  /  E±digits  to  *^±digits  before
-   ToExpression is called. *)
 fixSciNotation[s_String] := StringReplace[s,
   RegularExpression["[eE]([+-]?\\d+)"] :> "*^$1"
 ];
 
-(* Parse and sort; keep high precision *)
 samplePoints = Sort[SetPrecision[ToExpression /@ (fixSciNotation /@ spRaw), 200]];
 
 Print["Loaded ", Length[samplePoints], " sampling points:"];
@@ -124,11 +76,7 @@ Print[""];
 
 
 (* ----------------------------------------------------------------
-   3.  READ z.txt
-       SDPB writes all n components of y, one per line; blank lines
-       and lines starting with "#" are skipped.
-       The length of yVec must equal the number of functions in fVec.
-       A mismatch is caught by the dimensional check below.
+   3.  READ y.txt
    ---------------------------------------------------------------- *)
 
 If[!FileExistsQ[yFile],
@@ -144,9 +92,6 @@ If[Length[yRaw] == 0,
 
 yVec = SetPrecision[ToExpression /@ (fixSciNotation /@ yRaw), 200];
 
-(* Validate: every component of yVec must be numeric.
-   A non-numeric entry (e.g. containing symbolic 'e') means the
-   scientific-notation fix missed a case or the file is malformed. *)
 Do[
   If[!NumberQ[yVec[[k]]],
     Print["ERROR: y component ", k, " is not numeric: ", yVec[[k]]];
@@ -157,7 +102,6 @@ Do[
   {k, Length[yVec]}
 ];
 
-(* Same validation for sample points *)
 Do[
   If[!NumberQ[samplePoints[[k]]],
     Print["ERROR: sample point ", k, " is not numeric: ", samplePoints[[k]]];
@@ -171,71 +115,75 @@ Print[""];
 
 
 (* ================================================================
-   PROBLEM-SPECIFIC SECTION  ← edit here for your problem
-   ----------------------------------------------------------------
-   Define fList = {f1, f2, f3} to match g3_ExtremalEFT_2.m.
-   Each function accepts TWO arguments: a numeric x and an integer J.
-   No symbolic form is required — only numeric evaluation is used.
-
-   Jmax, Jlist:  the exact discrete spin values to check at each
-                 x-midpoint.  Must match g3_ExtremalEFT_2.m.
-
-   xLeft, xRight: the physical domain boundaries.  The check covers
-                  [xLeft, xRight] in full, including the boundary
-                  intervals [xLeft, x_min] and [x_max, xRight] that
-                  lie outside the current set of sample points.
-                  SDPB only enforces positivity AT the sample points;
-                  these outer regions are invisible to it otherwise.
+   PROBLEM-SPECIFIC SECTION — must match test9.m
    ================================================================ *)
-(* problem-specific *)
-(* let the mass be 4mA^2 < M^2 = 1 where M  = 1 to infinity *)
 
-maVal = SetPrecision[0.150, 600];
+(* FIX 1: exact rational for mA — avoids machine-float precision leakage *)
+maVal = N[3/20, 650];
 
-Print["mA = ", maVal]
+Print["mA = ", maVal];
 
-(* dispersion representation of Wilson coefficients *)
-(* All functions now precompute sp and mA numerically with N[...,prec] *)
-
-(* forward limit: use our own convention *)
+(* FIX 2: n4PrecMin — adaptive working precision for n4.
+   For J ≤ ~3782: returns 650 (no overhead).
+   For J > 3782:  returns J * 0.1568 + 60 (precision required to resolve
+   the catastrophic cancellation of the A(x)^J terms in n4). *)
+n4PrecMin[J_?IntegerQ, x_?NumericQ, margin_Integer:60, stdPrec_Integer:650] :=
+  Module[{sp0, z2, A, logA},
+    sp0  = N[1/(1 - x), 50];
+    z2   = 1 + 8*(3/20)^2 / (3*(sp0 - 4*(3/20)^2));
+    A    = If[z2 > 1, z2 + Sqrt[z2^2 - 1], 1];
+    logA = If[A > 1, N[Log[10, A], 50], 0];
+    Max[stdPrec, Ceiling[J * logA] + margin]
+  ];
 
 g20[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
-  mA = N[maVal, 600];
-  N[-(2*Sqrt[sp/(-4*mA^2 + sp)])/(2*mA^2 - sp)^3, 600]
+  sp = N[1/(1-x), 650];
+  mA = N[3/20, 650];
+  N[-(2*Sqrt[sp/(-4*mA^2 + sp)])/(2*mA^2 - sp)^3, 650]
 ];
 
 g31[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
-  mA = N[maVal, 600];
-  N[-(Sqrt[sp/(-4*mA^2 + sp)]*(-3 - (2*J*(1 + J)*(2*mA^2 - sp))/(-4*mA^2 + sp)))/(-2*mA^2 + sp)^4, 600]
+  sp = N[1/(1-x), 650];
+  mA = N[3/20, 650];
+  N[-(Sqrt[sp/(-4*mA^2 + sp)]*(-3 - (2*J*(1 + J)*(2*mA^2 - sp))/(-4*mA^2 + sp)))/(-2*mA^2 + sp)^4, 650]
 ];
 
-(* null constraint *)
-
-n4[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
-  mA = N[maVal, 600];
-  N[(81*Sqrt[sp/(-4*mA^2 + sp)]*(8*mA^4*(14*mA^2 - 15*sp)*(-8*mA^2 + 3*sp)^(3/2)*Hypergeometric2F1[-J, 1 + J, 1, (4*mA^2)/(12*mA^2 - 3*sp)] + (8*mA^4 - 18*mA^2*sp + 9*sp^2)*((-2*I)*mA*(10*mA^2 - 9*sp)*(8*mA^2 - 3*sp)*LegendreP[J, 1, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))] + Sqrt[-8*mA^2 + 3*sp]*(-8*mA^4 + 18*mA^2*sp - 9*sp^2)*LegendreP[J, 2, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))])))/(4*mA^2*(-2*mA^2 + sp)*(-8*mA^2 + 3*sp)^(3/2)*(8*mA^4 - 18*mA^2*sp + 9*sp^2)^3), 600]
+(* null constraint — PRECISION-PROPAGATION IMPLEMENTATION
+   FIX 2+3+4: adaptive precision, exact-rational mA, explicit Re[…] *)
+n4[x_?NumericQ, J_?IntegerQ] := Module[{prec, xp, sp, mA, result},
+  prec = n4PrecMin[J, x];
+  xp   = SetPrecision[x, prec];    (* promote x to avoid low-precision bottleneck *)
+  sp   = N[1/(1 - xp), prec];
+  mA   = N[3/20, prec];            (* exact rational, independent of global maVal *)
+  result = (81*Sqrt[sp/(-4*mA^2 + sp)]*(
+      8*mA^4*(14*mA^2 - 15*sp)*(-8*mA^2 + 3*sp)^(3/2)*
+        Hypergeometric2F1[-J, 1 + J, 1, (4*mA^2)/(12*mA^2 - 3*sp)] +
+      (8*mA^4 - 18*mA^2*sp + 9*sp^2)*(
+        (-2*I)*mA*(10*mA^2 - 9*sp)*(8*mA^2 - 3*sp)*
+          LegendreP[J, 1, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))] +
+        Sqrt[-8*mA^2 + 3*sp]*(-8*mA^4 + 18*mA^2*sp - 9*sp^2)*
+          LegendreP[J, 2, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))]
+      )
+    ))/(4*mA^2*(-2*mA^2 + sp)*(-8*mA^2 + 3*sp)^(3/2)*(8*mA^4 - 18*mA^2*sp + 9*sp^2)^3);
+  Re[N[result, 650]]
 ];
 
 X52[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
-  mA = N[maVal, 600];
-  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
+  sp = N[1/(1-x), 650];
+  mA = N[3/20, 650];
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 650]
 ];
 
 X53[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
-  mA = N[maVal, 600];
-  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*((-4 + J)*(-2 + J)*(3 + J)*(5 + J) + ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
+  sp = N[1/(1-x), 650];
+  mA = N[3/20, 650];
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*((-4 + J)*(-2 + J)*(3 + J)*(5 + J) + ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 650]
 ];
 
-(* Large J limit *)
 LargeJ[x_?NumericQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
-  mA = N[maVal, 600];
-  N[(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(18*sp^3*(-4*mA^2 + sp)^6), 600]
+  sp = N[1/(1-x), 650];
+  mA = N[3/20, 650];
+  N[(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(18*sp^3*(-4*mA^2 + sp)^6), 650]
 ];
 
 Jmax = 60;
@@ -245,36 +193,24 @@ Jlist = Join[Range[0, Jmax, 2], JlistLarge]; *)
 
 fList = {g20, g31, n4, X52, X53};
 
-(* large J limit *)
-(* 0& is a constant function of 0 *)
-
 extraTriplet = {0&, 0&, 0&, 0&, LargeJ};
 
-(* optimal lower bound *)
-(* norm = {0, 1, 0, 0, 0};
-obj = {-1, 0, 0, 0, 0}; *)
-
-(* optimal upper bound *)
 norm = {0, -1, 0, 0, 0};
-obj = {-1, 0, 0, 0, 0};
+obj  = {-1, 0, 0, 0, 0};
 
-xLeft  = SetPrecision[0, 600];   (* physical domain left endpoint  — check includes [xLeft,  x_min] *)
-xRight = SetPrecision[1, 600];   (* physical domain right endpoint — check includes [x_max, xRight] *)
+xLeft  = SetPrecision[0, 650];
+xRight = SetPrecision[1, 650];
 
 (* ================================================================
    END OF PROBLEM-SPECIFIC SECTION
    ================================================================ *)
 
 
-(* --- Dimensional consistency check ---
-   y.txt must have exactly as many lines as there are functions in
-   fList.  A mismatch means the wrong y.txt or fList was supplied. *)
 If[Length[yVec] != Length[fList],
   Print["ERROR: y.txt has ", Length[yVec], " component(s) but fList has ",
         Length[fList], " function(s). They must match."];
   Quit[2]
 ];
-
 
 If[Length[extraTriplet] != Length[fList],
   Print["ERROR: extraTriplet has ", Length[extraTriplet],
@@ -282,19 +218,10 @@ If[Length[extraTriplet] != Length[fList],
   Quit[2]
 ];
 
-
-
-(* F(x, J) = sum_{k=1}^{n} fList[[k]][x, J] * yVec[[k]]
-   Evaluated for each (midpoint, J) pair in the interval check below. *)
 F[x_?NumericQ, J_?IntegerQ] := Sum[yVec[[k]] * fList[[k]][x, J], {k, Length[yVec]}];
-
-(* large J limit check *)
 X[x_?NumericQ] := Sum[yVec[[k]] * extraTriplet[[k]][x], {k, Length[yVec]}];
 
-(* Safety: clamp midpoints near known singularity at x -> 1 (sp = 1/(1-x))
-   and provide a robust numeric evaluator that returns $Failed on
-   non-finite or exceptional results. *)
-singularTol = 10^-12;   (* distance from x=1 to avoid sp singularity *)
+singularTol = 10^-12;
 
 safeF[x_?NumericQ, J_?IntegerQ] := Module[{x0 = x, val},
   If[Abs[1 - x0] < singularTol, x0 = 1 - singularTol];
@@ -306,7 +233,6 @@ safeF[x_?NumericQ, J_?IntegerQ] := Module[{x0 = x, val},
   ]
 ];
 
-(* Safe evaluator for large-J functional X[x] *)
 safeX[x_?NumericQ] := Module[{x0 = x, val},
   If[Abs[1 - x0] < singularTol, x0 = 1 - singularTol];
   val = Quiet[Check[N[X[x0], 200], $Failed]];
@@ -317,31 +243,12 @@ safeX[x_?NumericQ] := Module[{x0 = x, val},
   ]
 ];
 
+
 (* ----------------------------------------------------------------
    5.  MIDPOINT CHECK OVER CONSECUTIVE INTERVALS
-       For each pair (samplePoints[[i]], samplePoints[[i+1]]):
-         - compute midpoint mid and interval width w = xb - xa
-         - evaluate F(mid, J) for EVERY J in Jlist
-         - fm = Min over J  (worst-case constraint violation)
-         - if fm < 0 AND w >= minWidth: flag for x-refinement
-         - if fm < 0 AND w <  minWidth: negative but below threshold
    ---------------------------------------------------------------- *)
 
-
-nIntervals       = Length[samplePoints] - 1;
-(* ----------------------------------------------------------------
-   Build the complete interval list:
-     LEFT boundary  [xLeft,            samplePoints[[1]]  ] if x_min > xLeft
-     INTERIOR pairs [samplePoints[[i]], samplePoints[[i+1]]] for i = 1..n-1
-     RIGHT boundary [samplePoints[[-1]], xRight            ] if x_max < xRight
-
-   SDPB guarantees F(xi, J) >= 0 at every sample point xi, so the
-   interior pairs are automatically safe AT their endpoints.  The
-   boundary intervals [xLeft, x_min] and [x_max, xRight] are NEVER
-   covered by any sample point — they are invisible to SDPB and must
-   be probed explicitly here.  Omitting them was the root cause of
-   missing the negative region at x ∈ [0, x_min] seen in z.txt.
-   ---------------------------------------------------------------- *)
+nIntervals    = Length[samplePoints] - 1;
 interiorPairs = Table[
   {samplePoints[[i]], samplePoints[[i + 1]]},
   {i, nIntervals}
@@ -352,9 +259,9 @@ allIntervals = Join[
   If[samplePoints[[-1]] < xRight - 10^-12, {{samplePoints[[-1]], xRight}}, {}]
 ];
 nAllIntervals    = Length[allIntervals];
-flaggedIntervals = {};   (* intervals to refine: min_J F(mid,J)<0 AND width>=minWidth *)
-tinyNegative     = {};   (* intervals with min_J F(mid,J)<0 but width<minWidth        *)
-midpointValues   = {};   (* {mid, min_J F(mid,J)} for each interval, for diagnostics  *)
+flaggedIntervals = {};
+tinyNegative     = {};
+midpointValues   = {};
 
 Print["Checking ", nAllIntervals, " interval(s) on [", xLeft, ", ", xRight,
       "]  \[Times]  ", Length[Jlist], " J-value(s):"];
@@ -372,7 +279,6 @@ Do[
   width = xb - xa;
   mid   = (xa + xb) / 2;
 
-  (* Evaluate F(mid, J) safely for every J in Jlist; handle failures gracefully *)
   fmByJ = Table[safeF[mid, Jlist[[j]]], {j, Length[Jlist]}];
   failedCount = Count[fmByJ, $Failed];
   If[failedCount > 0,
@@ -381,7 +287,6 @@ Do[
           " — proceeding with available J values (if any)."]
   ];
 
-  (* evaluate large-J functional X at midpoint *)
   xVal = safeX[mid];
   If[xVal === $Failed,
     Print["  NOTE: X(mid) evaluation failed at mid=", mid]
@@ -390,23 +295,21 @@ Do[
   validPairs = Select[Transpose[{Jlist, fmByJ}], Last[#] =!= $Failed &];
 
   If[validPairs == {} && xVal === $Failed,
-    Print["  ERROR: F(mid,J) failed for all J and X(mid) failed at mid=", mid, "; flagging interval for refinement."];
+    Print["  ERROR: F(mid,J) failed for all J and X(mid) failed at mid=", mid, "; flagging."];
     AppendTo[flaggedIntervals, {xa, xb}];
     AppendTo[midpointValues, {mid, $Failed, "all_failed"}];
     Continue[];
   ];
 
-  (* compute minima from available sources *)
   If[validPairs == {},
     fmJ = $Failed,
     vals = Last /@ validPairs;
-    js = First /@ validPairs;
-    fmJ = Min[vals];
-    worstJIndex = First[Ordering[vals, 1]];
+    js   = First /@ validPairs;
+    fmJ  = Min[vals];
+    worstJIndex     = First[Ordering[vals, 1]];
     worstJcandidate = js[[worstJIndex]];
   ];
 
-  (* combine fmJ and xVal to get overall worst-case value and source *)
   Which[
     fmJ === $Failed && xVal =!= $Failed,
       fm = xVal; worstSource = "X"; worstJ = None,
@@ -436,7 +339,8 @@ Do[
     fm < 0 && width >= minWidth,
       AppendTo[flaggedIntervals, {xa, xb}];
       Print["  [", xa, ", ", xb, "]  w=", width,
-            "  min value=", fm, "  (source=", worstSource, If[worstSource=="J", ", worst J=", ""],
+            "  min value=", fm, "  (source=", worstSource,
+            If[worstSource=="J", ", worst J=", ""],
             If[worstSource=="J", worstJ, ""], ")",
             "  *** NEGATIVE, will refine ***"]
   ],
@@ -447,8 +351,6 @@ Print[""];
 
 (* ----------------------------------------------------------------
    6.  CONVERGENCE CHECK
-       Converged when there are no refinable intervals, i.e. every
-       interval with F(mid)<0 is already narrower than minWidth.
    ---------------------------------------------------------------- *)
 
 If[Length[flaggedIntervals] == 0,
@@ -474,15 +376,6 @@ Print[""];
 
 (* ----------------------------------------------------------------
    7.  GENERATE NEW SAMPLING POINTS
-       For each flagged [xa, xb] (from observation.md):
-         x*  = (xa + xb) / 2
-         s   = (xb - xa) / nPts
-         new = { x* + (k - nPts/2) * s  :  k = 0, ..., nPts }
-             = { xa, xa+s, ..., x*, ..., xb-s, xb }
-       This places nPts+1 points spanning [xa, xb] exactly, including
-       the endpoints xa and xb.  In section 8 these will be merged
-       with the original samplePoints; the dedup step removes any
-       exact coincidences between the two sets.
    ---------------------------------------------------------------- *)
 
 newPoints = Flatten[
@@ -490,7 +383,6 @@ newPoints = Flatten[
     Module[{xa, xb, xStar, s},
       xa    = interval[[1]];
       xb    = interval[[2]];
-      (* Clamp boundary intervals away from singularities at x=0 and x=1 *)
       If[Abs[xa - xLeft] < singularTol, xa = xLeft + singularTol];
       If[Abs[xb - xRight] < singularTol, xb = xRight - singularTol];
       xStar = (xa + xb) / 2;
@@ -506,43 +398,11 @@ newPoints = Flatten[
 Print[""];
 Print["New candidate points (before dedup): ", Length[newPoints]];
 
-(* deduplication tolerance (absolute) — configurable *)
 dedupTol = 10^-10;
 
 
 (* ----------------------------------------------------------------
-   8.  MERGE ORIGINAL AND NEW POINTS, THEN DEDUPLICATE AND SORT
-       ----------------------------------------------------------------
-   WHY WE KEEP THE ORIGINAL SAMPLING POINTS (observation.md)
-
-   Discarding the original samplePoints and writing only newPoints
-   causes oscillatory instability across iterations:
-
-     Iter 1: original points cover [x_min, x_max].  Negative region
-             found in [xLeft, x_min].  newPoints are all near x_min.
-     Iter 2 (old code): sampling_points.txt = newPoints only.
-             SDPB is constrained only near x_min; the interval
-             [x'_max, xRight] is now completely unconstrained.
-             SDPB exploits this gap → negative region appears on
-             the right side.
-     Iter 3: newPoints now cover the right side.  Left side is
-             unconstrained again → negative region jumps back left.
-     → The negative region oscillates between the two boundaries
-       and never converges.  (Observed in practice, noted in
-       observation.md under "Unexpected Instability".)
-
-   FIX: always include the original samplePoints in the output.
-   They act as a GLOBAL SKELETON that prevents large unconstrained
-   gaps from opening on either side of the locally refined region.
-   The adaptive new points provide LOCAL refinement near each
-   negative region.  Together they ensure both coverage and
-   convergence.  The extra cost (more SDPB blocks per iteration)
-   is acceptable and necessary for stability.
-   ----------------------------------------------------------------
-   Dedup tolerance 10^-10 removes exact duplicates (e.g. an
-   endpoint of a flagged interval that coincides with an existing
-   sample point to full precision).  Distinct points that happen
-   to be close but numerically different are preserved.
+   8.  MERGE AND DEDUPLICATE
    ---------------------------------------------------------------- *)
 
 allPoints = Sort[Join[samplePoints, newPoints]];
@@ -555,8 +415,7 @@ dedupPoints = Fold[
   Rest[allPoints]
 ];
 
-(* Safety filter: remove any points exactly at x=0 or x=1 to avoid singularities *)
-dedupPoints = Select[dedupPoints, 
+dedupPoints = Select[dedupPoints,
   Function[x, Abs[x - xLeft] >= singularTol && Abs[x - xRight] >= singularTol]
 ];
 
@@ -569,39 +428,23 @@ Print[""];
 
 (* ----------------------------------------------------------------
    9.  WRITE MERGED SAMPLING POINTS TO FILE
-       Original samplePoints + new refined points, deduplicated.
-       One high-precision number per line, plain decimal notation
-       (no scientific notation) with 200 significant digits.
    ---------------------------------------------------------------- *)
 
-(* Format a number as a plain decimal string — NEVER scientific notation.
-   Uses RealDigits to decompose the number, then manually assembles the
-   string with leading zeros or integer part as needed.
-     0.001      → "0.0010000000000000000000000000000000000000000000000000"
-     1.0*10^-12 → "0.0000000000010000000000000000000000000000000000000000"
-   This avoids ToString[N[...]] which renders exponents as multi-line
-   superscripts in plain text output. *)
 formatPlainDecimal[x_?NumericQ] := Module[
   {ax, sign, digits, dpos, ndig = 50, dstr, result},
   If[x == 0, Return["0." <> StringJoin[Table["0", {ndig}]]]];
   sign = If[Negative[x], "-", ""];
   ax   = SetPrecision[Abs[x], ndig];
   {digits, dpos} = RealDigits[ax, 10, ndig];
-  (* RealDigits can return negative entries at the tail for
-     numbers that don't fill ndig digits; replace with 0 *)
   dstr = StringJoin[ToString /@ Replace[digits, n_ /; n < 0 :> 0, {1}]];
   result = Which[
     dpos >= ndig,
-      (* All digits are before the decimal point *)
       dstr <> StringJoin[Table["0", {dpos - ndig}]] <> ".0",
     dpos > 0,
-      (* Decimal point falls within the digit string *)
       StringTake[dstr, dpos] <> "." <> StringDrop[dstr, dpos],
     dpos == 0,
-      (* 0.d1d2d3... *)
       "0." <> dstr,
     dpos < 0,
-      (* 0.000...d1d2d3... — need -dpos leading zeros after "0." *)
       "0." <> StringJoin[Table["0", {-dpos}]] <> dstr
   ];
   sign <> result
@@ -623,4 +466,4 @@ Print["  ", dedupPoints];
 Print[""];
 Print["STATUS: Refinement needed. Re-run pmp2sdp + sdpb with updated ", outFile, "."];
 
-Quit[1];   (* exit code 1 = adaptive loop should continue *)
+Quit[1];
