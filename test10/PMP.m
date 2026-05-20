@@ -147,10 +147,8 @@ Module[{myArgs, spFile, jsonFile, prec},
 
   If[Length[myArgs] >= 1,
     spFile   = myArgs[[1]];
-    jsonFile = If[Length[myArgs] >= 2, myArgs[[2]], "numeric_pmp.json"];
-    (* Default prec raised from 600 \[RightArrow] 650 to exceed SDPB's 2048-bit working
-       precision (2048 * log10(2) \[TildeTilde] 616.5 decimal digits) by a safe margin. *)
-    prec     = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 650];
+    jsonFile = If[Length[myArgs] >= 2, myArgs[[2]], "n_pmp.json"];
+    prec     = 650
 
     Print["=== text9.m ==="];
     Print["  sample_points = ", spFile];
