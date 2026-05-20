@@ -176,15 +176,15 @@ g31[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
 (* --- n4: safe precision guard -------------------------------------------
    n4 contains LegendreP[J, 1, z] and LegendreP[J, 2, z] with z > 1, and
    Hypergeometric2F1[-J, 1+J, 1, z1] which equals P_J(1.066) at typical
-   sample points.  All three grow as A^J where A ~ 1.436 (at x ≈ 0),
+   sample points.  All three grow as A^J where A ~ 1.436 (at x \[TildeTilde] 0),
    requiring ~1560 decimal digits at J = 10000 just to represent individual
    terms before cancellation.  With prec = 600 the computed result is pure
    numerical noise of magnitude ~10^960.
 
    Physical justification for returning 0 at large J:
      extraTriplet = {0&, 0&, 0&, 0&, LargeJ}
-   explicitly encodes n4 → 0 as J → ∞ (index 3 in fList = n4).
-   The safe threshold is  J_SAFE = floor((prec - 30) / 0.156) ≈ 3654.
+   explicitly encodes n4 \[RightArrow] 0 as J \[RightArrow] \[Infinity] (index 3 in fList = n4).
+   The safe threshold is  J_SAFE = floor((prec - 30) / 0.156) \[TildeTilde] 3654.
    Since the only super-threshold spin in Jlist is J = 10000, this guard
    affects exactly the J = 10000 blocks.
    --------------------------------------------------------------------- *)
@@ -195,9 +195,9 @@ n4MaxLog10A = 0.156;
 
 n4Safe[x_?NumericQ, J_?IntegerQ] :=
   If[J > Floor[(600 - 30) / n4MaxLog10A],   (* J > ~3654 *)
-    (* Large-J limit: n4 → 0 (consistent with extraTriplet's 0& for n4) *)
+    (* Large-J limit: n4 \[RightArrow] 0 (consistent with extraTriplet's 0& for n4) *)
     SetPrecision[0, 600],
-    (* Normal evaluation for J ≤ 3654 *)
+    (* Normal evaluation for J \[LessEqual] 3654 *)
     n4[x, J]
   ];
 
@@ -219,15 +219,24 @@ X53[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*((-4 + J)*(-2 + J)*(3 + J)*(5 + J) + ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
 ];
 
-(* Large J limit *)
+(* Large J limit of X53 *)
 LargeJ[x_?NumericQ] := Module[{sp, mA},
   sp = N[1/(1-x), 600];
   mA = N[maVal, 600];
   N[(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(18*sp^3*(-4*mA^2 + sp)^6), 600]
 ];
 
+(* Large J limit of X52 *)
+LargeJ2[x_?NumericQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  N[-1/18*(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(sp^3*(-4*mA^2 + sp)^6), 600];
+]
+
 Jmax = 60;
 Jlist = Range[0, Jmax, 2];
+(* JlistLarge = {10000};
+Jlist = Join[Range[0, 60, 2], JlistLarge]; *)
 
 (* NOTE: n4 is replaced by n4Safe (returns 0 for J > ~3654, exact for J <= 3654).
    All other functions are unchanged; they grow polynomially in J and are
@@ -237,7 +246,7 @@ fList = {g20, g31, n4Safe, X52, X53};
 (* large J limit *)
 (* 0& is a constant function of 0 *)
 
-extraTriplet = {0&, 0&, 0&, 0&, LargeJ};
+extraTriplet = {0&, 0&, 0&, LargeJ2, LargeJ};
 
 (* optimal lower bound *)
 (* norm = {0, 1, 0, 0, 0};
