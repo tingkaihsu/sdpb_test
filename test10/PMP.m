@@ -149,14 +149,13 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:650] := Module[
 ];
 
 
-Module[{myArgs, spFile, jsonFile, prec},
+Module[{myArgs, spFile, jsonFile, prec_650},
 
   myArgs = If[Length[$ScriptCommandLine] >= 2, Rest[$ScriptCommandLine], {}];
 
   If[Length[myArgs] >= 1,
     spFile   = myArgs[[1]];
     jsonFile = If[Length[myArgs] >= 2, myArgs[[2]], "n_pmp.json"];
-    prec     = 650
 
     Print["=== text9.m ==="];
     Print["  sample_points = ", spFile];
