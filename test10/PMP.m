@@ -127,20 +127,7 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:650] := Module[
       "polynomials" -> {{ Table[
         {SetPrecision[f1List[[k]][samplePoints[[i]], Jlist[[j]]], prec]},
         {k, Length[f1List]}
-      ] },
-      {Table[
-        {SetPrecision[f2List[[k]][samplePoints[[i]], Jlist[[j]]], prec]},
-        {k, Length[f2List]}
-      ] },
-      {Table[
-        {SetPrecision[f3List[[k]][samplePoints[[i]], Jlist[[j]]], prec]},
-        {k, Length[f3List]}
-      ] },
-      {Table[
-        {SetPrecision[f4List[[k]][samplePoints[[i]], Jlist[[j]]], prec]},
-        {k, Length[f4List]}
-      ] }
-      }
+      ] }}
     |>],
     {i, Length[samplePoints]}
   ];
