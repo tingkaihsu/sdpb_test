@@ -257,42 +257,36 @@ X53[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*((-4 + J)*(-2 + J)*(3 + J)*(5 + J) + ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
 ];
 
-(* Large J limit of X53 *)
-LargeJ[x_?NumericQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
-  mA = N[maVal, 600];
-  N[(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(18*sp^3*(-4*mA^2 + sp)^6), 600]
+(* Large J limit *)
+LargeJX53[x_?NumericQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 650];
+  mA = N[maVal, 650];
+  N[(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(18*sp^3*(-4*mA^2 + sp)^6), 650]
 ];
 
-(* Large J limit of X52 *)
-LargeJ2[x_?NumericQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
-  mA = N[maVal, 600];
-  N[-1/18*(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(sp^3*(-4*mA^2 + sp)^6), 600];
-]
+LargeJX52[x_?NumericQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 650];
+  mA = N[maVal, 650];
+  N[-1/18*(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(sp^3*(-4*mA^2 + sp)^6), 650]
+];
 
 Jmax = 60;
 Jlist = Range[0, Jmax, 2];
-(* JlistLarge = {10000};
-Jlist = Join[Range[0, 60, 2], JlistLarge]; *)
 
-(* NOTE: n4 is replaced by n4Safe (returns 0 for J > ~3654, exact for J <= 3654).
-   All other functions are unchanged; they grow polynomially in J and are
-   numerically accurate with prec = 600 even at J = 10000. *)
 fList = {g20, g31, n4Safe, X52, X53};
 
 (* large J limit *)
 (* 0& is a constant function of 0 *)
 
-extraTriplet = {0&, 0&, 0&, LargeJ2, LargeJ};
+extraTriplet = {0&, 0&, 0&, LargeJ, LargeJX53};
 
 (* optimal lower bound *)
-(* norm = {0, 1, 0, 0, 0};
-obj = {-1, 0, 0, 0, 0}; *)
+norm = {0, 1, 0, 0, 0};
+obj = {-1, 0, 0, 0, 0};
 
 (* optimal upper bound *)
-norm = {0, -1, 0, 0, 0};
-obj = {-1, 0, 0, 0, 0};
+(* norm = {0, -1, 0, 0, 0};
+obj = {-1, 0, 0, 0, 0}; *)
 
 xLeft  = SetPrecision[0, 600];   (* physical domain left endpoint  — check includes [xLeft,  x_min] *)
 xRight = SetPrecision[1, 600];   (* physical domain right endpoint — check includes [x_max, xRight] *)

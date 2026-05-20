@@ -74,10 +74,22 @@ g31[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   N[-(Sqrt[sp/(-4*mA^2 + sp)]*(-3 - (2*J*(1 + J)*(2*mA^2 - sp))/(-4*mA^2 + sp)))/(-2*mA^2 + sp)^4, 650]
 ];
 
+(* Maximum log10[A(x)] over physical x in (0,1): A = z + sqrt(z^2-1),
+   z = 1 + 8*mA^2/(3*(sp - 4*mA^2)).  Evaluated numerically: max ~ 0.156. *)
+n4MaxLog10A = 0.156;
+
+n4Safe[x_?NumericQ, J_?IntegerQ] :=
+  If[J > Floor[(600 - 30) / n4MaxLog10A],   (* J > ~3654 *)
+    (* Large-J limit: n4 \[RightArrow] 0 (consistent with extraTriplet's 0& for n4) *)
+    SetPrecision[0, 600],
+    (* Normal evaluation for J \[LessEqual] 3654 *)
+    n4[x, J]
+  ];
+
 n4[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 650];
-  mA = N[maVal, 650];
-  N[(81*Sqrt[sp/(-4*mA^2 + sp)]*(8*mA^4*(14*mA^2 - 15*sp)*(-8*mA^2 + 3*sp)^(3/2)*Hypergeometric2F1[-J, 1 + J, 1, (4*mA^2)/(12*mA^2 - 3*sp)] + (8*mA^4 - 18*mA^2*sp + 9*sp^2)*((-2*I)*mA*(10*mA^2 - 9*sp)*(8*mA^2 - 3*sp)*LegendreP[J, 1, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))] + Sqrt[-8*mA^2 + 3*sp]*(-8*mA^4 + 18*mA^2*sp - 9*sp^2)*LegendreP[J, 2, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))])))/(4*mA^2*(-2*mA^2 + sp)*(-8*mA^2 + 3*sp)^(3/2)*(8*mA^4 - 18*mA^2*sp + 9*sp^2)^3), 650]
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  N[(81*Sqrt[sp/(-4*mA^2 + sp)]*(8*mA^4*(14*mA^2 - 15*sp)*(-8*mA^2 + 3*sp)^(3/2)*Hypergeometric2F1[-J, 1 + J, 1, (4*mA^2)/(12*mA^2 - 3*sp)] + (8*mA^4 - 18*mA^2*sp + 9*sp^2)*((-2*I)*mA*(10*mA^2 - 9*sp)*(8*mA^2 - 3*sp)*LegendreP[J, 1, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))] + Sqrt[-8*mA^2 + 3*sp]*(-8*mA^4 + 18*mA^2*sp - 9*sp^2)*LegendreP[J, 2, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))])))/(4*mA^2*(-2*mA^2 + sp)*(-8*mA^2 + 3*sp)^(3/2)*(8*mA^4 - 18*mA^2*sp + 9*sp^2)^3), 600]
 ];
 
 X52[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
@@ -108,7 +120,7 @@ LargeJX52[x_?NumericQ] := Module[{sp, mA},
 Jmax = 60;
 Jlist = Range[0, Jmax, 2];
 
-fList = {g20, g31, n4, X52, X53};
+fList = {g20, g31, n4Safe, X52, X53};
 
 (* large J limit *)
 (* 0& is a constant function of 0 *)
