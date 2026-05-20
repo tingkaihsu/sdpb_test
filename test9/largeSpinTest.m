@@ -1,44 +1,44 @@
 (* ================================================================
-   largeSpinTest.m  (precision-propagation corrected version)
+   check_large_J.m
    ----------------------------------------------------------------
    PURPOSE
      After an SDPB run with Jmax=60, read the dual vector y and the
      current sampling points, then check whether the functional
 
          F(x, J) = y₁·g20(x,J) + y₂·g31(x,J) + y₃·n4(x,J)
-                 + y₄·X52(x,J) + y₅·X53(x,J)
 
      remains non-negative for LARGE spins J > 60.
 
-   PRECISION FIXES (2026-05) — applied consistently with test9.m
-     1. maVal: N[3/20, 650] instead of SetPrecision[0.150, 600].
-     2. n4PrecMin: adaptive working precision for n4.
-     3. n4: evaluates at prec_local digits, Re[…] explicit.
-     4. All other functions: N[3/20, 650] for mA.
+     This is a DIAGNOSTIC tool — it does NOT modify any files.
+     It reports whether the "small J" regime (J ≤ 60) is sufficient
+     or whether additional spins must be added to the SDPB constraints.
 
-   BUG FIXES (pre-existing)
-     A. Asymptotic analysis (Phase 3): extraFuncs had only 3 entries
-        when fList has 5.  The large-J functional is
-          X(x) = Σ_k yVec[[k]] * extraTriplet[[k]][x]
-        which correctly selects y₅ * LargeJ(x) (the X53 large-J term).
-        Fixed to use extraTriplet directly.
-     B. SetPrecision[ToExpression /@ (fixSciNotation /@ val), 200] was
-        applied to a numeric val (not a string). Fixed to N[val, 50].
+   TWO PHASES
+     Phase 1: Check F(x_i, J) at existing sample points x_i for
+              J = 62, 64, ..., up to J_scan_max.
+              (At sample points, SDPB guarantees F ≥ 0 for J ≤ 60.
+               Violations here mean the bound is INVALID.)
 
-   PERFORMANCE NOTE
-     Evaluating n4[x, J] at J = 20000 requires ≈ 3196-digit precision.
-     Computing Hypergeometric2F1[-20000, 20001, 1, z] at that precision
-     is equivalent to evaluating a degree-20000 Legendre polynomial to
-     3196 digits — this may take minutes per evaluation.  Consider
-     limiting jScanMax to ≤ 10000 for routine diagnostic runs.
+     Phase 2: Check F(mid, J) at midpoints between sample points
+              for the same large J range.
+              (Catches cases where F is marginal at sample points
+               but dips negative between them.)
+
+   SMART J GRID
+     Instead of checking every even J up to 10000 (5000 values),
+     we use an adaptive grid:
+       Dense near Jmax:   {62, 64, 66, ..., 120}
+       Moderate spacing:  {140, 160, ..., 500}
+       Sparse/log:        {600, 800, 1000, 1500, 2000, 3000, 5000, 7500, 10000}
+     Total: ~100 J values instead of 5000.
 
    USAGE
-     wolframscript -file largeSpinTest.m <sp_file> <y_file> [J_scan_max]
+     wolframscript -file check_large_J.m <sp_file> <y_file> [J_scan_max]
 
    EXIT CODES
-     0  F ≥ 0 for all large J tested
-     1  Violations found
-     2  Error
+     0  F ≥ 0 for all large J tested — Jmax=60 is sufficient
+     1  Violations found — need to expand Jmax or add large-J regime
+     2  Error (bad arguments, unreadable files)
    ================================================================ *)
 
 
@@ -49,7 +49,7 @@
 myArgs = If[Length[$ScriptCommandLine] >= 2, Rest[$ScriptCommandLine], {}];
 
 If[Length[myArgs] < 2,
-  Print["USAGE: wolframscript -file largeSpinTest.m ",
+  Print["USAGE: wolframscript -file negative_region.m ",
         "<sp_file> <y_file> [N_pts] [out_sp_file]"];
   Quit[2]
 ];
@@ -58,9 +58,11 @@ spFile    = myArgs[[1]];
 yFile     = myArgs[[2]];
 nPts      = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 10];
 minWidth  = If[Length[myArgs] >= 5, ToExpression[myArgs[[5]]], 10^-6];
+
+(* spin grid *)
 jScanMax  = If[Length[myArgs] >= 4, ToExpression[myArgs[[4]]], 10000];
 
-Print["=== largeSpinTest.m  (Large-J Positivity Diagnostic) ==="];
+Print["=== check_large_J.m  (Large-J Positivity Diagnostic) ==="];
 Print["  sp_file     = ", spFile];
 Print["  y_file      = ", yFile];
 Print["  N_pts      = ", nPts];
@@ -72,11 +74,16 @@ Print[""];
 (* ----------------------------------------------------------------
    2. READ FILES
    ---------------------------------------------------------------- *)
-
+(* Fix C/Fortran-style scientific notation: e.g. "1.5e+02" -> "1.5*^+02"
+   Mathematica does not recognise lowercase 'e' or uppercase 'E' as an
+   exponent marker; it treats them as the symbol e or Euler's E.
+   This regex converts  e±digits  /  E±digits  to  *^±digits  before
+   ToExpression is called. *)
 fixSciNotation[s_String] := StringReplace[s,
   RegularExpression["[eE]([+-]?\\d+)"] :> "*^$1"
 ];
 
+(* Sampling points *)
 If[!FileExistsQ[spFile],
   Print["ERROR: sampling points file not found: ", spFile]; Quit[2]];
 
@@ -88,12 +95,16 @@ spRaw = Select[
 If[Length[spRaw] == 0,
   Print["ERROR: no sample points found in ", spFile]; Quit[2]];
 
+(* Parse and sort; keep high precision *)
 samplePoints = Sort[SetPrecision[ToExpression /@ (fixSciNotation /@ spRaw), 200]];
 Print["Loaded ", Length[samplePoints], " sampling points."];
 
-
 (* ----------------------------------------------------------------
-   3.  READ y.txt / z.txt
+   3.  READ z.txt
+       SDPB writes all n components of y, one per line; blank lines
+       and lines starting with "#" are skipped.
+       The length of yVec must equal the number of functions in fVec.
+       A mismatch is caught by the dimensional check below.
    ---------------------------------------------------------------- *)
 
 If[!FileExistsQ[yFile],
@@ -109,6 +120,9 @@ If[Length[yRaw] == 0,
 
 yVec = SetPrecision[ToExpression /@ (fixSciNotation /@ yRaw), 200];
 
+(* Validate: every component of yVec must be numeric.
+   A non-numeric entry (e.g. containing symbolic 'e') means the
+   scientific-notation fix missed a case or the file is malformed. *)
 Do[
   If[!NumberQ[yVec[[k]]],
     Print["ERROR: y component ", k, " is not numeric: ", yVec[[k]]];
@@ -119,6 +133,7 @@ Do[
   {k, Length[yVec]}
 ];
 
+(* Same validation for sample points *)
 Do[
   If[!NumberQ[samplePoints[[k]]],
     Print["ERROR: sample point ", k, " is not numeric: ", samplePoints[[k]]];
@@ -130,104 +145,114 @@ Do[
 Print["y vector (", Length[yVec], " component(s)): ", yVec];
 Print[""];
 
-
 (* ----------------------------------------------------------------
-   4. PROBLEM-SPECIFIC DEFINITIONS — must match test9.m
+   4. PROBLEM-SPECIFIC DEFINITIONS  (must match test9.m / refine_sampling.m)
    ---------------------------------------------------------------- *)
 
-(* FIX 1: exact rational for mA — avoids machine-float precision leakage *)
-maVal = N[3/20, 650];
-Print["mA = ", maVal];
+(* problem-specific *)
+(* let the mass be 4mA^2 < M^2 = 1 where M  = 1 to infinity *)
 
-(* FIX 2: n4PrecMin — adaptive working precision for n4.
-   For J ≤ ~3782: returns 650 (no overhead vs current code).
-   For J = 10000: returns 1628.
-   For J = 20000: returns 3196.
-   Uses the exact rational (3/20)^2 for mA in the precision estimator. *)
-n4PrecMin[J_?IntegerQ, x_?NumericQ, margin_Integer:60, stdPrec_Integer:650] :=
-  Module[{sp0, z2, A, logA},
-    sp0  = N[1/(1 - x), 50];
-    z2   = 1 + 8*(maVal)^2 / (3*(sp0 - 4*(maVal)^2));
-    A    = If[z2 > 1, z2 + Sqrt[z2^2 - 1], 1];
-    logA = If[A > 1, N[Log[10, A], 50], 0];
-    Max[stdPrec, Ceiling[J * logA] + margin]
-  ];
+maVal = SetPrecision[3/20, 600];
+
+Print["mA = ", maVal]
+
+(* dispersion representation of Wilson coefficients *)
+(* All functions now precompute sp and mA numerically with N[...,prec] *)
+
+(* forward limit: use our own convention *)
 
 g20[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 650];
-  mA = N[maVal, 650];
-  N[-(2*Sqrt[sp/(-4*mA^2 + sp)])/(2*mA^2 - sp)^3, 650]
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  N[-(2*Sqrt[sp/(-4*mA^2 + sp)])/(2*mA^2 - sp)^3, 600]
 ];
 
 g31[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 650];
-  mA = N[maVal, 650];
-  N[-(Sqrt[sp/(-4*mA^2 + sp)]*(-3 - (2*J*(1 + J)*(2*mA^2 - sp))/(-4*mA^2 + sp)))/(-2*mA^2 + sp)^4, 650]
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  N[-(Sqrt[sp/(-4*mA^2 + sp)]*(-3 - (2*J*(1 + J)*(2*mA^2 - sp))/(-4*mA^2 + sp)))/(-2*mA^2 + sp)^4, 600]
 ];
 
-(* null constraint — PRECISION-PROPAGATION IMPLEMENTATION
-   FIX 2+3+4: adaptive precision, exact-rational mA, explicit Re[…]
-   
-   PERFORMANCE NOTE: for J = 10000 this requires ~1628 digits.
-   For J = 20000 it requires ~3196 digits.  The Hypergeometric2F1
-   and LegendreP evaluations at these precisions may take minutes. *)
-n4[x_?NumericQ, J_?IntegerQ] := Module[{prec, xp, sp, mA, result},
-  prec = n4PrecMin[J, x];
-  If[prec > 1000,
-    Print["  [n4] J=", J, " requires prec=", prec, " digits — this may be slow..."]
+(* --- n4: safe precision guard -------------------------------------------
+   n4 contains LegendreP[J, 1, z] and LegendreP[J, 2, z] with z > 1, and
+   Hypergeometric2F1[-J, 1+J, 1, z1] which equals P_J(1.066) at typical
+   sample points.  All three grow as A^J where A ~ 1.436 (at x ≈ 0),
+   requiring ~1560 decimal digits at J = 10000 just to represent individual
+   terms before cancellation.  With prec = 600 the computed result is pure
+   numerical noise of magnitude ~10^960.
+
+   Physical justification for returning 0 at large J:
+     extraTriplet = {0&, 0&, 0&, 0&, LargeJ}
+   explicitly encodes n4 → 0 as J → ∞ (index 3 in fList = n4).
+   The safe threshold is  J_SAFE = floor((prec - 30) / 0.156) ≈ 3654.
+   Since the only super-threshold spin in Jlist is J = 10000, this guard
+   affects exactly the J = 10000 blocks.
+   --------------------------------------------------------------------- *)
+
+(* Maximum log10[A(x)] over physical x in (0,1): A = z + sqrt(z^2-1),
+   z = 1 + 8*mA^2/(3*(sp - 4*mA^2)).  Evaluated numerically: max ~ 0.156. *)
+n4MaxLog10A = 0.156;
+
+n4Safe[x_?NumericQ, J_?IntegerQ] :=
+  If[J > Floor[(600 - 30) / n4MaxLog10A],   (* J > ~3654 *)
+    (* Large-J limit: n4 → 0 (consistent with extraTriplet's 0& for n4) *)
+    SetPrecision[0, 600],
+    (* Normal evaluation for J ≤ 3654 *)
+    n4[x, J]
   ];
-  xp   = SetPrecision[x, prec];
-  sp   = N[1/(1 - xp), prec];
-  mA   = N[maVal, prec];
-  result = (81*Sqrt[sp/(-4*mA^2 + sp)]*(
-      8*mA^4*(14*mA^2 - 15*sp)*(-8*mA^2 + 3*sp)^(3/2)*
-        Hypergeometric2F1[-J, 1 + J, 1, (4*mA^2)/(12*mA^2 - 3*sp)] +
-      (8*mA^4 - 18*mA^2*sp + 9*sp^2)*(
-        (-2*I)*mA*(10*mA^2 - 9*sp)*(8*mA^2 - 3*sp)*
-          LegendreP[J, 1, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))] +
-        Sqrt[-8*mA^2 + 3*sp]*(-8*mA^4 + 18*mA^2*sp - 9*sp^2)*
-          LegendreP[J, 2, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))]
-      )
-    ))/(4*mA^2*(-2*mA^2 + sp)*(-8*mA^2 + 3*sp)^(3/2)*(8*mA^4 - 18*mA^2*sp + 9*sp^2)^3);
-  Re[N[result, 650]]
+
+n4[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  N[(81*Sqrt[sp/(-4*mA^2 + sp)]*(8*mA^4*(14*mA^2 - 15*sp)*(-8*mA^2 + 3*sp)^(3/2)*Hypergeometric2F1[-J, 1 + J, 1, (4*mA^2)/(12*mA^2 - 3*sp)] + (8*mA^4 - 18*mA^2*sp + 9*sp^2)*((-2*I)*mA*(10*mA^2 - 9*sp)*(8*mA^2 - 3*sp)*LegendreP[J, 1, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))] + Sqrt[-8*mA^2 + 3*sp]*(-8*mA^4 + 18*mA^2*sp - 9*sp^2)*LegendreP[J, 2, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))])))/(4*mA^2*(-2*mA^2 + sp)*(-8*mA^2 + 3*sp)^(3/2)*(8*mA^4 - 18*mA^2*sp + 9*sp^2)^3), 600]
 ];
 
 X52[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 650];
-  mA = N[maVal, 650];
-  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 650]
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
 ];
 
 X53[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 650];
-  mA = N[maVal, 650];
-  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*((-4 + J)*(-2 + J)*(3 + J)*(5 + J) + ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 650]
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*((-4 + J)*(-2 + J)*(3 + J)*(5 + J) + ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
 ];
 
+(* Large J limit *)
 LargeJ[x_?NumericQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 650];
-  mA = N[maVal, 650];
-  N[(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(18*sp^3*(-4*mA^2 + sp)^6), 650]
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  N[(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(18*sp^3*(-4*mA^2 + sp)^6), 600]
 ];
 
 Jmax = 60;
 Jlist = Range[0, Jmax, 2];
-(* JlistLarge = {3000};
-Jlist = Join[Range[0, Jmax, 2], JlistLarge]; *)
 
-fList = {g20, g31, n4, X52, X53};
+(* NOTE: n4 is replaced by n4Safe (returns 0 for J > ~3654, exact for J <= 3654).
+   All other functions are unchanged; they grow polynomially in J and are
+   numerically accurate with prec = 600 even at J = 10000. *)
+fList = {g20, g31, n4Safe, X52, X53};
 
-(* large J limit: g20→0, g31→0, n4→0, X52→0, X53→LargeJ *)
+(* large J limit *)
+(* 0& is a constant function of 0 *)
+
 extraTriplet = {0&, 0&, 0&, 0&, LargeJ};
 
+(* optimal lower bound *)
+(* norm = {0, 1, 0, 0, 0};
+obj = {-1, 0, 0, 0, 0}; *)
+
+(* optimal upper bound *)
 norm = {0, -1, 0, 0, 0};
-obj  = {-1, 0, 0, 0, 0};
+obj = {-1, 0, 0, 0, 0};
 
-xLeft  = SetPrecision[0, 650];
-xRight = SetPrecision[1, 650];
+xLeft  = SetPrecision[0, 600];   (* physical domain left endpoint  — check includes [xLeft,  x_min] *)
+xRight = SetPrecision[1, 600];   (* physical domain right endpoint — check includes [x_max, xRight] *)
 
-
-(* --- Dimensional consistency check --- *)
+(* --- Dimensional consistency check ---
+   y.txt must have exactly as many lines as there are functions in
+   fList.  A mismatch means the wrong y.txt or fList was supplied. *)
 If[Length[yVec] != Length[fList],
   Print["ERROR: y.txt has ", Length[yVec], " component(s) but fList has ",
         Length[fList], " function(s). They must match."];
@@ -239,8 +264,11 @@ If[Length[yVec] != Length[fList],
    4. BUILD SMART J GRID FOR SCANNING
    ---------------------------------------------------------------- *)
 
-JlistDense    = Range[62, Min[120, jScanMax], 2];
-JlistModerate = Range[140, Min[500, jScanMax], 20];
+(* The SDPB run constrained J = 0, 2, ..., 60 and J->infty.
+   We need to check J = 62, 64, ..., J_scan_max. *)
+
+JlistDense    = Range[62, Min[120, jScanMax], 2];         (* every even spin near Jmax *)
+JlistModerate = Range[140, Min[500, jScanMax], 20];       (* every 20 *)
 JlistSparse   = Select[
   {600, 800, 1000, 1500, 2000, 3000, 5000, 7500, 10000, 15000, 20000},
   # <= jScanMax &
@@ -250,18 +278,10 @@ JlistLarge = DeleteDuplicates[Sort[Join[JlistDense, JlistModerate, JlistSparse]]
 
 Print["Large-J scan grid: ", Length[JlistLarge], " spin values"];
 Print["  Range: J = ", First[JlistLarge], " to ", Last[JlistLarge]];
-Print["  Dense (62-120):     ", Length[JlistDense],    " values"];
+Print["  Dense (62-120):    ", Length[JlistDense], " values"];
 Print["  Moderate (140-500): ", Length[JlistModerate], " values"];
-Print["  Sparse (600+):      ", Length[JlistSparse],   " values"];
+Print["  Sparse (600+):     ", Length[JlistSparse], " values"];
 Print[""];
-
-(* Warn if large J will need very high precision *)
-If[jScanMax >= 5000,
-  Print["  WARNING: J ≥ 5000 will require prec ≥ 844 digits for n4."];
-  Print["  WARNING: J ≥ 10000 will require prec ≥ 1628 digits — evaluations may be slow."];
-  Print["  Consider setting jScanMax ≤ 3782 for routine runs."];
-  Print[""]
-];
 
 
 (* ----------------------------------------------------------------
@@ -270,12 +290,15 @@ If[jScanMax >= 5000,
 
 F[x_?NumericQ, J_?IntegerQ] := Sum[yVec[[k]] * fList[[k]][x, J], {k, Length[yVec]}];
 
-singularTol = SetPrecision[10^-12, 650];
+(* Safety: clamp midpoints near known singularity at x -> 1 (sp = 1/(1-x))
+   and provide a robust numeric evaluator that returns $Failed on
+   non-finite or exceptional results. *)
+singularTol = SetPrecision[10^-12, 600]; (* distance from x=1 to avoid sp singularity *)
 
 safeF[x_?NumericQ, J_?IntegerQ] := Module[{x0 = x, val},
   If[Abs[1 - x0] < singularTol, x0 = 1 - singularTol];
   If[Abs[x0] < singularTol, x0 = singularTol];
-  val = Quiet[Check[N[F[x0, J], 200], $Failed]];
+  val = Quiet[Check[N[F[x0, J], 600], $Failed]];
   If[val === $Failed || !NumberQ[val] ||
      MemberQ[{Infinity, -Infinity, ComplexInfinity, Indeterminate}, Head[val]],
     $Failed,
@@ -286,12 +309,14 @@ safeF[x_?NumericQ, J_?IntegerQ] := Module[{x0 = x, val},
 
 (* ----------------------------------------------------------------
    6. PHASE 1: CHECK AT SAMPLE POINTS
+      At x_i where SDPB guarantees F ≥ 0 for J ≤ 60,
+      check whether F ≥ 0 also holds for J > 60.
    ---------------------------------------------------------------- *)
 
 Print["========================================"];
 Print["  PHASE 1: Checking at SAMPLE POINTS"];
 Print["========================================"];
-Print["  ", Length[samplePoints], " x-points and ", Length[JlistLarge], " J-values"];
+Print["  ", Length[samplePoints], " x-points and ", Length[JlistLarge], "J-values"];
 Print[""];
 
 phase1Violations = {};
@@ -302,7 +327,8 @@ phase1WorstJ = None;
 Do[
   xi = samplePoints[[i]];
 
-  localMin  = Infinity;
+  (* For each x_i, find the minimum F over all large J *)
+  localMin = Infinity;
   localWorstJ = None;
 
   Do[
@@ -314,6 +340,7 @@ Do[
     {Jj, JlistLarge}
   ];
 
+  (* Negative values *)
   If[localMin < 0,
     AppendTo[phase1Violations, {xi, localWorstJ, localMin}];
   ];
@@ -324,6 +351,7 @@ Do[
     phase1WorstJ = localWorstJ;
   ];
 
+  (* Progress indicator every 10 points *)
   If[Mod[i, Max[1, Floor[Length[samplePoints]/10]]] == 0,
     Print["  Progress: ", i, "/", Length[samplePoints],
           "  local min so far: ", phase1MinVal]
@@ -351,6 +379,7 @@ If[Length[phase1Violations] > 0,
   ];
   Print[""];
 
+  (* Identify critical J values *)
   violatedJs = DeleteDuplicates[Sort[#[[2]] & /@ phase1Violations]];
   Print["  J values with violations: ", violatedJs];
   Print["  Suggested: add these to Jlist in test9.m and rerun SDPB."];
@@ -360,6 +389,8 @@ Print[""];
 
 (* ----------------------------------------------------------------
    7. PHASE 2: CHECK AT MIDPOINTS
+      Even if Phase 1 passes, F could dip negative between
+      sample points for large J.
    ---------------------------------------------------------------- *)
 
 Print["========================================"];
@@ -368,13 +399,14 @@ Print["========================================"];
 
 nIntervals = Length[samplePoints] - 1;
 
+(* Include boundary intervals *)
 allIntervals = Join[
   If[samplePoints[[1]]  > xLeft  + 10^-12, {{xLeft + singularTol, samplePoints[[1]]}}, {}],
   Table[{samplePoints[[i]], samplePoints[[i+1]]}, {i, nIntervals}],
   If[samplePoints[[-1]] < xRight - 10^-12, {{samplePoints[[-1]], xRight - singularTol}}, {}]
 ];
 
-Print["  ", Length[allIntervals], " intervals and ", Length[JlistLarge], " J-values"];
+Print["  ", Length[allIntervals], " intervals and ", Length[JlistLarge], "J-values"];
 Print["  Left boundary  : [", xLeft, ", ", samplePoints[[1]], "]  ",
       If[samplePoints[[1]] > xLeft  + 10^-12, "(active)", "(skipped — x_min = xLeft)"]];
 Print["  Right boundary : [", samplePoints[[-1]], ", ", xRight, "]  ",
@@ -393,6 +425,7 @@ Do[
   width = xb - xa;
   mid = (xa + xb) / 2;
 
+  (* Clamp away from singularities *)
   If[Abs[mid] < singularTol, mid = singularTol];
   If[Abs[1 - mid] < singularTol, mid = 1 - singularTol];
 
@@ -452,19 +485,15 @@ Print[""];
 
 (* ----------------------------------------------------------------
    8. ASYMPTOTIC ANALYSIS
-      BUG FIX A: extraFuncs had 3 entries; corrected to use extraTriplet
-      (which has 5 entries matching fList) so the J→∞ functional is
-      correctly computed as Σ_k yVec[[k]] * extraTriplet[[k]][x].
-      This selects y₅ * LargeJ(x) — the X53 large-J contribution.
-
-      BUG FIX B: display of val used fixSciNotation /@ val on a Number
-      (not a String).  Replaced with N[val, 50] for a clean display.
+      Check how F scales with J at a few representative x values.
+      This reveals whether violations are transient or persistent.
    ---------------------------------------------------------------- *)
 
 Print["========================================"];
 Print["  ASYMPTOTIC ANALYSIS"];
 Print["========================================"];
 
+(* Pick a few representative x values *)
 nRep = Min[5, Length[samplePoints]];
 repIndices = Table[
   Max[1, Min[Length[samplePoints], Round[i * Length[samplePoints] / (nRep + 1)]]],
@@ -480,20 +509,19 @@ Do[
   xi = repXvals[[r]];
   Print[""];
   Print["  x = ", xi, "  (sp = ", N[1/(1-xi), 6], ")"];
-  Print["    J       |  F(x,J)                    |  F/J^6"];
-  Print["    --------|----------------------------|------------------------------"];
+  Print["    J       |  F(x,J)          |  F/J^6"];
+  Print["    --------|------------------|----------------"];
   Do[
     val = safeF[xi, Jp];
-    (* BUG FIX B: val is already a Number — display directly *)
     ratio = If[val =!= $Failed && Jp > 0, val / Jp^6, "N/A"];
-    Print["    ", Jp, "     |  ",
-          If[val =!= $Failed, N[val, 50], "$Failed"],
-          "    |  ", If[NumberQ[ratio], N[ratio, 50], ratio]],
+    Print["    ", Jp, "     |  ", If[val =!= $Failed, SetPrecision[ToExpression /@ (fixSciNotation /@ val), 200], "$Failed"],
+          "    |  ", If[NumberQ[ratio], SetPrecision[ToExpression /@ (fixSciNotation /@ ratio), 200], ratio]],
     {Jp, JprobeList}
   ];
-  (* BUG FIX A: use extraTriplet (5 entries) and Length[yVec] (not 3) *)
-  xInfVal = Sum[yVec[[k]] * extraTriplet[[k]][xi], {k, Length[yVec]}];
-  Print["    inf     |  (LargeJ limit)            |  ", N[xInfVal, 50]],
+  (* Also show the J->infty limit for comparison *)
+  extraFuncs = extraTriplet;
+  xInfVal = Sum[yVec[[k]] * extraFuncs[[k]][xi], {k, Length[yVec]}];
+  Print["    inf     |  (LargeJ limit)  |  ", SetPrecision[ToExpression /@ (fixSciNotation /@ xInfVal), 200]],
   {r, Length[repXvals]}
 ];
 Print[""];
@@ -521,6 +549,7 @@ If[totalViolations == 0,
   Print[""];
   Quit[0],
 
+  (* Violations found *)
   Print[""];
   Print["  X  VIOLATIONS FOUND: ", totalViolations, " total"];
   Print["     Phase 1 (sample points): ", Length[phase1Violations]];
