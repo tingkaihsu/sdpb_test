@@ -149,7 +149,7 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:650] := Module[
 ];
 
 
-Module[{myArgs, spFile, jsonFile, prec_650},
+Module[{myArgs, spFile, jsonFile, prec_:650},
 
   myArgs = If[Length[$ScriptCommandLine] >= 2, Rest[$ScriptCommandLine], {}];
 
