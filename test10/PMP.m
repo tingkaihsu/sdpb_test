@@ -74,6 +74,8 @@ f1List = {
   Function[{x}, M1[x][[1, 1]]]
 };
 
+Print["f1List = ", f1List];
+
 f2List = {
   Function[{x}, M0[x][[2, 1]]],
   Function[{x}, M1[x][[2, 1]]]
