@@ -97,7 +97,7 @@ If[Length[spRaw] == 0,
   Print["ERROR: no sample points found in ", spFile]; Quit[2]];
 
 (* Parse and sort; keep high precision *)
-samplePoints = Sort[SetPrecision[ToExpression /@ spRaw, 50]];
+samplePoints = Sort[SetPrecision[ToExpression /@ spRaw, 600]];
 
 Print["Loaded ", Length[samplePoints], " sampling points:"];
 Print["  ", samplePoints];
@@ -123,7 +123,7 @@ yRaw = Select[
 If[Length[yRaw] == 0,
   Print["ERROR: y.txt is empty: ", yFile]; Quit[2]];
 
-yVec = SetPrecision[ToExpression /@ yRaw, 50];
+yVec = SetPrecision[ToExpression /@ yRaw, 600];
 
 Print["y vector (", Length[yVec], " component(s)): ", yVec];
 Print[""];
@@ -292,7 +292,7 @@ newPoints = Flatten[
       s     = (xb - xa) / nPts;
       Print["  Flagged interval [", xa, ", ", xb, "]:"];
       Print["    x* = ", xStar, "  s = ", s];
-      Table[SetPrecision[xStar + (k - nPts/2) * s, 50], {k, 0, nPts}]
+      Table[SetPrecision[xStar + (k - nPts/2) * s, 600], {k, 0, nPts}]
     ],
     {interval, flaggedIntervals}
   ]
@@ -333,7 +333,7 @@ Print[""];
    ---------------------------------------------------------------- *)
 
 outLines = StringRiffle[
-  ToString[NumberForm[#, {50, 45}]] & /@ dedupPoints,
+  ToString[NumberForm[#, {600, 545}]] & /@ dedupPoints,
   "\n"
 ];
 
