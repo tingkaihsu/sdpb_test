@@ -259,15 +259,15 @@ X53[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
 
 (* Large J limit *)
 LargeJX53[x_?NumericQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 650];
-  mA = N[maVal, 650];
-  N[(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(18*sp^3*(-4*mA^2 + sp)^6), 650]
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  N[(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(18*sp^3*(-4*mA^2 + sp)^6), 600]
 ];
 
 LargeJX52[x_?NumericQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 650];
-  mA = N[maVal, 650];
-  N[-1/18*(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(sp^3*(-4*mA^2 + sp)^6), 650]
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  N[-1/18*(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(sp^3*(-4*mA^2 + sp)^6), 600]
 ];
 
 Jmax = 60;
