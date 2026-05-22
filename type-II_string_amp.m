@@ -1,7 +1,3 @@
-(* ::Package:: *)
-
-(* ::Package:: *)
-
 (* ============================================================
    Type-II string amplitude: KK reduction 5d -> 4d
    5d dilaton scattering -> 4d massive scalar amplitude
@@ -12,60 +8,29 @@
    is enforced by the replacement rule. *)
 A4[s_,t_] := (s^2+t^2+u^2)^2 *
               (Gamma[-s/4] Gamma[-t/4] Gamma[-u/4]) /
-              (Gamma[1+s/4] Gamma[1+t/4] Gamma[1+u/4]) /. {u -> -s-t};
+              (Gamma[1+s/4] Gamma[1+t/4] Gamma[1+u/4])/. {u -> -s-t};
 
-A4[s,t] // FullSimplify
+Print[ A4[s,t] // FullSimplify ];
 
-
-mstr = n/R;
-
-(* Mandelstam variables shifted by KK mass in each channel.
-   The KK momentum along the compact direction contributes
-   (m+m)^2 = 4m^2 to the s-channel invariant. *)
-hs[s_, m_] := s + (m+m)^2;   (* = s + 4m^2 *)
-ht[t_, m_] := t;
-hu[u_, m_] := u;
+(* s-channel *)
+s5d[s_, m_] := s - (m+m)^2;
+t5d[t_, m_] := t;
+u5d[u_, m_] := u;
 
 (* Verify: shifted sum is 4m^2 on the Mandelstam constraint surface *)
-hs[s,m] + ht[t,m] + hu[u,m] /. {s+t+u -> 0}
+Print[ s5d[s,m] + t5d[t,m] + u5d[u,m] /. {s+t+u -> 4m^2} ];
 
+Print["A4[s5d[s,m], t] = ", A4[s5d[s,m], t]//FullSimplify ]
 
-(* s-channel shifted amplitude (as a sanity check) *)
-A4[hs[s,m], t]
-
-
-(* ============================================================
-   stu-symmetric 4d amplitude.
-
-   Three terms, one per channel:
-     term 1: s-channel  -- shift s -> s+4m^2, u_eff = -(s+4m^2)-t  (inside A4)
-     term 2: t-channel  -- shift t -> t+4m^2, u_eff = -s-(t+4m^2)  (inside A4)
-     term 3: u-channel  -- u -> 4m^2-s-t     (written out explicitly)
-
-   BUG FIX (minor, operator-precedence / clarity):
-   The original code wrote:
-     A4[...] + A4[...] + (Gamma-expr) /. {u -> 4m^2-s-t}
-   Mathematica's /. has LOWER precedence than +, so this is
-   equivalent to (A4[...]+A4[...]+Gamma-expr) /. {u->4m^2-s-t}.
-   In practice this is harmless (u is already gone from the first
-   two terms after A4 evaluates), but it is fragile and misleading.
-   Fix: wrap the third term in explicit parentheses.
-   ============================================================ *)
-M4[s_,t_] :=
-  A4[s+4m^2, t] +
-  A4[s, t+4m^2] +
-  ((s^2+t^2+u^2)^2 *
-   (Gamma[-s/4] Gamma[-t/4] Gamma[-u/4]) /
-   (Gamma[1+s/4] Gamma[1+t/4] Gamma[1+u/4]) /. {u -> 4m^2-s-t});
-
-
-(* Symmetry checks *)
-Print["s-t symmetry test of A4[s,t] = ",
-      A4[s+4m^2,t] - A4[t+4m^2,s] // FullSimplify]
-Print["s-t symmetry test of M4[s,t] = ",
-      M4[s,t] - M4[t,s]]
-
-
+M4[s_, t_, m_] := ( (s-4m^2)^2+t^2+u^2 )^2 *
+                  ( Gamma[-(s-4m^2)/4] Gamma[-t/4] Gamma[-u/4] ) /
+                  ( Gamma[1+(s-4m^2)/4] Gamma[1+t/4] Gamma[1+u/4] ) 
+                  + ( s^2+(t-4m^2)^2+u^2 )^2 *
+                  ( Gamma[-s/4] Gamma[-(t-4m^2)/4] Gamma[-u/4] ) /
+                  ( Gamma[1+s/4] Gamma[1+(t-4m^2)/4] Gamma[1+u/4] )
+                  + ( s^2+t^2+(u-4m^2)^2 )^2 *
+                  ( Gamma[-s/4] Gamma[-t/4] Gamma[-(u-4m^2)/4] ) /
+                  ( Gamma[1+s/4] Gamma[1+t/4] Gamma[1+(u-4m^2)/4] );
 (* ============================================================
    RESIDUE COMPUTATION \[LongDash] CORRECTED
 
@@ -107,16 +72,13 @@ Print["s-t symmetry test of M4[s,t] = ",
    ============================================================ *)
 
 (* Step 1: Evaluate M4 at the three required points *)
-M4at    = M4[2m^2, t]       // FullSimplify;
-M4deriv = D[M4[s,t], s] /. s -> 2m^2 // FullSimplify;
-M4shft  = M4[2m^2-t, t]     // FullSimplify;
+M4at    = M4[2m^2, t, m]       // FullSimplify;
+M4deriv = D[M4[s,t, m], s] /. s -> 2m^2 // FullSimplify;
+M4shft  = M4[2m^2-t, t, m]     // FullSimplify;
 
 (* Step 2: Assemble the residue from the analytic formula *)
 residue = (M4deriv * t - M4at + M4shft) / t^2 // FullSimplify;
 
 (* Step 3: Series coefficients in t *)
-Print[SeriesCoefficient[residue, {t, 0, 0}]]
-Print[SeriesCoefficient[residue, {t, 0, 1}]]
-
-
-
+Print[SeriesCoefficient[residue, {t, 0, 0}] ]
+Print[SeriesCoefficient[residue, {t, 0, 1}] ]

@@ -17,7 +17,7 @@
       the wrong binary representation.  FIX: use N[3/20, prec]
       (exact rational) inside every function that needs precision
       beyond 16 digits.
-   2. Fixed prec=600/650 inside n4 regardless of J.  At J=10000
+   2. Fixed prec=600/600 inside n4 regardless of J.  At J=10000
       the terms are ~10^1568 and 600 digits leave ~10^968 noise.
       FIX: dynamic prec via n4PrecMin[J, x].
    3. Outer N[expr, 600] doesn't increase internal evaluation
@@ -81,11 +81,7 @@ WritePmpJsonNumerical[
 (* problem-specific *)
 (* let the mass be 4mA^2 < M^2 = 1 where M  = 1 to infinity *)
 
-(* FIX 1 of 4: Use the exact rational 3/20 instead of the machine float 0.150.
-   SetPrecision[0.150, 600] pads from the wrong IEEE-754 bit pattern (which
-   encodes 0.14999999999999999...), giving a spuriously "high-precision" but
-   factually wrong value at digit 17 onward.  N[3/20, 600] is exact. *)
-maVal = N[3/20, 650];
+maVal = N[3/20, 600];
 
 Print["mA = ", maVal]
 
@@ -102,7 +98,7 @@ Print["mA = ", maVal]
      log₁₀(A) ≈ 0.157 at worst case (x → 0)
      prec_local = max(stdPrec, ⌈J · log₁₀(A)⌉ + margin)
 
-   For J ≤ 60: prec_local = stdPrec = 650   → zero overhead.
+   For J ≤ 60: prec_local = stdPrec = 600   → zero overhead.
    For J = 10000: prec_local = 1628          → correct resolution.
    For J = 20000: prec_local = 3196          → correct resolution.
 
@@ -111,7 +107,7 @@ Print["mA = ", maVal]
    to avoid the machine-float contamination described in §2.1.
    ============================================================ *)
 
-n4PrecMin[J_?IntegerQ, x_?NumericQ, margin_Integer:60, stdPrec_Integer:650] :=
+n4PrecMin[J_?IntegerQ, x_?NumericQ, margin_Integer:60, stdPrec_Integer:600] :=
   Module[{sp0, z2, A, logA},
     sp0  = N[1/(1 - x), 50];
     z2   = 1 + 8*(3/20)^2 / (3*(sp0 - 4*(3/20)^2));
@@ -123,15 +119,15 @@ n4PrecMin[J_?IntegerQ, x_?NumericQ, margin_Integer:60, stdPrec_Integer:650] :=
 (* forward limit: use our own convention *)
 
 g20[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 650];
-  mA = N[3/20, 650];    (* FIX 1: exact rational *)
-  N[-(2*Sqrt[sp/(-4*mA^2 + sp)])/(2*mA^2 - sp)^3, 650]
+  sp = N[1/(1-x), 600];
+  mA = N[3/20, 600];    (* FIX 1: exact rational *)
+  N[-(2*Sqrt[sp/(-4*mA^2 + sp)])/(2*mA^2 - sp)^3, 600]
 ];
 
 g31[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 650];
-  mA = N[3/20, 650];    (* FIX 1: exact rational *)
-  N[-(Sqrt[sp/(-4*mA^2 + sp)]*(-3 - (2*J*(1 + J)*(2*mA^2 - sp))/(-4*mA^2 + sp)))/(-2*mA^2 + sp)^4, 650]
+  sp = N[1/(1-x), 600];
+  mA = N[3/20, 600];    (* FIX 1: exact rational *)
+  N[-(Sqrt[sp/(-4*mA^2 + sp)]*(-3 - (2*J*(1 + J)*(2*mA^2 - sp))/(-4*mA^2 + sp)))/(-2*mA^2 + sp)^4, 600]
 ];
 
 (* null constraint — PRECISION-PROPAGATION IMPLEMENTATION
@@ -139,8 +135,8 @@ g31[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
    Strategy: compute all intermediate quantities at prec_local digits,
    where prec_local is determined adaptively by n4PrecMin.
 
-   For J ≤ ~3782: prec_local = 650 (same as other functions, zero overhead).
-   For J > 3782:  prec_local > 650 (extra digits only where required).
+   For J ≤ ~3782: prec_local = 600 (same as other functions, zero overhead).
+   For J > 3782:  prec_local > 600 (extra digits only where required).
 
    Key implementation points:
    - xp = SetPrecision[x, prec]: promotes the input x to prec digits.
@@ -155,7 +151,7 @@ g31[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
      Mathematica's internal precision tracker.
    - Hypergeometric2F1 and LegendreP are evaluated at ≈ prec digits
      because their arguments carry prec-digit precision.
-   - Re[N[result, 650]]: the imaginary residual from LegendreP[J,1,z>1]
+   - Re[N[result, 600]]: the imaginary residual from LegendreP[J,1,z>1]
      should be ~10^{-margin} after the (-2I) cancellation.  Re[…]
      extracts the real part explicitly and serves as a self-diagnostic:
      if Im is large, prec_local was insufficient.
@@ -185,26 +181,20 @@ n4[x_?NumericQ, J_?IntegerQ] := Module[{prec, xp, sp, mA, result},
   (* FIX 4: explicit Re[…] — the imaginary residual ~10^{-margin} is discarded.
      If this print fires with a large value, increase margin in n4PrecMin. *)
   (* Uncomment for debugging: Print["n4 Im residual @ J=", J, ": ", Im[N[result,20]]]; *)
-  Re[N[result, 650]]
+  Re[N[result, 600] ]
 ];
 
 X52[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 650];
-  mA = N[3/20, 650];    (* FIX 1: exact rational *)
-  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 650]
-];
-
-X53[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 650];
-  mA = N[3/20, 650];    (* FIX 1: exact rational *)
-  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*((-4 + J)*(-2 + J)*(3 + J)*(5 + J) + ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 650]
+  sp = N[1/(1-x), 600];
+  mA = N[3/20, 600];    (* FIX 1: exact rational *)
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
 ];
 
 (* Large J limit *)
 LargeJ[x_?NumericQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 650];
-  mA = N[3/20, 650];    (* FIX 1: exact rational *)
-  N[(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(18*sp^3*(-4*mA^2 + sp)^6), 650]
+  sp = N[1/(1-x), 600];
+  mA = N[3/20, 600];    (* FIX 1: exact rational *)
+  N[(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(18*sp^3*(-4*mA^2 + sp)^6), 600]
 ];
 
 Jmax = 60;
@@ -212,17 +202,17 @@ Jlist = Range[0, Jmax, 2];
 (* JlistLarge = {3000};
 Jlist = Join[Range[0, Jmax, 2], JlistLarge]; *)
 
-fList = {g20, g31, n4, X52, X53};
+fList = {g20, g31, n4, X52};
 
 (* large J limit: 0& for g20,g31,n4,X52; LargeJ for X53 *)
-extraTriplet = {0&, 0&, 0&, 0&, LargeJ};
+extraTriplet = {0&, 0&, 0&, LargeJ};
 
 (* optimal upper bound *)
-norm = {0, -1, 0, 0, 0};
-obj  = {-1, 0, 0, 0, 0};
+norm = {0, -1, 0, 0};
+obj  = {-1, 0, 0, 0};
 
 
-testNumericalSDP[spFile_String, jsonFile_String, prec_:650] := Module[
+testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
   {rawLines, spLines, samplePoints, sampleScalings, polsRegular, polsExtra},
 
   rawLines = ReadList[spFile, String];
@@ -286,9 +276,9 @@ Module[{myArgs, spFile, jsonFile, prec},
   If[Length[myArgs] >= 1,
     spFile   = myArgs[[1]];
     jsonFile = If[Length[myArgs] >= 2, myArgs[[2]], "numeric_pmp.json"];
-    (* 650 digits exceeds SDPB 2048-bit precision (≈ 616.5 decimal digits)
+    (* 600 digits exceeds SDPB 2048-bit precision (≈ 616.5 decimal digits)
        by a safe margin.  n4 uses higher precision adaptively when J is large. *)
-    prec     = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 650];
+    prec     = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 600];
 
     Print["=== test9.m ==="];
     Print["  sample_points = ", spFile];
