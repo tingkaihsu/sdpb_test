@@ -253,7 +253,7 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
   Print["Read ", Length[samplePoints], " x sample points from ", spFile];
   Print["  x-points    : ", samplePoints];
   Print["  J-values    : ", Jlist, "  (", Length[Jlist], " spins, exact)"];
-  Print["  extraTriplet: ", extraTriplet, "  (J\[Rule]\[Infinity] limit)"];
+  Print["  large-J limit: {0,0,0,LargeJ}  (J\[Rule]\[Infinity] limit)"];
 
   sampleScalings = SetPrecision[Exp[-#] & /@ samplePoints, prec];
 
@@ -264,19 +264,19 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
       "sampleScalings" -> {sampleScalings[[i]]},
       "polynomials" -> {
 	      { 
-			Table[SetPrecision[f11List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f11List]}],
-			Table[SetPrecision[f21List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f21List]}],
-			Table[SetPrecision[f31List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f31List]}]
+          Table[{SetPrecision[f11List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f11List]}],
+          Table[{SetPrecision[f21List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f21List]}],
+          Table[{SetPrecision[f31List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f31List]}]
 	      },
 	      {
-	        Table[SetPrecision[f12List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f12List]}],
-			Table[SetPrecision[f22List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f22List]}],
-			Table[SetPrecision[f32List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f32List]}]
+	        Table[{SetPrecision[f12List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f12List]}],
+			    Table[{SetPrecision[f22List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f22List]}],
+			    Table[{SetPrecision[f32List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f32List]}]
 	      },
 	      {
-	        Table[SetPrecision[f13List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f13List]}],
-			Table[SetPrecision[f23List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f23List]}],
-			Table[SetPrecision[f33List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f33List]}]
+	        Table[{SetPrecision[f13List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f13List]}],
+			    Table[{SetPrecision[f23List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f23List]}],
+			    Table[{SetPrecision[f33List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f33List]}]
 	      }
       }
     |>],
@@ -290,19 +290,19 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
       "sampleScalings" -> {sampleScalings[[i]]},
       "polynomials" -> {
 	      { 
-			Table[SetPrecision[j11List[[k]][samplePoints[[i]]], prec], {k, Length[j11List]}],
-			Table[SetPrecision[j21List[[k]][samplePoints[[i]]], prec], {k, Length[j21List]}],
-			Table[SetPrecision[j31List[[k]][samplePoints[[i]]], prec], {k, Length[j31List]}]
+          Table[{SetPrecision[j11List[[k]][samplePoints[[i]]], prec]}, {k, Length[j11List]}],
+          Table[{SetPrecision[j21List[[k]][samplePoints[[i]]], prec]}, {k, Length[j21List]}],
+          Table[{SetPrecision[j31List[[k]][samplePoints[[i]]], prec]}, {k, Length[j31List]}]
 	      },
 	      {
-	        Table[SetPrecision[j12List[[k]][samplePoints[[i]]], prec], {k, Length[j12List]}],
-			Table[SetPrecision[j22List[[k]][samplePoints[[i]]], prec], {k, Length[j22List]}],
-			Table[SetPrecision[j32List[[k]][samplePoints[[i]]], prec], {k, Length[j32List]}]
+	        Table[{SetPrecision[j12List[[k]][samplePoints[[i]]], prec]}, {k, Length[j12List]}],
+			    Table[{SetPrecision[j22List[[k]][samplePoints[[i]]], prec]}, {k, Length[j22List]}],
+			    Table[{SetPrecision[j32List[[k]][samplePoints[[i]]], prec]}, {k, Length[j32List]}]
 	      },
 	      {
-	        Table[SetPrecision[j13List[[k]][samplePoints[[i]]], prec], {k, Length[j13List]}],
-			Table[SetPrecision[j23List[[k]][samplePoints[[i]]], prec], {k, Length[j23List]}],
-			Table[SetPrecision[j33List[[k]][samplePoints[[i]]], prec], {k, Length[j33List]}]
+	        Table[{SetPrecision[j13List[[k]][samplePoints[[i]]], prec]}, {k, Length[j13List]}],
+			    Table[{SetPrecision[j23List[[k]][samplePoints[[i]]], prec]}, {k, Length[j23List]}],
+			    Table[{SetPrecision[j33List[[k]][samplePoints[[i]]], prec]}, {k, Length[j33List]}]
 	      }
       }
     |>],
