@@ -1,3 +1,5 @@
+(* ::Package:: *)
+
 (* ============================================================
    Matrix PMP Example for SDPB 3.0.0
    
@@ -116,7 +118,7 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:650] := Module[
   
      Each block encodes the 2x2 constraint matrix at ONE sample point as a
      degree-0 (constant) polynomial matrix.  toJsonObject in SDPB.m dispatches
-     on the head PositiveMatrixWithPrefactor — using NumericalPositiveMatrixWithPrefactor
+     on the head PositiveMatrixWithPrefactor \[LongDash] using NumericalPositiveMatrixWithPrefactor
      (an unknown head) causes toJsonObject to return unevaluated.
 
      polynomials nesting for a 2x2 matrix (Listing 2, SDPB manual):

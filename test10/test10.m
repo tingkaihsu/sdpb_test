@@ -1,34 +1,6 @@
-(* pmp generator for AAAA scattering *)
-(* ============================================================
-   PRECISION-PROPAGATION FIX (2026-05)
-   ------------------------------------------------------------
-   The null constraint n4[x, J] contains three special functions
-   (Hypergeometric2F1, LegendreP[J,1,·], LegendreP[J,2,·]) that
-   each grow as  A(x)^J  with  A = z₂ + √(z₂²−1) > 1.
-   They must cancel exactly (null identity).  Resolving this
-   cancellation faithfully requires
+(* ::Package:: *)
 
-       prec_local  ≥  J · max_x log₁₀ A(x)  +  margin
-                   ≈  J · 0.1568            +  60
-
-   LEAKAGE POINTS FIXED
-   1. maVal = SetPrecision[0.150, 600]: machine float 0.150 has
-      only 15–16 true digits.  SetPrecision pads with zeros from
-      the wrong binary representation.  FIX: use N[3/20, prec]
-      (exact rational) inside every function that needs precision
-      beyond 16 digits.
-   2. Fixed prec=600/600 inside n4 regardless of J.  At J=10000
-      the terms are ~10^1568 and 600 digits leave ~10^968 noise.
-      FIX: dynamic prec via n4PrecMin[J, x].
-   3. Outer N[expr, 600] doesn't increase internal evaluation
-      precision of Hypergeometric2F1/LegendreP — those inherit
-      precision from their arguments.  FIX: sp, mA computed at
-      prec_local digits so arguments carry the right precision.
-   4. Im residual: LegendreP[J,1,z>1] is imaginary in Mathematica's
-      convention; the (-2I) factor makes the product real.  At finite
-      precision an Im residual ~10^{-margin} remains.  FIX: Re[…]
-      made explicit so the output is always a real number.
-   ============================================================ *)
+(* pmp generator for mixed scattering *)
 
 ClearAll[NumericalPositiveMatrixWithPrefactor];
 
@@ -81,40 +53,9 @@ WritePmpJsonNumerical[
 (* problem-specific *)
 (* let the mass be 4mA^2 < M^2 = 1 where M  = 1 to infinity *)
 
-maVal = N[3/20, 600];
+maVal = N[1/100, 600];
 
 Print["mA = ", maVal]
-
-(* ============================================================
-   FIX 2 of 4: n4PrecMin — adaptive working precision for n4.
-
-   Returns the minimum number of decimal digits needed so that
-   evaluating n4[x, J] resolves the catastrophic cancellation of
-   the three  A(x)^J  terms to `margin` true significant figures.
-
-   Algorithm:
-     z₂  = 1 + 8·mA²/(3·(sp − 4·mA²))  (the Legendre argument)
-     A   = z₂ + √(z₂²−1)  > 1
-     log₁₀(A) ≈ 0.157 at worst case (x → 0)
-     prec_local = max(stdPrec, ⌈J · log₁₀(A)⌉ + margin)
-
-   For J ≤ 60: prec_local = stdPrec = 600   → zero overhead.
-   For J = 10000: prec_local = 1628          → correct resolution.
-   For J = 20000: prec_local = 3196          → correct resolution.
-
-   The estimate itself uses only 50-digit arithmetic (no cancellation).
-   The exact rational (3/20)^2 is used for mA inside the estimator
-   to avoid the machine-float contamination described in §2.1.
-   ============================================================ *)
-
-n4PrecMin[J_?IntegerQ, x_?NumericQ, margin_Integer:60, stdPrec_Integer:600] :=
-  Module[{sp0, z2, A, logA},
-    sp0  = N[1/(1 - x), 50];
-    z2   = 1 + 8*(3/20)^2 / (3*(sp0 - 4*(3/20)^2));
-    A    = If[z2 > 1, z2 + Sqrt[z2^2 - 1], 1];
-    logA = If[A > 1, N[Log[10, A], 50], 0];
-    Max[stdPrec, Ceiling[J * logA] + margin]
-  ];
 
 (* forward limit: use our own convention *)
 
@@ -130,44 +71,9 @@ g31[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   N[-(Sqrt[sp/(-4*mA^2 + sp)]*(-3 - (2*J*(1 + J)*(2*mA^2 - sp))/(-4*mA^2 + sp)))/(-2*mA^2 + sp)^4, 600]
 ];
 
-(* null constraint — PRECISION-PROPAGATION IMPLEMENTATION
-   --------------------------------------------------------
-   Strategy: compute all intermediate quantities at prec_local digits,
-   where prec_local is determined adaptively by n4PrecMin.
-
-   For J ≤ ~3782: prec_local = 600 (same as other functions, zero overhead).
-   For J > 3782:  prec_local > 600 (extra digits only where required).
-
-   Key implementation points:
-   - xp = SetPrecision[x, prec]: promotes the input x to prec digits.
-     x may arrive with fewer digits (e.g. 200 from the file reader);
-     SetPrecision pads rather than creates precision, but since n4 = 0
-     identically, the result does not depend sensitively on the last
-     digits of x.  The promotion prevents the 200-digit x from acting
-     as a bottleneck that limits all downstream arithmetic.
-   - mA = N[3/20, prec]: exact rational for mA, ignores global maVal.
-   - All arithmetic involving sp, mA (including the special-function
-     arguments) inherits prec-digit precision automatically through
-     Mathematica's internal precision tracker.
-   - Hypergeometric2F1 and LegendreP are evaluated at ≈ prec digits
-     because their arguments carry prec-digit precision.
-   - Re[N[result, 600]]: the imaginary residual from LegendreP[J,1,z>1]
-     should be ~10^{-margin} after the (-2I) cancellation.  Re[…]
-     extracts the real part explicitly and serves as a self-diagnostic:
-     if Im is large, prec_local was insufficient.
-
-   The formula itself is unchanged from the original. *)
-
-n4[x_?NumericQ, J_?IntegerQ] := Module[{prec, xp, sp, mA, result},
-  (* FIX 2: adaptive precision — no overhead for J ≤ 60 *)
-  prec = n4PrecMin[J, x];
-  (* FIX 3: promote input x; avoids 200-digit bottleneck from file reader *)
-  xp   = SetPrecision[x, prec];
-  (* FIX 1 (inside n4): exact rational for mA, independent of global maVal *)
-  sp   = N[1/(1 - xp), prec];
-  mA   = N[3/20, prec];
-  (* The expression below is UNCHANGED from the original formula.
-     All intermediate values inherit prec-digit precision automatically. *)
+n4[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
+  sp   = N[1/(1 - x), 600];
+  mA   = N[maVal, 600];
   result = (81*Sqrt[sp/(-4*mA^2 + sp)]*(
       8*mA^4*(14*mA^2 - 15*sp)*(-8*mA^2 + 3*sp)^(3/2)*
         Hypergeometric2F1[-J, 1 + J, 1, (4*mA^2)/(12*mA^2 - 3*sp)] +
@@ -178,34 +84,154 @@ n4[x_?NumericQ, J_?IntegerQ] := Module[{prec, xp, sp, mA, result},
           LegendreP[J, 2, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))]
       )
     ))/(4*mA^2*(-2*mA^2 + sp)*(-8*mA^2 + 3*sp)^(3/2)*(8*mA^4 - 18*mA^2*sp + 9*sp^2)^3);
-  (* FIX 4: explicit Re[…] — the imaginary residual ~10^{-margin} is discarded.
-     If this print fires with a large value, increase margin in n4PrecMin. *)
-  (* Uncomment for debugging: Print["n4 Im residual @ J=", J, ": ", Im[N[result,20]]]; *)
   Re[N[result, 600] ]
 ];
 
 X52[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   sp = N[1/(1-x), 600];
-  mA = N[3/20, 600];    (* FIX 1: exact rational *)
+  mA = N[maVal, 600];    (* FIX 1: exact rational *)
   N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
 ];
 
 (* Large J limit *)
 LargeJ[x_?NumericQ] := Module[{sp, mA},
   sp = N[1/(1-x), 600];
-  mA = N[3/20, 600];    (* FIX 1: exact rational *)
+  mA = N[maVal, 600];    (* FIX 1: exact rational *)
   N[(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(18*sp^3*(-4*mA^2 + sp)^6), 600]
 ];
 
 Jmax = 60;
 Jlist = Range[0, Jmax, 2];
-(* JlistLarge = {3000};
-Jlist = Join[Range[0, Jmax, 2], JlistLarge]; *)
 
-fList = {g20, g31, n4, X52};
+M0[x_?NumericQ,J_?IntegerQ] := {
+	{g20[x,J],0,0},
+	{0,0,0},
+	{0,0,0}
+};
+
+M1[x_?NumericQ,J_?IntegerQ] := {
+	{g31[x,J],0,0},
+	{0,0,0},
+	{0,0,0}
+};
+
+M2[x_?NumericQ, J_?IntegerQ] :={
+	{n4[x,J],0,0},
+	{0,0,0},
+	{0,0,0}
+};
+
+M3[x_?NumericQ, J_?IntegerQ] :={
+	{X52[x,J],0,0},
+	{0,0,0},
+	{0,0,0}
+};
+
+M4[x_?NumericQ] :={
+	{LargeJ[x],0,0},
+	{0,0,0},
+	{0,0,0}
+}
+
+(* null *)
+N0[x_?NumericQ] :={
+	{0,0,0},
+	{0,0,0},
+	{0,0,0}
+};
+
+f11List ={
+	Function[{x,J}, M0[x,J][[1,1]]],
+	Function[{x,J}, M1[x,J][[1,1]]],
+	Function[{x,J}, M2[x,J][[1,1]]],
+	Function[{x,J}, M3[x,J][[1,1]]]
+};
+
+f22List ={
+	Function[{x,J}, M0[x,J][[2,2]]],
+	Function[{x,J}, M1[x,J][[2,2]]],
+	Function[{x,J}, M2[x,J][[2,2]]],
+	Function[{x,J}, M3[x,J][[2,2]]]
+};
+
+f33List = {
+	Function[{x,J}, M0[x,J][[3,3]]],
+	Function[{x,J}, M1[x,J][[3,3]]],
+	Function[{x,J}, M2[x,J][[3,3]]],
+	Function[{x,J}, M3[x,J][[3,3]]]
+};
+
+f12List ={
+	Function[{x,J}, M0[x,J][[1,2]]],
+	Function[{x,J}, M1[x,J][[1,2]]],
+	Function[{x,J}, M2[x,J][[1,2]]],
+	Function[{x,J}, M3[x,J][[1,2]]]
+};
+
+f21List = f12List;
+
+f13List = {
+	Function[{x,J}, M0[x,J][[1,3]]],
+	Function[{x,J}, M1[x,J][[1,3]]],
+	Function[{x,J}, M2[x,J][[1,3]]],
+	Function[{x,J}, M3[x,J][[1,3]]]
+};
+f31List = f13List;
+
+f23List = {
+	Function[{x,J}, M0[x,J][[2,3]]],
+	Function[{x,J}, M1[x,J][[2,3]]],
+	Function[{x,J}, M2[x,J][[2,3]]],
+	Function[{x,J}, M3[x,J][[2,3]]]
+};
+f32List = f23List;
+
+j11List = {
+	Function[{x}, N0[x][[1,1]]],
+	Function[{x}, N0[x][[1,1]]],
+	Function[{x}, N0[x][[1,1]]],
+	Function[{x}, M4[x][[1,1]]]
+};
+j22List = {
+	Function[{x}, N0[x][[2,2]]],
+	Function[{x}, N0[x][[2,2]]],
+	Function[{x}, N0[x][[2,2]]],
+	Function[{x}, M4[x][[2,2]]]
+};
+j33List = {
+	Function[{x}, N0[x][[3,3]]],
+	Function[{x}, N0[x][[3,3]]],
+	Function[{x}, N0[x][[3,3]]],
+	Function[{x}, M4[x][[3,3]]]
+};
+
+j12List = {
+	Function[{x}, N0[x][[1,2]]],
+	Function[{x}, N0[x][[1,2]]],
+	Function[{x}, N0[x][[1,2]]],
+	Function[{x}, M4[x][[1,2]]]
+};
+j21List = j12List;
+
+j13List = {
+	Function[{x}, N0[x][[1,3]]],
+	Function[{x}, N0[x][[1,3]]],
+	Function[{x}, N0[x][[1,3]]],
+	Function[{x}, M4[x][[1,3]]]
+};
+j31List = j13List;
+
+j23List = {
+	Function[{x}, N0[x][[2,3]]],
+	Function[{x}, N0[x][[2,3]]],
+	Function[{x}, N0[x][[2,3]]],
+	Function[{x}, M4[x][[2,3]]]
+};
+j32List = j23List;
+
 
 (* large J limit: 0& for g20,g31,n4,X52; LargeJ for X53 *)
-extraTriplet = {0&, 0&, 0&, LargeJ};
+(* extraTriplet = {0&, 0&, 0&, LargeJ}; *)
 
 (* optimal upper bound *)
 norm = {0, -1, 0, 0};
@@ -236,10 +262,23 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
       "prefactor"      -> DampedRational[1, {}, 1/E, x],
       "samplePoints"   -> {samplePoints[[i]]},
       "sampleScalings" -> {sampleScalings[[i]]},
-      "polynomials" -> {{ Table[
-        {SetPrecision[fList[[k]][samplePoints[[i]], Jlist[[j]]], prec]},
-        {k, Length[fList]}
-      ] }}
+      "polynomials" -> {
+	      { 
+			Table[SetPrecision[f11List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f11List]}],
+			Table[SetPrecision[f21List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f21List]}],
+			Table[SetPrecision[f31List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f31List]}]
+	      },
+	      {
+	        Table[SetPrecision[f12List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f12List]}],
+			Table[SetPrecision[f22List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f22List]}],
+			Table[SetPrecision[f32List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f32List]}]
+	      },
+	      {
+	        Table[SetPrecision[f13List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f13List]}],
+			Table[SetPrecision[f23List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f23List]}],
+			Table[SetPrecision[f33List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f33List]}]
+	      }
+      }
     |>],
     {i, Length[samplePoints]}, {j, Length[Jlist]}
   ];
@@ -249,10 +288,23 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
       "prefactor"      -> DampedRational[1, {}, 1/E, x],
       "samplePoints"   -> {samplePoints[[i]]},
       "sampleScalings" -> {sampleScalings[[i]]},
-      "polynomials" -> {{ Table[
-        {SetPrecision[extraTriplet[[k]][samplePoints[[i]]], prec]},
-        {k, Length[extraTriplet]}
-      ] }}
+      "polynomials" -> {
+	      { 
+			Table[SetPrecision[j11List[[k]][samplePoints[[i]]], prec], {k, Length[j11List]}],
+			Table[SetPrecision[j21List[[k]][samplePoints[[i]]], prec], {k, Length[j21List]}],
+			Table[SetPrecision[j31List[[k]][samplePoints[[i]]], prec], {k, Length[j31List]}]
+	      },
+	      {
+	        Table[SetPrecision[j12List[[k]][samplePoints[[i]]], prec], {k, Length[j12List]}],
+			Table[SetPrecision[j22List[[k]][samplePoints[[i]]], prec], {k, Length[j22List]}],
+			Table[SetPrecision[j32List[[k]][samplePoints[[i]]], prec], {k, Length[j32List]}]
+	      },
+	      {
+	        Table[SetPrecision[j13List[[k]][samplePoints[[i]]], prec], {k, Length[j13List]}],
+			Table[SetPrecision[j23List[[k]][samplePoints[[i]]], prec], {k, Length[j23List]}],
+			Table[SetPrecision[j33List[[k]][samplePoints[[i]]], prec], {k, Length[j33List]}]
+	      }
+      }
     |>],
     {i, Length[samplePoints]}
   ];
@@ -276,7 +328,7 @@ Module[{myArgs, spFile, jsonFile, prec},
   If[Length[myArgs] >= 1,
     spFile   = myArgs[[1]];
     jsonFile = If[Length[myArgs] >= 2, myArgs[[2]], "numeric_pmp.json"];
-    (* 600 digits exceeds SDPB 2048-bit precision (≈ 616.5 decimal digits)
+    (* 600 digits exceeds SDPB 2048-bit precision (\[TildeTilde] 616.5 decimal digits)
        by a safe margin.  n4 uses higher precision adaptively when J is large. *)
     prec     = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 600];
 

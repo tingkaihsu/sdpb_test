@@ -1,3 +1,5 @@
+(* ::Package:: *)
+
 (* ---------- coefficient helper ---------- *)
 
 del[a_, b_] := delCoeff @@ Sort[{a, b}];
@@ -48,12 +50,15 @@ fwdMlow[s_, t_, mA_, Nmax_Integer] :=
 
 fwdKer[sp_, t_, s1_, s2_, k_] := 1/( (sp-s1)*( (sp-s1)*(sp-s2) )^(k/2) );
 
-g2 = -SeriesCoefficient[Residue[fwdKer[sp,t,2m^2,2m^2-t,2]*stuMlow[sp, t, m, 10], {sp, Infinity}], {t,0,0}]//FullSimplify;
+g2 = -SeriesCoefficient[Residue[fwdKer[sp,t,2m^2,2m^2-t,2]*fwdMlow[sp, t, m, 10], {sp, Infinity}], {t,0,0}]//FullSimplify;
 
 Print["coefficient mapping g2 = ", g2];
 Print[""]
-g3 = -SeriesCoefficient[Residue[fwdKer[sp,t,2m^2,2m^2-t,2]*stuMlow[sp,t,m,10], {sp,Infinity}], {t,0,1}]//FullSimplify;
+g3 = -SeriesCoefficient[Residue[fwdKer[sp,t,2m^2,2m^2-t,2]*fwdMlow[sp,t,m,10], {sp,Infinity}], {t,0,1}]//FullSimplify;
 
 Print["coefficient mapping g3 = ", g3];
 Print[""]
-Print["coefficient mapping at stu expansion point: c2 = ", -SeriesCoefficient[Residue[fwdKer[sp,t,4m^2/3,8m^2/3-t,2]*stuMlow[sp,t,m,10], {sp, Infinity}], {t,0,0}]//FullSimplify]
+Print["coefficient mapping at stu expansion point: c2 = ", -SeriesCoefficient[Residue[fwdKer[sp,t,2m^2,2m^2-t,2]*stuMlow[sp,t,m,10], {sp, Infinity}], {t,0,0}]//FullSimplify]
+
+
+
