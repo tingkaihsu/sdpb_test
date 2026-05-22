@@ -61,13 +61,13 @@ Print["mA = ", maVal]
 
 g20[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   sp = N[1/(1-x), 600];
-  mA = N[3/20, 600];    (* FIX 1: exact rational *)
+  mA = N[maVal, 600];    (* FIX 1: exact rational *)
   N[-(2*Sqrt[sp/(-4*mA^2 + sp)])/(2*mA^2 - sp)^3, 600]
 ];
 
 g31[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   sp = N[1/(1-x), 600];
-  mA = N[3/20, 600];    (* FIX 1: exact rational *)
+  mA = N[maVal, 600];    (* FIX 1: exact rational *)
   N[-(Sqrt[sp/(-4*mA^2 + sp)]*(-3 - (2*J*(1 + J)*(2*mA^2 - sp))/(-4*mA^2 + sp)))/(-2*mA^2 + sp)^4, 600]
 ];
 
