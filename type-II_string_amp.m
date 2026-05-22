@@ -1,8 +1,6 @@
 (* ::Package:: *)
 
 (* ::Package:: *)
-(**)
-
 
 (* ============================================================
    Type-II string amplitude: KK reduction 5d -> 4d
@@ -109,17 +107,16 @@ Print["s-t symmetry test of M4[s,t] = ",
    ============================================================ *)
 
 (* Step 1: Evaluate M4 at the three required points *)
-M4at[m_, t_]    := M4[2m^2, t];
-M4deriv[m_, t_] := D[M4[s,t], s] /. s -> 2m^2;
-M4shft[m_,t_]   := M4[2m^2-t, t];
+M4at    = M4[2m^2, t]       // FullSimplify;
+M4deriv = D[M4[s,t], s] /. s -> 2m^2 // FullSimplify;
+M4shft  = M4[2m^2-t, t]     // FullSimplify;
 
 (* Step 2: Assemble the residue from the analytic formula *)
-residue[m_, t_] := (M4deriv[m,t] * t - M4at[m,t] + M4shft[m,t]) / t^2;
+residue = (M4deriv * t - M4at + M4shft) / t^2 // FullSimplify;
 
 (* Step 3: Series coefficients in t *)
-g2[m_] := SeriesCoefficient[residue[m,t], {t, 0, 0}];
-g3[m_] := SeriesCoefficient[residue[m,t], {t, 0, 1}];
+Print[SeriesCoefficient[residue, {t, 0, 0}]]
+Print[SeriesCoefficient[residue, {t, 0, 1}]]
 
 
 
-Plot[g3[m]/g2[m],{m,0,4/10}]

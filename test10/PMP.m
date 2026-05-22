@@ -183,7 +183,7 @@ Module[{myArgs, spFile, jsonFile, prec},
     jsonFile = If[Length[myArgs] >= 2, myArgs[[2]], "n_pmp.json"];
     prec     = 650;  (* BUG FIX: added missing semicolon *)
 
-    Print["=== text9.m ==="];
+    Print["=== text10.m ==="];
     Print["  sample_points = ", spFile];
     Print["  output_json   = ", jsonFile];
     Print["  precision     = ", prec];
