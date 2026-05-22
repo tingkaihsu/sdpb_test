@@ -177,9 +177,9 @@ f4List = {
    fVec.  A mismatch means either the wrong y.txt or the wrong fVec
    was supplied; either way the functional would be evaluated
    incorrectly, so we stop immediately. *)
-If[Length[yVec] != Length[fVec],
+If[Length[yVec] != Length[f1List],
   Print["ERROR: y.txt has ", Length[yVec], " component(s) but fVec has ",
-        Length[fVec], " function(s). They must match."];
+        Length[f1List], " function(s). They must match."];
   Quit[2]
 ];
 
