@@ -30,7 +30,7 @@ stuMlow[s_, t_, mA_, Nmax_Integer] :=
         Function[{ab},
             c[ab[[1]], ab[[2]]]
             * (s-4mA^2/3)^ab[[1]]
-            * (t-4mA^2/3)^ab[[2]]
+            * (u-4mA^2/3)^ab[[2]]
         ] /@ validTriples[Nmax]
     ] /. {u -> 4mA^2 - s - t};
 
@@ -46,14 +46,14 @@ fwdMlow[s_, t_, mA_, Nmax_Integer] :=
         ] /@ validTriples[Nmax]
     ] /. {u -> 4mA^2 - s - t};
 
-fwdKer[sp_, t_, mA_, s1_, s2_, k_] := 1/( (sp-s1)*( (sp-s1)*(sp-s2) )^(k/2) );
+fwdKer[sp_, t_, s1_, s2_, k_] := 1/( (sp-s1)*( (sp-s1)*(sp-s2) )^(k/2) );
 
-g2 = SeriesCoefficient[fwdKer[sp,t,m,2m^2,2m^2-t,2]*stuMlow[sp, t, m, 10], {t,0,0}]//FullSimplify;
+g2 = -SeriesCoefficient[Residue[fwdKer[sp,t,2m^2,2m^2-t,2]*stuMlow[sp, t, m, 10], {sp, Infinity}], {t,0,0}]//FullSimplify;
 
 Print["coefficient mapping g2 = ", g2];
-
-g3 = SeriesCoefficient[fwdKer[sp,t,m,2m^2,2m^2-t,2]*stuMlow[sp,t,m,10], {t,0,1}]//FullSimplify;
+Print[""]
+g3 = -SeriesCoefficient[Residue[fwdKer[sp,t,2m^2,2m^2-t,2]*stuMlow[sp,t,m,10], {sp,Infinity}], {t,0,1}]//FullSimplify;
 
 Print["coefficient mapping g3 = ", g3];
-
-Print["coefficient mapping at stu expansion point: c2 = ", SeriesCoefficient[fwdKer[sp,t,m,4m^2/3,8m^2/3-t,2]*stuMlow[sp,t,m,10], {t,0,0}]//FullSimplify]
+Print[""]
+Print["coefficient mapping at stu expansion point: c2 = ", -SeriesCoefficient[Residue[fwdKer[sp,t,4m^2/3,8m^2/3-t,2]*stuMlow[sp,t,m,10], {sp, Infinity}], {t,0,0}]//FullSimplify]
