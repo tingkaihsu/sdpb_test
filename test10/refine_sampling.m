@@ -457,65 +457,92 @@ Do[
           " — proceeding with available J values (if any)."]
   ];
 
-  (* evaluate large-J functional X at midpoint *)
+  (* Evaluate large-J functional X at midpoint *)
   xVal = safeX[mid];
   If[xVal === $Failed,
     Print["  NOTE: X(mid) evaluation failed at mid=", mid]
   ];
 
-  validPairs = Select[Transpose[{Jlist, fmByJ}], Last[#] =!= $Failed &];
-
-  If[validPairs == {} && xVal === $Failed,
-    Print["  ERROR: F(mid,J) failed for all J and X(mid) failed at mid=", mid, "; flagging interval for refinement."];
+  (* If every source failed, flag conservatively and continue *)
+  If[failedCount == Length[Jlist] && xVal === $Failed,
+    Print["  Interval [", xa, ", ", xb, "]  w=", width, "  mid=", mid];
+    Print["    ERROR: all evaluations failed — flagging for refinement"];
     AppendTo[flaggedIntervals, {xa, xb}];
-    AppendTo[midpointValues, {mid, $Failed, "all_failed"}];
-    Continue[];
+    AppendTo[midpointValues, {mid, $Failed, 0}];
+    Continue[]
   ];
 
-  (* compute minima from available sources *)
-  If[validPairs == {},
-    fmJ = $Failed,
-    vals = Last /@ validPairs;
-    js = First /@ validPairs;
-    fmJ = Min[vals];
-    worstJIndex = First[Ordering[vals, 1]];
-    worstJcandidate = js[[worstJIndex]];
-  ];
+  (* ---------------------------------------------------------------
+     Collect every individual violation.
+     Each entry: {"J", J_value, min_eigenvalue}  or  {"X", None, min_eigenvalue}
+     A violation exists whenever the minimum eigenvalue of F[mid,J]
+     or X[mid] is strictly negative — independently of the other sources.
+     We do NOT aggregate into a single scalar; every (x,J) and (x,X)
+     violation is recorded and reported separately.
+     --------------------------------------------------------------- *)
+  violations = {};
 
-  (* combine fmJ and xVal to get overall worst-case value and source *)
-  Which[
-    fmJ === $Failed && xVal =!= $Failed,
-      fm = xVal; worstSource = "X"; worstJ = None,
-
-    fmJ =!= $Failed && xVal === $Failed,
-      fm = fmJ; worstSource = "J"; worstJ = worstJcandidate,
-
-    fmJ =!= $Failed && xVal =!= $Failed,
-      If[xVal <= fmJ, fm = xVal; worstSource = "X"; worstJ = None,
-         fm = fmJ; worstSource = "J"; worstJ = worstJcandidate
+  (* Check each J value independently *)
+  Do[
+    With[{val = fmByJ[[jIdx]], Jval = Jlist[[jIdx]]},
+      If[val =!= $Failed && val < 0,
+        AppendTo[violations, {"J", Jval, val}]
       ]
+    ],
+    {jIdx, Length[Jlist]}
   ];
 
-  AppendTo[midpointValues, {mid, fm, worstSource}];
+  (* Check the large-J functional independently *)
+  If[xVal =!= $Failed && xVal < 0,
+    AppendTo[violations, {"X", None, xVal}]
+  ];
 
-  Which[
-    fm >= 0,
-      Print["  [", xa, ", ", xb, "]  w=", width,
-            "  min value=", fm, "  ok (source=", worstSource, ")"],
+  (* --- Report interval header then every individual violation --- *)
+  Print["  Interval [", xa, ", ", xb, "]  w=", width, "  mid=", mid];
 
-    fm < 0 && width < minWidth,
+  If[Length[violations] > 0,
+
+    (* Report EACH (x, J) or (x, X) violation on its own line *)
+    Do[
+      With[{viol = violations[[v]]},
+        If[viol[[1]] === "J",
+          Print["    *** NEGATIVE: x=", mid,
+                "  J=", viol[[2]],
+                "  min_eigenvalue=", viol[[3]]],
+          Print["    *** NEGATIVE: x=", mid,
+                "  X (large-J limit)",
+                "  min_eigenvalue=", viol[[3]]]
+        ]
+      ],
+      {v, Length[violations]}
+    ];
+
+    (* Flag the interval for refinement, or mark as tiny if too narrow *)
+    If[width < minWidth,
       AppendTo[tinyNegative, {xa, xb}];
-      Print["  [", xa, ", ", xb, "]  w=", width,
-            "  min value=", fm, "  (source=", worstSource, ")",
-            "  negative but w < ", minWidth, " — below threshold, skipping"],
-
-    fm < 0 && width >= minWidth,
+      Print["    -> negative (", Length[violations], " violation(s)) but width=", width,
+            " < min_width=", minWidth, " — below threshold, skipping"],
       AppendTo[flaggedIntervals, {xa, xb}];
-      Print["  [", xa, ", ", xb, "]  w=", width,
-            "  min value=", fm, "  (source=", worstSource, If[worstSource=="J", ", worst J=", ""],
-            If[worstSource=="J", worstJ, ""], ")",
-            "  *** NEGATIVE, will refine ***"]
-  ],
+      Print["    -> will refine: new sampling point at x=", mid,
+            "  (", Length[violations], " violation(s))"]
+    ],
+
+    (* No violations at this midpoint: all F(mid,J) >= 0 and X(mid) >= 0 *)
+    Print["    ok — F(mid,J) >= 0 for all J and X(mid) >= 0"]
+  ];
+
+  (* Diagnostic record: worst (most negative) value among violations,
+     or smallest positive value when there are none *)
+  negVals = Last /@ violations;
+  worstVal = If[Length[negVals] > 0,
+    Min[negVals],
+    posVals = Select[
+      Join[DeleteCases[fmByJ, $Failed], If[xVal === $Failed, {}, {xVal}]],
+      # >= 0 &];
+    If[Length[posVals] > 0, Min[posVals], $Failed]
+  ];
+  AppendTo[midpointValues, {mid, worstVal, Length[violations]}],
+
   {i, nAllIntervals}
 ];
 Print[""];
