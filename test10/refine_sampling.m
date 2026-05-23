@@ -136,9 +136,60 @@ Print[""];
    Tests2.m.  Each function accepts a numeric argument and returns
    a numeric value.  No symbolic form is required.
    ================================================================ *)
+maVal = N[1/100, 600];
 
+Print["mA = ", maVal]
+
+(* forward limit: use our own convention *)
+
+g20[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];    (* FIX 1: exact rational *)
+  N[-(2*Sqrt[sp/(-4*mA^2 + sp)])/(2*mA^2 - sp)^3, 600]
+];
+
+g31[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];    (* FIX 1: exact rational *)
+  N[-(Sqrt[sp/(-4*mA^2 + sp)]*(-3 - (2*J*(1 + J)*(2*mA^2 - sp))/(-4*mA^2 + sp)))/(-2*mA^2 + sp)^4, 600]
+];
+
+n4[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
+  sp   = N[1/(1 - x), 600];
+  mA   = N[maVal, 600];
+  result = (81*Sqrt[sp/(-4*mA^2 + sp)]*(
+      8*mA^4*(14*mA^2 - 15*sp)*(-8*mA^2 + 3*sp)^(3/2)*
+        Hypergeometric2F1[-J, 1 + J, 1, (4*mA^2)/(12*mA^2 - 3*sp)] +
+      (8*mA^4 - 18*mA^2*sp + 9*sp^2)*(
+        (-2*I)*mA*(10*mA^2 - 9*sp)*(8*mA^2 - 3*sp)*
+          LegendreP[J, 1, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))] +
+        Sqrt[-8*mA^2 + 3*sp]*(-8*mA^4 + 18*mA^2*sp - 9*sp^2)*
+          LegendreP[J, 2, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))]
+      )
+    ))/(4*mA^2*(-2*mA^2 + sp)*(-8*mA^2 + 3*sp)^(3/2)*(8*mA^4 - 18*mA^2*sp + 9*sp^2)^3);
+  Re[N[result, 600] ]
+];
+
+X52[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];    (* FIX 1: exact rational *)
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
+];
+
+(* Large J limit *)
+LargeJ[x_?NumericQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];    (* FIX 1: exact rational *)
+  N[(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(18*sp^3*(-4*mA^2 + sp)^6), 600]
+];
+
+Jmax = 60;
+Jlist = Range[0, Jmax, 2];
+
+(* Matrix *)
 M0[x_?NumericQ,J_?IntegerQ] := {
 	{g20[x,J],0,0},
+
 	{0,0,0},
 	{0,0,0}
 };
