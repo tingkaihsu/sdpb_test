@@ -137,150 +137,64 @@ Print[""];
    a numeric value.  No symbolic form is required.
    ================================================================ *)
 
-M0[x_?NumericQ,J_?IntegerQ] := {
-	{g20[x,J],0,0},
-	{0,0,0},
-	{0,0,0}
+M0[x_?NumericQ] := {
+  {1 + x^4, x^2},
+  {x^2, 2 + x^4}
 };
 
-M1[x_?NumericQ,J_?IntegerQ] := {
-	{g31[x,J],0,0},
-	{0,0,0},
-	{0,0,0}
+M1[x_?NumericQ] := {
+  {x^4/12 + x^2, x^2/2},
+  {x^2/2, x^4/12 + 2 x^2}
 };
 
-M2[x_?NumericQ, J_?IntegerQ] :={
-	{n4[x,J],0,0},
-	{0,0,0},
-	{0,0,0}
+f1List = {
+  Function[{x}, M0[x][[1, 1]]],
+  Function[{x}, M1[x][[1, 1]]]
 };
 
-M3[x_?NumericQ, J_?IntegerQ] :={
-	{X52[x,J],0,0},
-	{0,0,0},
-	{0,0,0}
+f2List = {
+  Function[{x}, M0[x][[2, 1]]],
+  Function[{x}, M1[x][[2, 1]]]
 };
 
-M4[x_?NumericQ] :={
-	{LargeJ[x],0,0},
-	{0,0,0},
-	{0,0,0}
-}
-
-(* null *)
-N0[x_?NumericQ] :={
-	{0,0,0},
-	{0,0,0},
-	{0,0,0}
+f3List = {
+  Function[{x}, M0[x][[1, 2]]],
+  Function[{x}, M1[x][[1, 2]]]
 };
 
-f11List ={
-	Function[{x,J}, M0[x,J][[1,1]]],
-	Function[{x,J}, M1[x,J][[1,1]]],
-	Function[{x,J}, M2[x,J][[1,1]]],
-	Function[{x,J}, M3[x,J][[1,1]]]
+f4List = {
+  Function[{x}, M0[x][[2, 2]]],
+  Function[{x}, M1[x][[2, 2]]]
 };
-
-f22List ={
-	Function[{x,J}, M0[x,J][[2,2]]],
-	Function[{x,J}, M1[x,J][[2,2]]],
-	Function[{x,J}, M2[x,J][[2,2]]],
-	Function[{x,J}, M3[x,J][[2,2]]]
-};
-
-f33List = {
-	Function[{x,J}, M0[x,J][[3,3]]],
-	Function[{x,J}, M1[x,J][[3,3]]],
-	Function[{x,J}, M2[x,J][[3,3]]],
-	Function[{x,J}, M3[x,J][[3,3]]]
-};
-
-f12List ={
-	Function[{x,J}, M0[x,J][[1,2]]],
-	Function[{x,J}, M1[x,J][[1,2]]],
-	Function[{x,J}, M2[x,J][[1,2]]],
-	Function[{x,J}, M3[x,J][[1,2]]]
-};
-
-f21List = f12List;
-
-f13List = {
-	Function[{x,J}, M0[x,J][[1,3]]],
-	Function[{x,J}, M1[x,J][[1,3]]],
-	Function[{x,J}, M2[x,J][[1,3]]],
-	Function[{x,J}, M3[x,J][[1,3]]]
-};
-f31List = f13List;
-
-f23List = {
-	Function[{x,J}, M0[x,J][[2,3]]],
-	Function[{x,J}, M1[x,J][[2,3]]],
-	Function[{x,J}, M2[x,J][[2,3]]],
-	Function[{x,J}, M3[x,J][[2,3]]]
-};
-f32List = f23List;
-
-(* optimal upper bound *)
-norm = {0, -1, 0, 0};
-obj  = {-1, 0, 0, 0};
 
 (* ================================================================
    END OF PROBLEM-SPECIFIC SECTION
    ================================================================ *)
 
-xLeft  = SetPrecision[0, 600];   (* physical domain left endpoint  — check includes [xLeft,  x_min] *)
-xRight = SetPrecision[1, 600];   (* physical domain right endpoint — check includes [x_max, xRight] *)
 
 (* --- Dimensional consistency check ---
    y.txt must have exactly as many lines as there are functions in
    fVec.  A mismatch means either the wrong y.txt or the wrong fVec
    was supplied; either way the functional would be evaluated
    incorrectly, so we stop immediately. *)
-If[Length[yVec] != Length[f11List],
+If[Length[yVec] != Length[f1List],
   Print["ERROR: y.txt has ", Length[yVec], " component(s) but fVec has ",
-        Length[f11List], " function(s). They must match."];
+        Length[f1List], " function(s). They must match."];
   Quit[2]
 ];
 
 (* F(x) = sum_{k=1}^{n} fVec[[k]](x) * yVec[[k]]
    Works for any n >= 1; no change needed when n changes. *)
-F11[x_?NumericQ, J_?IntegerQ] := Sum[ yVec[[k]] * f11List[[k]][x, J], {k, Length[yVec]} ];
-F22[x_?NumericQ, J_?IntegerQ] := Sum[ yVec[[k]] * f22List[[k]][x, J], {k, Length[yVec]} ];
-F33[x_?NumericQ, J_?IntegerQ] := Sum[ yVec[[k]] * f33List[[k]][x, J], {k, Length[yVec]} ];
-
-F12[x_?NumericQ, J_?IntegerQ] := Sum[ yVec[[k]] * f12List[[k]][x, J], {k, Length[yVec]} ];
-F21[x_?NumericQ, J_?IntegerQ] := F12[x, J];
-
-F13[x_?NumericQ, J_?IntegerQ] := Sum[ yVec[[k]] * f13List[[k]][x, J], {k, Length[yVec]} ];
-F31[x_?NumericQ, J_?IntegerQ] := F31[x, J];
-
-F23[x_?NumericQ, J_?IntegerQ] := Sum[ yVec[[k]] * f23List[[k]][x, J], {k, Length[yVec]} ];
-F32[x_?NumericQ, J_?IntegerQ] := F23[x, J];
+F11[x_?NumericQ] := Sum[yVec[[k]] * f1List[[k]][x], {k, Length[yVec]}];
+F12[x_?NumericQ] := Sum[yVec[[k]] * f2List[[k]][x], {k, Length[yVec]}];
+F21[x_?NumericQ] := Sum[yVec[[k]] * f3List[[k]][x], {k, Length[yVec]}];
+F22[x_?NumericQ] := Sum[yVec[[k]] * f4List[[k]][x], {k, Length[yVec]}];
 
 
-F[x_?NumericQ, J_?IntegerQ] := {
-    {F11[x, J], F12[x, J], F13[x, J]},
-    {F21[x, J], F22[x, J], F23[x, J]},
-    {F31[x, J], F32[x, J], F33[x, J]}
+F[x_?NumericQ] := {
+    {F11[x], F12[x]},
+    {F21[x], F22[x]}
 };
-
-(* Safety: clamp midpoints near known singularity at x -> 1 (sp = 1/(1-x))
-   and provide a robust numeric evaluator that returns $Failed on
-   non-finite or exceptional results. *)
-singularTol = 10^-12;   (* distance from x=1 to avoid sp singularity *)
-
-safeF[x_?NumericQ, J_?IntegerQ] := Module[{x0 = x, val},
-  If[Abs[1 - x0] < singularTol, x0 = 1 - singularTol];
-  temp = N[F[x0, J], 600];
-  egnVal = Eigenvalues[temp];
-  val = Quiet[Check[Min[egnVal], $Failed] ];
-
-  If[val === $Failed || !NumberQ[val] ||
-     MemberQ[{Infinity, -Infinity, ComplexInfinity, Indeterminate, DirectedInfinity}, val],
-    $Failed,
-    val
-  ]
-];
 
 (* ----------------------------------------------------------------
    5.  MIDPOINT CHECK OVER CONSECUTIVE INTERVALS
@@ -292,46 +206,23 @@ safeF[x_?NumericQ, J_?IntegerQ] := Module[{x0 = x, val},
            stopping threshold — skip, do not generate new points
    ---------------------------------------------------------------- *)
 
-interiorPairs = Table[
-  {samplePoints[[i]], samplePoints[[i + 1]]},
-  {i, nIntervals}
-];
-allIntervals = Join[
-  If[samplePoints[[1]]  > xLeft  + singularTol, {{xLeft,  samplePoints[[1]]}},  {}],
-  interiorPairs,
-  If[samplePoints[[-1]] < xRight - singularTol, {{samplePoints[[-1]], xRight}}, {}]
-];
-nAllIntervals    = Length[allIntervals];
-flaggedIntervals = {};   (* intervals to refine: min_J F(mid,J)<0 AND width>=minWidth *)
-tinyNegative     = {};   (* intervals with min_J F(mid,J)<0 but width<minWidth        *)
-midpointValues   = {};   (* {mid, min_J F(mid,J)} for each interval, for diagnostics  *)
+nIntervals       = Length[samplePoints] - 1;
+flaggedIntervals = {};   (* intervals to refine: F(mid)<0 AND width>=minWidth *)
+tinyNegative     = {};   (* intervals with F(mid)<0 but width<minWidth        *)
+midpointValues   = {};   (* for diagnostic printing *)
 
-Print["Checking ", nAllIntervals, " interval(s) on [", xLeft, ", ", xRight,
-      "]  \[Times]  ", Length[Jlist], " J-value(s):"];
-Print["  Interior pairs : ", Length[interiorPairs]];
-Print["  Left boundary  : [", xLeft, ", ", samplePoints[[1]], "]  ",
-      If[samplePoints[[1]] > xLeft  + 10^-12, "(active)", "(skipped — x_min = xLeft)"]];
-Print["  Right boundary : [", samplePoints[[-1]], ", ", xRight, "]  ",
-      If[samplePoints[[-1]] < xRight - 10^-12, "(active)", "(skipped — x_max = xRight)"]];
+Print["Checking ", nIntervals, " interval(s) between consecutive sample points:"];
 Print["  (stopping threshold: min_width = ", minWidth, ")"];
 Print[""];
 
 Do[
-  xa    = allIntervals[[i, 1]];
-  xb    = allIntervals[[i, 2]];
+  xa    = samplePoints[[i]];
+  xb    = samplePoints[[i + 1]];
   width = xb - xa;
   mid   = (xa + xb) / 2;
-
-  fmByJ    = Table[ safeF[mid, Jlist[[j]] ], {j, Length[Jlist]} ];
-  failedCount = Count[fmByJ, $Failed];
-  If[failedCount > 0,
-    Print["  WARNING: ", failedCount,
-          " non-finite F(mid,J) evaluation(s) at mid=", mid,
-          " — proceeding with available J values (if any)."]
-  ];
-  
-  eigenList = Eigenvalues[fmByJ];
-  AppendTo[midpointValues, {mid, fmByJ}];
+  fm    = F[mid];
+  eigenList = Eigenvalues[fm];
+  AppendTo[midpointValues, {mid, fm}];
 
   Which[
     Min[eigenList] >= 0,
@@ -438,7 +329,7 @@ Print[""];
 
 (* ----------------------------------------------------------------
    9.  OVERWRITE sampling_points.txt WITH THE NEW POINTS ONLY
-       One high-precision number per line, 600 significant digits.
+       One high-precision number per line, 50 significant digits.
    ---------------------------------------------------------------- *)
 
 outLines = StringRiffle[

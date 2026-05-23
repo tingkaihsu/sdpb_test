@@ -116,7 +116,7 @@ fixSciNotation[s_String] := StringReplace[s,
 ];
 
 (* Parse and sort; keep high precision *)
-samplePoints = Sort[SetPrecision[ToExpression /@ (fixSciNotation /@ spRaw), 200]];
+samplePoints = Sort[SetPrecision[ToExpression /@ (fixSciNotation /@ spRaw), 600]];
 
 Print["Loaded ", Length[samplePoints], " sampling points:"];
 Print["  ", samplePoints];
@@ -142,7 +142,7 @@ yRaw = Select[
 If[Length[yRaw] == 0,
   Print["ERROR: z.txt is empty: ", yFile]; Quit[2]];
 
-yVec = SetPrecision[ToExpression /@ (fixSciNotation /@ yRaw), 200];
+yVec = SetPrecision[ToExpression /@ (fixSciNotation /@ yRaw), 600];
 
 (* Validate: every component of yVec must be numeric.
    A non-numeric entry (e.g. containing symbolic 'e') means the
@@ -329,7 +329,7 @@ singularTol = 10^-12;   (* distance from x=1 to avoid sp singularity *)
 
 safeF[x_?NumericQ, J_?IntegerQ] := Module[{x0 = x, val},
   If[Abs[1 - x0] < singularTol, x0 = 1 - singularTol];
-  val = Quiet[Check[N[F[x0, J], 200], $Failed]];
+  val = Quiet[Check[N[F[x0, J], 600], $Failed]];
   If[val === $Failed || !NumberQ[val] ||
      MemberQ[{Infinity, -Infinity, ComplexInfinity, Indeterminate, DirectedInfinity}, val],
     $Failed,
@@ -340,7 +340,7 @@ safeF[x_?NumericQ, J_?IntegerQ] := Module[{x0 = x, val},
 (* Safe evaluator for large-J functional X[x] *)
 safeX[x_?NumericQ] := Module[{x0 = x, val},
   If[Abs[1 - x0] < singularTol, x0 = 1 - singularTol];
-  val = Quiet[Check[N[X[x0], 200], $Failed]];
+  val = Quiet[Check[N[X[x0], 600], $Failed]];
   If[val === $Failed || !NumberQ[val] ||
      MemberQ[{Infinity, -Infinity, ComplexInfinity, Indeterminate, DirectedInfinity}, val],
     $Failed,
@@ -528,7 +528,7 @@ newPoints = Flatten[
       s     = (xb - xa) / nPts;
       Print["  Flagged interval [", interval[[1]], ", ", interval[[2]], "] (clamped to [", xa, ", ", xb, "]):"];
       Print["    x* = ", xStar, "  s = ", s];
-      Table[SetPrecision[xStar + (k - nPts/2) * s, 200], {k, 0, nPts}]
+      Table[SetPrecision[xStar + (k - nPts/2) * s, 600], {k, 0, nPts}]
     ],
     {interval, flaggedIntervals}
   ]
@@ -602,13 +602,13 @@ Print[""];
    9.  WRITE MERGED SAMPLING POINTS TO FILE
        Original samplePoints + new refined points, deduplicated.
        One high-precision number per line, plain decimal notation
-       (no scientific notation) with 200 significant digits.
+       (no scientific notation) with 600 significant digits.
    ---------------------------------------------------------------- *)
 
 (* Format a number as a plain decimal string — NEVER scientific notation.
    Uses RealDigits to decompose the number, then manually assembles the
    string with leading zeros or integer part as needed.
-     0.001      → "0.0010000000000000000000000000000000000000000000000000"
+     0.001      → "0.001000000000000000000000000000000000000000000000₀₀₀"
      1.0*10^-12 → "0.0000000000010000000000000000000000000000000000000000"
    This avoids ToString[N[...]] which renders exponents as multi-line
    superscripts in plain text output. *)
