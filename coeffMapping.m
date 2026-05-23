@@ -67,4 +67,4 @@ Print["coefficient mapping at stu expansion point: c2 = ", c2]
 (* Extract the fwd coeff directly *)
 Ker[s_, t_, mA_, k_, q_, s1_, s2_] := 1/((s-s1)(4mA^2-s-t-s2)) 1/((s-s1)^(k-q)(4mA^2-s-t-s2)^q);
 
-Print["g[2,0] = ", SeriesCoefficient[Residue[Ker[s,t,mA,2,0,2mA^2,2mA^2]fwdMlow[s,t,mA,10],{s,2mA^2}],{t,0,0}]]
+Print["g[2,0] = ", SeriesCoefficient[Residue[Ker[s,t,mA,0,2,2mA^2,2mA^2]fwdMlow[s,t,mA,10],{s,Infinity}],{t,0,0}]]

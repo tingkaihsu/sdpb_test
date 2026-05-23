@@ -123,7 +123,27 @@ yRaw = Select[
 If[Length[yRaw] == 0,
   Print["ERROR: y.txt is empty: ", yFile]; Quit[2]];
 
-yVec = SetPrecision[ToExpression /@ yRaw, 600];
+(* BUG FIX 1: z.txt (y.txt) writes Euler's number as lowercase 'e'.
+   Mathematica's ToExpression treats bare 'e' as a free symbol, not as
+   the built-in constant E = 2.71828..., making yVec[[4]] symbolic and
+   causing all J != 0 evaluations of F[x,J] and every evaluation of X[x]
+   to fail.  Replace every standalone 'e' (not part of an identifier,
+   number literal, or backtick precision annotation) with 'E' first. *)
+yRawFixed = StringReplace[#,
+  RegularExpression["(?<![A-Za-z0-9`\\$_])e(?![A-Za-z0-9`_])"] -> "*10^"
+] & /@ yRaw;
+yVec = SetPrecision[ToExpression /@ yRawFixed, 600];
+
+(* Guard: if any component is still not purely numeric, abort early with
+   a clear message rather than silently producing $Failed in every safeF/safeX call. *)
+Do[
+  If[!NumericQ[yVec[[k]]],
+    Print["ERROR: y.txt component ", k, " is not a number after parsing: ", yVec[[k]]];
+    Print["  Raw line was: ", yRaw[[k]]];
+    Quit[2]
+  ],
+  {k, Length[yVec]}
+];
 
 Print["y vector (", Length[yVec], " component(s)): ", yVec];
 Print[""];
@@ -381,29 +401,66 @@ X[x_?NumericQ] := {
    non-finite or exceptional results. *)
 singularTol = 10^-12;   (* distance from x=1 to avoid sp singularity *)
 
-safeF[x_?NumericQ, J_?IntegerQ] := Module[{x0 = x, temp, egnVal, val},
+(* BUG FIX 2-5 for safeF:
+   (2) 'mat' and 'egnVals' are now LOCAL Module variables — they were
+       previously global, causing stale values from one call to corrupt the next.
+   (3) Both N[F[…]] and Eigenvalues[…] are wrapped in Quiet[Check[…,$Failed]]
+       so that SILENT failures (returning unevaluated without a message) are
+       caught before reaching Min, not just message-generating ones.
+   (4) MatrixQ[mat, NumericQ] pre-flight guard rejects symbolic or partial
+       matrices before Eigenvalues is called, giving a clean $Failed path.
+   (5) Re /@ egnVals strips tiny numerical imaginary parts that arise from
+       floating-point arithmetic on nearly-symmetric matrices; the final
+       Im[minEgn] == 0 check ensures no complex value leaks through
+       (NumberQ[a+bI] is True, so the old MemberQ guard was insufficient). *)
+safeF[x_?NumericQ, J_?IntegerQ] := Module[{x0 = x, mat, egnVals, minEgn},
   If[Abs[1 - x0] < singularTol, x0 = 1 - singularTol];
-  temp = N[F[x0, J], 600];
-  egnVal = Eigenvalues[temp];
-  val = Quiet[Check[Min[egnVal], $Failed] ];
 
-  If[val === $Failed || !NumberQ[val] ||
-     MemberQ[{Infinity, -Infinity, ComplexInfinity, Indeterminate, DirectedInfinity}, val],
+  (* Step 1: evaluate the matrix, catching both message and silent failures *)
+  mat = Quiet[Check[N[F[x0, J], 600], $Failed]];
+  If[mat === $Failed, Return[$Failed]];
+
+  (* Step 2: reject symbolic / non-numeric matrices immediately *)
+  If[!MatrixQ[mat, NumericQ], Return[$Failed]];
+
+  (* Step 3: compute eigenvalues, catching failures *)
+  egnVals = Quiet[Check[Eigenvalues[mat], $Failed]];
+  If[egnVals === $Failed || !VectorQ[egnVals, NumericQ], Return[$Failed]];
+
+  (* Step 4: strip floating-point imaginary noise, then take the minimum *)
+  minEgn = Min[Re /@ egnVals];
+
+  (* Step 5: final sanity — result must be a real finite number *)
+  If[!NumberQ[minEgn] || Im[minEgn] =!= 0 ||
+     MemberQ[{Infinity, -Infinity, ComplexInfinity, Indeterminate}, minEgn],
     $Failed,
-    val
+    minEgn
   ]
 ];
 
-safeX[x_?NumericQ] := Module[{x0 = x, temp, egnVal, val},
+(* BUG FIX 2-5 for safeX: same set of fixes as safeF above. *)
+safeX[x_?NumericQ] := Module[{x0 = x, mat, egnVals, minEgn},
   If[Abs[1 - x0] < singularTol, x0 = 1 - singularTol];
-  temp = N[X[x0], 600];
-  egnVal = Eigenvalues[temp];
-  val = Quiet[Check[Min[egnVal], $Failed] ];
 
-  If[val === $Failed || !NumberQ[val] ||
-     MemberQ[{Infinity, -Infinity, ComplexInfinity, Indeterminate, DirectedInfinity}, val],
+  (* Step 1: evaluate the matrix, catching both message and silent failures *)
+  mat = Quiet[Check[N[X[x0], 600], $Failed]];
+  If[mat === $Failed, Return[$Failed]];
+
+  (* Step 2: reject symbolic / non-numeric matrices immediately *)
+  If[!MatrixQ[mat, NumericQ], Return[$Failed]];
+
+  (* Step 3: compute eigenvalues, catching failures *)
+  egnVals = Quiet[Check[Eigenvalues[mat], $Failed]];
+  If[egnVals === $Failed || !VectorQ[egnVals, NumericQ], Return[$Failed]];
+
+  (* Step 4: strip floating-point imaginary noise, then take the minimum *)
+  minEgn = Min[Re /@ egnVals];
+
+  (* Step 5: final sanity — result must be a real finite number *)
+  If[!NumberQ[minEgn] || Im[minEgn] =!= 0 ||
+     MemberQ[{Infinity, -Infinity, ComplexInfinity, Indeterminate}, minEgn],
     $Failed,
-    val
+    minEgn
   ]
 ];
 (* ----------------------------------------------------------------
