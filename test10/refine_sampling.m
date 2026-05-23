@@ -123,16 +123,32 @@ yRaw = Select[
 If[Length[yRaw] == 0,
   Print["ERROR: y.txt is empty: ", yFile]; Quit[2]];
 
+parseSDPBReal[str_String] := Module[{s = StringTrim[str], expr},
+  If[s === "" || StringStartsQ[s, "#"], Return[$Failed]];
 (* BUG FIX 1: z.txt (y.txt) writes Euler's number as lowercase 'e'.
    Mathematica's ToExpression treats bare 'e' as a free symbol, not as
    the built-in constant E = 2.71828..., making yVec[[4]] symbolic and
    causing all J != 0 evaluations of F[x,J] and every evaluation of X[x]
    to fail.  Replace every standalone 'e' (not part of an identifier,
    number literal, or backtick precision annotation) with 'E' first. *)
-yRawFixed = StringReplace[#,
+(* yRawFixed = StringReplace[#,
   RegularExpression["(?<![A-Za-z0-9`\\$_])e(?![A-Za-z0-9`_])"] -> "*10^"
 ] & /@ yRaw;
-yVec = SetPrecision[ToExpression /@ yRawFixed, 600];
+yVec = SetPrecision[ToExpression /@ yRawFixed, 600]; *)
+
+s = StringReplace[
+  s,
+  RegularExpression["(?<=\\d)[eE]([+-]?\\d+)"] -> "*^$1"
+];
+
+expr = Quiet[Check[ToExpression[s], $Failed]];
+If[expr === $Failed || !NumericQ[expr],
+  $Failed,
+  SetPrecision[N[expr, 600], 600]
+]
+];
+
+yVec = parseSDPBReal /@ yRaw;
 
 (* Guard: if any component is still not purely numeric, abort early with
    a clear message rather than silently producing $Failed in every safeF/safeX call. *)
