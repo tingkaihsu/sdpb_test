@@ -346,23 +346,23 @@ F12[x_?NumericQ, J_?IntegerQ] := Sum[ yVec[[k]] * f12List[[k]][x, J], {k, Length
 F21[x_?NumericQ, J_?IntegerQ] := F12[x, J];
 
 F13[x_?NumericQ, J_?IntegerQ] := Sum[ yVec[[k]] * f13List[[k]][x, J], {k, Length[yVec]} ];
-F31[x_?NumericQ, J_?IntegerQ] := F31[x, J];
+F31[x_?NumericQ, J_?IntegerQ] := F13[x, J];
 
 F23[x_?NumericQ, J_?IntegerQ] := Sum[ yVec[[k]] * f23List[[k]][x, J], {k, Length[yVec]} ];
 F32[x_?NumericQ, J_?IntegerQ] := F23[x, J];
 
-J11[x_?NumericQ, J_?IntegerQ] := Sum[ yVec[[k]] * f11List[[k]][x, J], {k, Length[yVec]} ];
-J22[x_?NumericQ, J_?IntegerQ] := Sum[ yVec[[k]] * f22List[[k]][x, J], {k, Length[yVec]} ];
-J33[x_?NumericQ, J_?IntegerQ] := Sum[ yVec[[k]] * f33List[[k]][x, J], {k, Length[yVec]} ];
+J11[x_?NumericQ] := Sum[ yVec[[k]] * j11List[[k]][x], {k, Length[yVec]} ];
+J22[x_?NumericQ] := Sum[ yVec[[k]] * j22List[[k]][x], {k, Length[yVec]} ];
+J33[x_?NumericQ] := Sum[ yVec[[k]] * j33List[[k]][x], {k, Length[yVec]} ];
 
-J12[x_?NumericQ, J_?IntegerQ] := Sum[ yVec[[k]] * f12List[[k]][x, J], {k, Length[yVec]} ];
-J21[x_?NumericQ, J_?IntegerQ] := F12[x, J];
+J12[x_?NumericQ] := Sum[ yVec[[k]] * j12List[[k]][x], {k, Length[yVec]} ];
+J21[x_?NumericQ] := J12[x];
 
-J13[x_?NumericQ, J_?IntegerQ] := Sum[ yVec[[k]] * f13List[[k]][x, J], {k, Length[yVec]} ];
-J31[x_?NumericQ, J_?IntegerQ] := J31[x, J];
+J13[x_?NumericQ] := Sum[ yVec[[k]] * j13List[[k]][x], {k, Length[yVec]} ];
+J31[x_?NumericQ] := J13[x];
 
-J23[x_?NumericQ, J_?IntegerQ] := Sum[ yVec[[k]] * f23List[[k]][x, J], {k, Length[yVec]} ];
-J32[x_?NumericQ, J_?IntegerQ] := J23[x, J];
+J23[x_?NumericQ] := Sum[ yVec[[k]] * j23List[[k]][x], {k, Length[yVec]} ];
+J32[x_?NumericQ] := J23[x];
 
 F[x_?NumericQ, J_?IntegerQ] := {
     {F11[x, J], F12[x, J], F13[x, J]},
@@ -371,9 +371,9 @@ F[x_?NumericQ, J_?IntegerQ] := {
 };
 
 X[x_?NumericQ] := {
-    {J11[x, 0], J12[x, 0], J13[x, 0]},
-    {J21[x, 0], J22[x, 0], J23[x, 0]},
-    {J31[x, 0], J32[x, 0], J33[x, 0]}
+    {J11[x], J12[x], J13[x]},
+    {J21[x], J22[x], J23[x]},
+    {J31[x], J32[x], J33[x]}
 };
 
 (* Safety: clamp midpoints near known singularity at x -> 1 (sp = 1/(1-x))
@@ -415,6 +415,8 @@ safeX[x_?NumericQ] := Module[{x0 = x, val},
          - if F(m) < 0 AND w <  minWidth: negative but below the
            stopping threshold — skip, do not generate new points
    ---------------------------------------------------------------- *)
+
+nIntervals = Length[samplePoints] - 1;
 
 interiorPairs = Table[
   {samplePoints[[i]], samplePoints[[i + 1]]},
