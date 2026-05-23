@@ -381,7 +381,7 @@ X[x_?NumericQ] := {
    non-finite or exceptional results. *)
 singularTol = 10^-12;   (* distance from x=1 to avoid sp singularity *)
 
-safeF[x_?NumericQ, J_?IntegerQ] := Module[{x0 = x, val},
+safeF[x_?NumericQ, J_?IntegerQ] := Module[{x0 = x, temp, egnVal, val},
   If[Abs[1 - x0] < singularTol, x0 = 1 - singularTol];
   temp = N[F[x0, J], 600];
   egnVal = Eigenvalues[temp];
@@ -394,7 +394,7 @@ safeF[x_?NumericQ, J_?IntegerQ] := Module[{x0 = x, val},
   ]
 ];
 
-safeX[x_?NumericQ] := Module[{x0 = x, val},
+safeX[x_?NumericQ] := Module[{x0 = x, temp, egnVal, val},
   If[Abs[1 - x0] < singularTol, x0 = 1 - singularTol];
   temp = N[X[x0], 600];
   egnVal = Eigenvalues[temp];
