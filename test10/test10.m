@@ -107,7 +107,7 @@ LargeJAAAA[x_?NumericQ] := Module[{sp, mA},
   N[(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(18*sp^3*(-4*mA^2 + sp)^6), 600]
 ];
 
-Jmax = 60;
+Jmax = 2;
 Jlist = Range[0, Jmax, 2];
 
 M0[x_?NumericQ,J_?IntegerQ] := {
@@ -250,7 +250,7 @@ j23List = {
 	Function[{x}, N0[x][[2,3]]],
 	Function[{x}, N0[x][[2,3]]],
 	Function[{x}, N0[x][[2,3]]],
-  Function[{x}, M4[x][[2,3]]],
+  Function[{x}, M4[x][[2,3]]]
 };
 j32List = j23List;
 
