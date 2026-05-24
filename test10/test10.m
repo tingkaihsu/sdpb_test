@@ -97,7 +97,7 @@ X52AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
 (* null constraint from other channels *)
 n4BBBB[x_?NumericQ, J_?IntegerQ] := Module[{sp},
   sp = N[1/(1-x), 600];
-  N[J*(1+J)*(J^2+J-8)/(2*sp^5), 600];
+  N[J*(1+J)*(J^2+J-8)/(2*sp^5), 600]
 ];
 
 (* Large J limit *)
@@ -142,7 +142,7 @@ M4[x_?NumericQ] :={
 
 M5[x_?NumericQ, J_?IntegerQ] :={
   {0,0,0},
-  {0,n4BBBB[x,J],0},
+  {0,n4AAAA[x,J],0},
   {0,0,0}
 };
 
