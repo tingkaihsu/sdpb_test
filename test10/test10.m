@@ -289,19 +289,19 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
       "sampleScalings" -> {sampleScalings[[i]]},
       "polynomials" -> {
 	      { 
-          Table[{SetPrecision[f11List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f11List]}],
-          Table[{SetPrecision[f21List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f21List]}],
-          Table[{SetPrecision[f31List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f31List]}]
+          Table[N[f11List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f11List]}],
+          Table[N[f21List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f21List]}],
+          Table[N[f31List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f31List]}]
 	      },
 	      {
-	        Table[{SetPrecision[f12List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f12List]}],
-			    Table[{SetPrecision[f22List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f22List]}],
-			    Table[{SetPrecision[f32List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f32List]}]
+	        Table[N[f12List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f12List]}],
+			    Table[N[f22List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f22List]}],
+			    Table[N[f32List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f32List]}]
 	      },
 	      {
-	        Table[{SetPrecision[f13List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f13List]}],
-			    Table[{SetPrecision[f23List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f23List]}],
-			    Table[{SetPrecision[f33List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f33List]}]
+	        Table[N[f13List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f13List]}],
+			    Table[N[f23List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f23List]}],
+			    Table[N[f33List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f33List]}]
 	      }
       }
     |>],
@@ -315,19 +315,19 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
       "sampleScalings" -> {sampleScalings[[i]]},
       "polynomials" -> {
 	      { 
-          Table[{SetPrecision[j11List[[k]][samplePoints[[i]]], prec]}, {k, Length[j11List]}],
-          Table[{SetPrecision[j21List[[k]][samplePoints[[i]]], prec]}, {k, Length[j21List]}],
-          Table[{SetPrecision[j31List[[k]][samplePoints[[i]]], prec]}, {k, Length[j31List]}]
+          Table[N[j11List[[k]][samplePoints[[i]]], prec], {k, Length[j11List]}],
+          Table[N[j21List[[k]][samplePoints[[i]]], prec], {k, Length[j21List]}],
+          Table[N[j31List[[k]][samplePoints[[i]]], prec], {k, Length[j31List]}]
 	      },
 	      {
-	        Table[{SetPrecision[j12List[[k]][samplePoints[[i]]], prec]}, {k, Length[j12List]}],
-			    Table[{SetPrecision[j22List[[k]][samplePoints[[i]]], prec]}, {k, Length[j22List]}],
-			    Table[{SetPrecision[j32List[[k]][samplePoints[[i]]], prec]}, {k, Length[j32List]}]
+	        Table[N[j12List[[k]][samplePoints[[i]]], prec], {k, Length[j12List]}],
+			    Table[N[j22List[[k]][samplePoints[[i]]], prec], {k, Length[j22List]}],
+			    Table[N[j32List[[k]][samplePoints[[i]]], prec], {k, Length[j32List]}]
 	      },
 	      {
-	        Table[{SetPrecision[j13List[[k]][samplePoints[[i]]], prec]}, {k, Length[j13List]}],
-			    Table[{SetPrecision[j23List[[k]][samplePoints[[i]]], prec]}, {k, Length[j23List]}],
-			    Table[{SetPrecision[j33List[[k]][samplePoints[[i]]], prec]}, {k, Length[j33List]}]
+	        Table[N[j13List[[k]][samplePoints[[i]]], prec], {k, Length[j13List]}],
+			    Table[N[j23List[[k]][samplePoints[[i]]], prec], {k, Length[j23List]}],
+			    Table[N[j33List[[k]][samplePoints[[i]]], prec], {k, Length[j33List]}]
 	      }
       }
     |>],
