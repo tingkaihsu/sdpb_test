@@ -71,7 +71,7 @@ g31[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   N[-(Sqrt[sp/(-4*mA^2 + sp)]*(-3 - (2*J*(1 + J)*(2*mA^2 - sp))/(-4*mA^2 + sp)))/(-2*mA^2 + sp)^4, 600]
 ];
 
-n4AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
+n4[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
   sp   = N[1/(1 - x), 600];
   mA   = N[maVal, 600];
   result = (81*Sqrt[sp/(-4*mA^2 + sp)]*(
@@ -87,27 +87,20 @@ n4AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
   Re[N[result, 600] ]
 ];
 
-X52AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+X52[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   sp = N[1/(1-x), 600];
   mA = N[maVal, 600];    (* FIX 1: exact rational *)
   N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
 ];
 
-
-(* null constraint from other channels *)
-n4BBBB[x_?NumericQ, J_?IntegerQ] := Module[{sp},
-  sp = N[1/(1-x), 600];
-  N[J*(1+J)*(J^2+J-8)/(2*sp^5), 600]
-];
-
 (* Large J limit *)
-LargeJAAAA[x_?NumericQ] := Module[{sp, mA},
+LargeJ[x_?NumericQ] := Module[{sp, mA},
   sp = N[1/(1-x), 600];
   mA = N[maVal, 600];    (* FIX 1: exact rational *)
   N[(Sqrt[sp/(-4*mA^2 + sp)]*(-32*mA^6 + 24*mA^4*sp - 6*mA^2*sp^2 + sp^3))/(18*sp^3*(-4*mA^2 + sp)^6), 600]
 ];
 
-Jmax = 2;
+Jmax = 60;
 Jlist = Range[0, Jmax, 2];
 
 M0[x_?NumericQ,J_?IntegerQ] := {
@@ -123,28 +116,22 @@ M1[x_?NumericQ,J_?IntegerQ] := {
 };
 
 M2[x_?NumericQ, J_?IntegerQ] :={
-	{n4AAAA[x,J],0,0},
+	{n4[x,J],0,0},
 	{0,0,0},
 	{0,0,0}
 };
 
 M3[x_?NumericQ, J_?IntegerQ] :={
-	{X52AAAA[x,J],0,0},
+	{X52[x,J],0,0},
 	{0,0,0},
 	{0,0,0}
 };
 
 M4[x_?NumericQ] :={
-	{LargeJAAAA[x],0,0},
+	{LargeJ[x],0,0},
 	{0,0,0},
 	{0,0,0}
-};
-
-M5[x_?NumericQ, J_?IntegerQ] :={
-  {0,0,0},
-  {0,n4AAAA[x,J],0},
-  {0,0,0}
-};
+}
 
 (* null *)
 N0[x_?NumericQ] :={
@@ -157,28 +144,28 @@ f11List ={
 	Function[{x,J}, M0[x,J][[1,1]]],
 	Function[{x,J}, M1[x,J][[1,1]]],
 	Function[{x,J}, M2[x,J][[1,1]]],
-  Function[{x,J}, M3[x,J][[1,1]]]
+	Function[{x,J}, M3[x,J][[1,1]]]
 };
 
 f22List ={
 	Function[{x,J}, M0[x,J][[2,2]]],
 	Function[{x,J}, M1[x,J][[2,2]]],
 	Function[{x,J}, M2[x,J][[2,2]]],
-  Function[{x,J}, M3[x,J][[2,2]]]
+	Function[{x,J}, M3[x,J][[2,2]]]
 };
 
 f33List = {
 	Function[{x,J}, M0[x,J][[3,3]]],
 	Function[{x,J}, M1[x,J][[3,3]]],
 	Function[{x,J}, M2[x,J][[3,3]]],
-  Function[{x,J}, M3[x,J][[3,3]]]
+	Function[{x,J}, M3[x,J][[3,3]]]
 };
 
 f12List ={
 	Function[{x,J}, M0[x,J][[1,2]]],
 	Function[{x,J}, M1[x,J][[1,2]]],
 	Function[{x,J}, M2[x,J][[1,2]]],
-  Function[{x,J}, M3[x,J][[1,2]]]
+	Function[{x,J}, M3[x,J][[1,2]]]
 };
 
 f21List = f12List;
@@ -187,7 +174,7 @@ f13List = {
 	Function[{x,J}, M0[x,J][[1,3]]],
 	Function[{x,J}, M1[x,J][[1,3]]],
 	Function[{x,J}, M2[x,J][[1,3]]],
-  Function[{x,J}, M3[x,J][[1,3]]]
+	Function[{x,J}, M3[x,J][[1,3]]]
 };
 f31List = f13List;
 
@@ -195,7 +182,7 @@ f23List = {
 	Function[{x,J}, M0[x,J][[2,3]]],
 	Function[{x,J}, M1[x,J][[2,3]]],
 	Function[{x,J}, M2[x,J][[2,3]]],
-  Function[{x,J}, M3[x,J][[2,3]]]
+	Function[{x,J}, M3[x,J][[2,3]]]
 };
 f32List = f23List;
 
@@ -203,26 +190,26 @@ j11List = {
 	Function[{x}, N0[x][[1,1]]],
 	Function[{x}, N0[x][[1,1]]],
 	Function[{x}, N0[x][[1,1]]],
-  Function[{x}, M4[x][[1,1]]]
+	Function[{x}, M4[x][[1,1]]]
 };
 j22List = {
 	Function[{x}, N0[x][[2,2]]],
 	Function[{x}, N0[x][[2,2]]],
 	Function[{x}, N0[x][[2,2]]],
-  Function[{x}, M4[x][[2,2]]]
+	Function[{x}, M4[x][[2,2]]]
 };
 j33List = {
 	Function[{x}, N0[x][[3,3]]],
 	Function[{x}, N0[x][[3,3]]],
 	Function[{x}, N0[x][[3,3]]],
-  Function[{x}, M4[x][[3,3]]]
+	Function[{x}, M4[x][[3,3]]]
 };
 
 j12List = {
 	Function[{x}, N0[x][[1,2]]],
 	Function[{x}, N0[x][[1,2]]],
 	Function[{x}, N0[x][[1,2]]],
-  Function[{x}, M4[x][[1,2]]]
+	Function[{x}, M4[x][[1,2]]]
 };
 j21List = j12List;
 
@@ -230,7 +217,7 @@ j13List = {
 	Function[{x}, N0[x][[1,3]]],
 	Function[{x}, N0[x][[1,3]]],
 	Function[{x}, N0[x][[1,3]]],
-  Function[{x}, M4[x][[1,3]]]
+	Function[{x}, M4[x][[1,3]]]
 };
 j31List = j13List;
 
@@ -238,7 +225,7 @@ j23List = {
 	Function[{x}, N0[x][[2,3]]],
 	Function[{x}, N0[x][[2,3]]],
 	Function[{x}, N0[x][[2,3]]],
-  Function[{x}, M4[x][[2,3]]]
+	Function[{x}, M4[x][[2,3]]]
 };
 j32List = j23List;
 
@@ -277,19 +264,19 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
       "sampleScalings" -> {sampleScalings[[i]]},
       "polynomials" -> {
 	      { 
-          Table[N[f11List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f11List]}],
-          Table[N[f21List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f21List]}],
-          Table[N[f31List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f31List]}]
+          Table[{SetPrecision[f11List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f11List]}],
+          Table[{SetPrecision[f21List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f21List]}],
+          Table[{SetPrecision[f31List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f31List]}]
 	      },
 	      {
-	        Table[N[f12List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f12List]}],
-			    Table[N[f22List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f22List]}],
-			    Table[N[f32List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f32List]}]
+	        Table[{SetPrecision[f12List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f12List]}],
+			    Table[{SetPrecision[f22List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f22List]}],
+			    Table[{SetPrecision[f32List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f32List]}]
 	      },
 	      {
-	        Table[N[f13List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f13List]}],
-			    Table[N[f23List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f23List]}],
-			    Table[N[f33List[[k]][samplePoints[[i]], Jlist[[j]]], prec], {k, Length[f33List]}]
+	        Table[{SetPrecision[f13List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f13List]}],
+			    Table[{SetPrecision[f23List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f23List]}],
+			    Table[{SetPrecision[f33List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f33List]}]
 	      }
       }
     |>],
@@ -303,19 +290,19 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
       "sampleScalings" -> {sampleScalings[[i]]},
       "polynomials" -> {
 	      { 
-          Table[N[j11List[[k]][samplePoints[[i]]], prec], {k, Length[j11List]}],
-          Table[N[j21List[[k]][samplePoints[[i]]], prec], {k, Length[j21List]}],
-          Table[N[j31List[[k]][samplePoints[[i]]], prec], {k, Length[j31List]}]
+          Table[{SetPrecision[j11List[[k]][samplePoints[[i]]], prec]}, {k, Length[j11List]}],
+          Table[{SetPrecision[j21List[[k]][samplePoints[[i]]], prec]}, {k, Length[j21List]}],
+          Table[{SetPrecision[j31List[[k]][samplePoints[[i]]], prec]}, {k, Length[j31List]}]
 	      },
 	      {
-	        Table[N[j12List[[k]][samplePoints[[i]]], prec], {k, Length[j12List]}],
-			    Table[N[j22List[[k]][samplePoints[[i]]], prec], {k, Length[j22List]}],
-			    Table[N[j32List[[k]][samplePoints[[i]]], prec], {k, Length[j32List]}]
+	        Table[{SetPrecision[j12List[[k]][samplePoints[[i]]], prec]}, {k, Length[j12List]}],
+			    Table[{SetPrecision[j22List[[k]][samplePoints[[i]]], prec]}, {k, Length[j22List]}],
+			    Table[{SetPrecision[j32List[[k]][samplePoints[[i]]], prec]}, {k, Length[j32List]}]
 	      },
 	      {
-	        Table[N[j13List[[k]][samplePoints[[i]]], prec], {k, Length[j13List]}],
-			    Table[N[j23List[[k]][samplePoints[[i]]], prec], {k, Length[j23List]}],
-			    Table[N[j33List[[k]][samplePoints[[i]]], prec], {k, Length[j33List]}]
+	        Table[{SetPrecision[j13List[[k]][samplePoints[[i]]], prec]}, {k, Length[j13List]}],
+			    Table[{SetPrecision[j23List[[k]][samplePoints[[i]]], prec]}, {k, Length[j23List]}],
+			    Table[{SetPrecision[j33List[[k]][samplePoints[[i]]], prec]}, {k, Length[j33List]}]
 	      }
       }
     |>],
