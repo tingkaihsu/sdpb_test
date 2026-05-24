@@ -101,3 +101,14 @@ g = Plot[r[m],{m,1/1000,4/10},WorkingPrecision->600,PlotRange->All,PlotTheme->"D
 
 
 Export["C:\\Users\\User\\Pictures\\Screenshots\\ugly.png",g]
+
+
+(* massless case *)
+A4[s_,t_] := Module[{u = -s-t},
+			(s*t+s*u+t*u)^2 *
+            (Gamma[-s/4] Gamma[-t/4] Gamma[-u/4]) /
+            (Gamma[1+s/4] Gamma[1+t/4] Gamma[1+u/4])];
+            
+Ker[s_,k_,s1_,s2_] := 1/((s-s1)*((s-s1)*(s-s2))^(k/2))
+
+Print["g2 = ", SeriesCoefficient[SeriesCoefficient[Ker[s,2,0,-t]*A4[s,t],{s,Infinity,-1}],{t,0,0}]//FullSimplify]
