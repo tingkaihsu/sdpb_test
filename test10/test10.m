@@ -89,7 +89,7 @@ n4AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
 
 n4BBBB[x_?NumericQ, J_?IntegerQ] := Module[{sp, result},
   sp   = N[1/(1 - x), 600];
-  result = (8-8 J-7 J^2+2 J^3+J^4)/(2 sp^5)-2*2/sp^5;
+  result = (8-8*J-7*J^2+2*J^3+J^4)/(2*sp^5)-2*2/sp^5;
   Re[N[result, 600] ]
 ];
 
@@ -97,6 +97,11 @@ X52AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   sp = N[1/(1-x), 600];
   mA = N[maVal, 600];    (* FIX 1: exact rational *)
   N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
+];
+
+X52BBBB[x_?NumericQ, J_?IntegerQ] := Module[{sp},
+  sp = N[1/(1-x), 600];
+  N[, 600]
 ];
 
 (* Large J limit *)

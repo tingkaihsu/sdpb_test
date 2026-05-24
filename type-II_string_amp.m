@@ -5,8 +5,8 @@ Amp[s_,t_] := Module[{u = -s-t},
               (Gamma[1-s/4] Gamma[1-t/4] Gamma[1-u/4]) /
               (Gamma[1+s/4] Gamma[1+t/4] Gamma[1+u/4])];
 
-(* result is g2 = 0 *)
-Print["g2 = ", SeriesCoefficient[Amp[s,t], {s,0,2},{t,0,0}]//FullSimplify ]
+Print["s-t symmetry: ", Amp[s,t] == Amp[t,s] ];
+Print["s-u symmetry: ", Amp[s,t] == Amp[-s-t,t] ];
 
-Print["g3 = ", SeriesCoefficient[Amp[s,t], {s,0,3}, {t,0,0}]//FullSimplify ]
+Print["low-energy Amp[s,t] = ", Series[Amp[s,t], {s,0,3}, {t,0,3}]//Normal//FullSimplify];
 
