@@ -258,8 +258,8 @@ j32List = j23List;
 (* extraTriplet = {0&, 0&, 0&, LargeJ}; *)
 
 (* optimal upper bound *)
-norm = {0, -1, 0, 0};
-obj  = {-1, 0, 0, 0};
+norm = {0, -1, 0, 0, 0};
+obj  = {-1, 0, 0, 0, 0};
 
 
 testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
