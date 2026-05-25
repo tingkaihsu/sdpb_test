@@ -93,16 +93,23 @@ n4BBBB[x_?NumericQ, J_?IntegerQ] := Module[{sp, result},
   Re[N[result, 600] ]
 ];
 
+n4ABAB[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  result = (243 sp (-4 Hypergeometric2F1[-J,1+J,1,-((2 m^2 sp)/(3 (m^2-sp)^2))]-((2 m^2-3 sp) (3 Sqrt[2] (m^2-sp)^2 Sqrt[(m^2 sp (-3 m^4+4 m^2 sp-3 sp^2))/(m^2-sp)^4] LegendreP[J,1,(3 m^4-2 m^2 sp+3 sp^2)/(3 (m^2-sp)^2)]+sp (-2 m^2+3 sp) LegendreP[J,2,(3 m^4-2 m^2 sp+3 sp^2)/(3 (m^2-sp)^2)]))/(3 m^6-4 m^4 sp+3 m^2 sp^2)))/(4 (2 m^2-3 sp)^5 (-m^2+sp));
+  Re[N[result, 600] ]
+];
+
 X52AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   sp = N[1/(1-x), 600];
   mA = N[maVal, 600];    (* FIX 1: exact rational *)
   N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
 ];
 
-X52BBBB[x_?NumericQ, J_?IntegerQ] := Module[{sp},
+(* X52BBBB[x_?NumericQ, J_?IntegerQ] := Module[{sp},
   sp = N[1/(1-x), 600];
   N[, 600]
-];
+]; *)
 
 (* Large J limit *)
 LargeJAAAA[x_?NumericQ] := Module[{sp, mA},
@@ -149,6 +156,12 @@ M5[x_?NumericQ, J_?IntegerQ] :={
 	{0,n4BBBB[x,J],0},
 	{0,0,0}
 };
+
+M6[x_?NumericQ, J_?IntegerQ] :={
+  {0,0,0},
+  {0,0,0},
+  {0,0,n4ABAB[x,J]}
+}
 
 (* null *)
 N0[x_?NumericQ] :={
