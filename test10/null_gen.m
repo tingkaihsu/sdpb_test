@@ -2,7 +2,7 @@
 
 (* null constraint generator for ABAB scattering *)
 (* ---------- coefficient helper ---------- *)
-ClearAll["Global*"];
+ClearAll["Global`*"];
 
 g[a_, b_] := gABAB @@ Sort[{a, b}];
 c[a_, b_] := cABAB @@ Sort[{a, b}];
@@ -75,11 +75,11 @@ MABAB[s_, t_, m_] := 1/2*s/(s-m^2)*LegendreP[J, 1+(2*s*t)/(s-m^2)^2];
 MBBAA[s_, t_, m_] := (s/(s-m^2))^(1/4)*LegendreP[J,(2t+s-2m^2)/Sqrt[s(s-4m^2)]];
 
 sKer[sp_,m_,J_,k_,q_] := Assuming[J \[Element] Integers && J >= 0,
-  FullSimplify @ SeriesCoefficient[Ker[sp,t,s1[m],s2[m],k,q]*MABAB[sp,t,m]-Ker[t,sp,s1[m],s2[m],k,q]*MBBAA[sp,t,m], {t, 2m^2/3, -1}]
+  Simplify @ SeriesCoefficient[Ker[sp,t,s1[m],s2[m],k,q]*MABAB[sp,t,m]-Ker[t,sp,s1[m],s2[m],k,q]*MBBAA[sp,t,m], {t, 2m^2/3, -1}]
 ];
 
 uKer[sp_,m_,J_,k_,q_] := Assuming[J \[Element] Integers && J >= 0,
-  FullSimplify @ SeriesCoefficient[Ker[2m^2-sp-t,t,s1[m],s2[m],k,q]*MABAB[sp,t,m]-Ker[t,2m^2-sp-t,s1[m],s2[m],k,q]*MBBAA[sp,t,m], {t, 2m^2/3, -1}]
+  Simplify @ SeriesCoefficient[Ker[2m^2-sp-t,t,s1[m],s2[m],k,q]*MABAB[sp,t,m]-Ker[t,2m^2-sp-t,s1[m],s2[m],k,q]*MBBAA[sp,t,m], {t, 2m^2/3, -1}]
 ];
 
 Xkq[k_Integer, q_Integer, J_, sp_, m_] := sKer[sp,m,J,k,q]-uKer[sp,m,J,k,q];
@@ -87,7 +87,7 @@ Xkq[k_Integer, q_Integer, J_, sp_, m_] := sKer[sp,m,J,k,q]-uKer[sp,m,J,k,q];
 kn = 5;
 qn = 2;
 
-Print["X[5,2] = ", Xkq[kn,qn,J,sp,m]//FullSimplify]
+Print["X[5,2] = ", Xkq[kn,qn,J,sp,m]//Simplify]
 Print["massless-limit X[5,2] = ", Limit[Xkq[kn,qn,J,sp,m],{m -> 0}]]
 
 
