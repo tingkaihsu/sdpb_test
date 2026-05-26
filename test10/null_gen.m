@@ -87,8 +87,8 @@ Xkq[k_Integer, q_Integer, J_, sp_, m_] := sKer[sp,m,J,k,q]-uKer[sp,m,J,k,q];
 kn = 5;
 qn = 2;
 
-Print["X[5,2] = ", Xkq[kn,qn,J,sp,m]//Simplify]
-Print["massless-limit X[5,2] = ", Limit[Xkq[kn,qn,J,sp,m],{m -> 0}]]
+Print["X[5,2] = ", Xkq[kn,qn,J,sp,m]//Simplify];
+Print["massless-limit X[5,2] = ", Limit[Xkq[kn,qn,J,sp,m],{m -> 0}, Direction->"FromAbove"]];
 
 
 (4-5*d)J*(J+1)+2(J*(J+1))^2/.{d -> 4}//FullSimplify
