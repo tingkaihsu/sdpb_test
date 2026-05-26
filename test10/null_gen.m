@@ -2,6 +2,7 @@
 
 (* null constraint generator for ABAB scattering *)
 (* ---------- coefficient helper ---------- *)
+ClearAll["Global*"];
 
 g[a_, b_] := gABAB @@ Sort[{a, b}];
 c[a_, b_] := cABAB @@ Sort[{a, b}];
@@ -66,10 +67,11 @@ Ker[s_, t_, s1_, s2_, k_, q_] := 1/( (s-s1)*(t-s2) ) * 1/(s-s1)^(k-q) * 1/(t-s2)
 s1[mA_] := 2mA^2/3;
 s2[mA_] := 2mA^2/3;
 
-Print["double contour test: ", Residue[Residue[ Ker[s,t,s1[m],s2[m],5,2]*stuMABAB[s,t,m,10]-Ker[t,s,s1[m],s2[m],5,2]*stuMBBAA[s,t,m,10], {s,Infinity}], {t,2m^2/3}]//FullSimplify ]
+Print["double contour test (stu ansatz): ", Residue[Residue[ Ker[s,t,s1[m],s2[m],5,2]*stuMABAB[s,t,m,10]-Ker[t,s,s1[m],s2[m],5,2]*stuMBBAA[s,t,m,10], {s,Infinity}], {t,2m^2/3} ]//FullSimplify ]
 
 
-MABAB[s_, t_, m_] := 1/2*s/(s-m^2)*LegendreP[J,1+(2*s*t)/(s-m^2)^2];
+(* NOT sure about the 1/2 factor in MABAB *)
+MABAB[s_, t_, m_] := 1/2*s/(s-m^2)*LegendreP[J, 1+(2*s*t)/(s-m^2)^2];
 MBBAA[s_, t_, m_] := (s/(s-m^2))^(1/4)*LegendreP[J,(2t+s-2m^2)/Sqrt[s(s-4m^2)]];
 
 sKer[sp_,m_,J_,k_,q_] := Assuming[J \[Element] Integers && J >= 0,
@@ -91,6 +93,4 @@ Print["massless-limit X[5,2] = ", Limit[Xkq[kn,qn,J,sp,m],{m -> 0}]]
 
 (4-5*d)J*(J+1)+2(J*(J+1))^2/.{d -> 4}//FullSimplify
 (23d^2-12d-20)*J*(J+1)+(-21d-2)*(J*(J+1))^2+4(J*(J+1))^3/.{d->4}//FullSimplify
-
-
 
