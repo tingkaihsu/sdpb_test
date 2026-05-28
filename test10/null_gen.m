@@ -4,8 +4,8 @@
 (* ---------- coefficient helper ---------- *)
 ClearAll["Global`*"];
 
-g[a_, b_] := gABAB @@ Sort[{a, b}];
-c[a_, b_] := cABAB @@ Sort[{a, b}];
+g[a_, b_] := gABBA @@ Sort[{a, b}];
+c[a_, b_] := cAABB @@ Sort[{a, b}];
 
 validTriples[Nmax_Integer] :=
     Flatten[Table[{a, b}, {a, 0, Nmax}, {b, 0, Nmax - a}], 1];
@@ -14,8 +14,8 @@ validTriples[Nmax_Integer] :=
 
 (* Commented-out single-term prototype kept for reference *)
 
-(* ABAB scattering change the ansatz to be s-u symmetric *)
-suMABAB[s_, t_, mA_, Nmax_Integer] :=
+(* ABBA scattering change the ansatz to be s-u symmetric *)
+suMABBA[s_, t_, mA_, Nmax_Integer] :=
     gABB^2 * (1/s + 1/u) + gAAB*gBBB * (1/t) + 
     gAAB^2 * (1/(s-mA^2) + 1/(u-mA^2)) + gAAA*gBBA * (1/(t-mA^2)) +
     Total[
@@ -40,47 +40,38 @@ tuMBBAA[s_, t_, mA_, Nmax_Integer] :=
         ] /@ validTriples[Nmax]
     ] /. {u -> 2mA^2 - s - t};
 
-s1[m_] := 2m^2;
-s2[m_] := 0;
-Ker[s_, t_, s1_, s2_, k_, q_] := 1/( (s-s1)*(t-s2) ) * 1/(s-s1)^(k-q) * 1/(t-s2)^q;
+s1[m_,t_] := m^2;
+s2[m_,t_] := 4m^2-t-s1[m,t];
+Ker[s_, t_, s1_, s2_, k_] := 1/(s-s1)*1/((s-s1)*(s-s2))^(k/2);
 
-Residue[ Residue[ Ker[s,t,s1[m],s2[m],5,2]*suMABAB[s,t,m,10], {s,Infinity}] , {t,0}]//Simplify
-Residue[ Residue[ Ker[t,s,s1[m],s2[m],5,2]*tuMBBAA[s,t,m,10], {s,Infinity}] , {t,0}]//Simplify
-
-
-solABAB = Solve[t == ((s-m^2)^2(cos-1))/(2s),{cos}]//FullSimplify;
-Print["solABAB = ", solABAB];
-
-solBBAA = Solve[t == m^2-s/2+1/2*Sqrt[s*(s-4m^2)]*cos,{cos}]//FullSimplify;
-Print["solBBAA = ", solBBAA];
+Print["g[4,0] = ", SeriesCoefficient[ Residue[Ker[s,t,s1[m,t],s2[m,t],2]*suMABBA[s,t,m,10],{s,s1[m,t]}]+Residue[Ker[s,t,s1[m,t],s2[m,t],2]*suMABBA[s,t,m,10],{s,s2[m,t]}] ,{t,0,2}]//FullSimplify]
+Print["g[4,0] = ", SeriesCoefficient[ Residue[Ker[s,t,s1[m,t],s2[m,t],4]*suMABBA[s,t,m,10],{s,s1[m,t]}]+Residue[Ker[s,t,s1[m,t],s2[m,t],4]*suMABBA[s,t,m,10],{s,s2[m,t]}] ,{t,0,0}]//FullSimplify]
 
 (* Note that the 1/2 factor in MABAB *)
-MABAB[s_, t_, m_] := 1/2*s/(s-m^2)*LegendreP[J, 1+(2*s*t)/(s-m^2)^2];
-(* BB -> AA scattering is NOT s <-> symmetric? *)
-MBBAA[s_, t_, m_] := (s/(s-m^2))^(1/4)*LegendreP[J,(2t+s-2m^2)/Sqrt[s(s-4m^2)]];
+MABAB[s_, t_, m_] := 1/2*s/(s-m^2)*LegendreP[J, (-m^4+s (-2 m^2+s+2 t))/(m^2-s)^2];
+MABBA[s_,t_,m_] := 1/2*s/(s-m^2)*LegendreP[J, 1+(2 s t)/(m^2-s)^2];
+(* BB -> AA scattering is NOT s <-> t symmetric? *)
+MBBAA[s_, t_, m_] := (s/(s-m^2))^(1/4)*LegendreP[J,(-2 m^2+s+2 t)/Sqrt[s (-4 m^2+s)]];
 
-sKer[sp_,m_,J_,k_,q_] := Assuming[J \[Element] Integers && J >= 0 && m >= 0 && sp >= 0,
-  Simplify @ SeriesCoefficient[Ker[sp,t,s1[m],s2[m],k,q]*MABAB[sp,t,m]-Ker[t,sp,s1[m],s2[m],k,q]*MBBAA[sp,t,m], {t, m^2, -1}]
-];
+(* ---------- partial-wave kernels around crossing point ---------- *)
 
-uKer[sp_,m_,J_,k_,q_] := Assuming[J \[Element] Integers && J >= 0 && m >= 0 && sp >= 0,
-  Simplify @ SeriesCoefficient[Ker[2m^2-sp-t,t,s1[m],s2[m],k,q]*MABAB[sp,t,m]-Ker[t,2m^2-sp-t,s1[m],s2[m],k,q]*MBBAA[2m^2-sp-t,t,m], {t, m^2, -1}]
-];
 
-Xkq[k_Integer, q_Integer, J_, sp_, m_] := sKer[sp,m,J,k,q]-uKer[sp,m,J,k,q];
+(* AB -> AB s-channel *)
+sKer[sp_, m_, J_, k_, q_] := Assuming[ J \[Element] Integers && J >= 0 && m >= 0 && sp >= 0, Simplify @ SeriesCoefficient[ 1/((sp-m^2)*t)*1/((sp-m^2)^(k-q)*t^q) * MABAB[sp, t, m] - 1/((sp-m^2)*t)*1/((sp-m^2)^k*t^(k-q)) * MBBAA[sp, t, m], {t, 0, -1} ] ];
 
-kn = 5;
+(* crossed u-channel contribution *)
+uKer[sp_, m_, J_, k_, q_] := Assuming[ J \[Element] Integers && J >= 0 && m >= 0 && sp >= 0, Simplify @ SeriesCoefficient[ 1/(((2m^2-sp-t)-m^2)*t)*1/(((2m^2-sp-t)-m^2)^(k-q)*t^q) * MABAB[sp, t, m] - 1/(((2m^2-sp-t)-m^2)*t)*1/(((2m^2-sp-t)-m^2)^q*t^(k-q)) * MABBA[sp, 2m^2-sp-t, m], {t, 0, -1} ] ];
+
+(* null kernel *)
+Xkq[k_Integer, q_Integer, J_, sp_, m_] := Simplify[ sKer[sp, m, J, k, q] - uKer[sp, m, J, k, q] ];
+  
+  
+kn = 4;
 qn = 2;
 
 Print["X[5,2] = ", Xkq[kn,qn,J,sp,m]//Simplify];
 
+Print["massless sKer[5,2] = ", sKer[sp,0,J,kn,qn]//Simplify];
 
-
-Print["massless-limit X[5,2] = ", FullSimplify[Xkq[kn,qn,J,sp,0],Assumptions->{sp>0}]];
-(4-5*d)J*(J+1)+2(J*(J+1))^2/.{d -> 4}//FullSimplify
-(23d^2-12d-20)*J*(J+1)+(-21d-2)*(J*(J+1))^2+4(J*(J+1))^3/.{d->4}//FullSimplify
-
-
-
-
+Print["massless uKer[5,2] = ", uKer[sp,0,J,kn,qn]//Simplify];
 
