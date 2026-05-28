@@ -93,6 +93,27 @@ n4BBBB[x_?NumericQ, J_?IntegerQ] := Module[{sp, result},
   Re[N[result, 600] ]
 ];
 
+n4ABBA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  result = (sp (12 mA^4+6 (-4+J+J^2) mA^2 sp+(12-8 J-7 J^2+2 J^3+J^4) sp^2))/(4 (mA^2-sp)^8);
+  Re[N[result, 600] ]
+];
+
+n4BBAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  result = -(((-(sp/(4 mA^2-sp)))^(1/4) LegendreP[J,2,2,(-2 mA^2+sp)/Sqrt[sp (-4 mA^2+sp)]])/(2 mA^4 (mA^2-sp)^3));
+  Re[N[result, 600] ]
+];
+
+n4ABAB[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  result = (sp (12 LegendreP[J,(-mA^4-2 mA^2 sp+sp^2)/(mA^2-sp)^2]+(6 (-mA^2+sp) LegendreP[J,1,2,(-mA^4-2 mA^2 sp+sp^2)/(mA^2-sp)^2])/(mA^2 Sqrt[1-(2 mA^2)/sp])-((mA^2-sp)^2 sp LegendreP[J,2,2,(-mA^4-2 mA^2 sp+sp^2)/(mA^2-sp)^2])/(2 mA^6-mA^4 sp)))/(4 (mA^2-sp)^5 (-mA^2+sp));
+  Re[N[result, 600] ]
+];
+
 X52AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   sp = N[1/(1-x), 600];
   mA = N[maVal, 600];    (* FIX 1: exact rational *)
@@ -150,6 +171,12 @@ M5[x_?NumericQ, J_?IntegerQ] :={
 	{0,0,0}
 };
 
+M6[x_?NumericQ, J_?IntegerQ] :={
+  {0,1/2*n4BBAA[x,J],0},
+  {1/2*n4BBAA[x,J],0,0},
+  {0,0,n4ABAB[x,J]+n4ABBA[x,J]}
+};
+
 (* null *)
 N0[x_?NumericQ] :={
 	{0,0,0},
@@ -162,6 +189,7 @@ f11List ={
 	Function[{x,J}, M1[x,J][[1,1]]],
 	Function[{x,J}, M2[x,J][[1,1]]],
   Function[{x,J}, M5[x,J][[1,1]]],
+  Function[{x,J}, M6[x,J][[1,1]]],
 	Function[{x,J}, M3[x,J][[1,1]]]
 };
 
@@ -170,6 +198,7 @@ f22List ={
 	Function[{x,J}, M1[x,J][[2,2]]],
 	Function[{x,J}, M2[x,J][[2,2]]],
   Function[{x,J}, M5[x,J][[2,2]]],
+  Function[{x,J}, M6[x,J][[2,2]]],
 	Function[{x,J}, M3[x,J][[2,2]]]
 };
 
@@ -178,6 +207,7 @@ f33List = {
 	Function[{x,J}, M1[x,J][[3,3]]],
 	Function[{x,J}, M2[x,J][[3,3]]],
   Function[{x,J}, M5[x,J][[3,3]]],
+  Function[{x,J}, M6[x,J][[3,3]]],
 	Function[{x,J}, M3[x,J][[3,3]]]
 };
 
@@ -186,6 +216,7 @@ f12List ={
 	Function[{x,J}, M1[x,J][[1,2]]],
 	Function[{x,J}, M2[x,J][[1,2]]],
   Function[{x,J}, M5[x,J][[1,2]]],
+  Function[{x,J}, M6[x,J][[1,2]]],
 	Function[{x,J}, M3[x,J][[1,2]]]
 };
 
@@ -196,6 +227,7 @@ f13List = {
 	Function[{x,J}, M1[x,J][[1,3]]],
 	Function[{x,J}, M2[x,J][[1,3]]],
   Function[{x,J}, M5[x,J][[1,3]]],
+  Function[{x,J}, M6[x,J][[1,3]]],
 	Function[{x,J}, M3[x,J][[1,3]]]
 };
 f31List = f13List;
@@ -205,6 +237,7 @@ f23List = {
 	Function[{x,J}, M1[x,J][[2,3]]],
 	Function[{x,J}, M2[x,J][[2,3]]],
   Function[{x,J}, M5[x,J][[2,3]]],
+  Function[{x,J}, M6[x,J][[2,3]]],
 	Function[{x,J}, M3[x,J][[2,3]]]
 };
 f32List = f23List;
@@ -214,6 +247,7 @@ j11List = {
 	Function[{x}, N0[x][[1,1]]],
 	Function[{x}, N0[x][[1,1]]],
   Function[{x}, N0[x][[1,1]]],
+  Function[{x}, N0[x][[1,1]]],
 	Function[{x}, M4[x][[1,1]]]
 };
 j22List = {
@@ -221,9 +255,11 @@ j22List = {
 	Function[{x}, N0[x][[2,2]]],
 	Function[{x}, N0[x][[2,2]]],
   Function[{x}, N0[x][[2,2]]],
+  Function[{x}, N0[x][[2,2]]],
 	Function[{x}, M4[x][[2,2]]]
 };
 j33List = {
+  Function[{x}, N0[x][[3,3]]],
 	Function[{x}, N0[x][[3,3]]],
 	Function[{x}, N0[x][[3,3]]],
 	Function[{x}, N0[x][[3,3]]],
@@ -232,6 +268,7 @@ j33List = {
 };
 
 j12List = {
+  Function[{x}, N0[x][[1,2]]],
 	Function[{x}, N0[x][[1,2]]],
 	Function[{x}, N0[x][[1,2]]],
 	Function[{x}, N0[x][[1,2]]],
@@ -241,6 +278,7 @@ j12List = {
 j21List = j12List;
 
 j13List = {
+  Function[{x}, N0[x][[1,3]]],
 	Function[{x}, N0[x][[1,3]]],
 	Function[{x}, N0[x][[1,3]]],
 	Function[{x}, N0[x][[1,3]]],
@@ -250,6 +288,7 @@ j13List = {
 j31List = j13List;
 
 j23List = {
+  Function[{x}, N0[x][[2,3]]],
 	Function[{x}, N0[x][[2,3]]],
 	Function[{x}, N0[x][[2,3]]],
 	Function[{x}, N0[x][[2,3]]],
@@ -263,8 +302,8 @@ j32List = j23List;
 (* extraTriplet = {0&, 0&, 0&, LargeJ}; *)
 
 (* optimal upper bound *)
-norm = {0, -1, 0, 0, 0};
-obj  = {-1, 0, 0, 0, 0};
+norm = {0, -1, 0, 0, 0, 0};
+obj  = {-1, 0, 0, 0, 0, 0};
 
 
 testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[

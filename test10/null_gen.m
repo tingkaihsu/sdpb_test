@@ -49,6 +49,7 @@ Print["g[4,0] = ", SeriesCoefficient[ Residue[Ker[s,t,s1[m,t],s2[m,t],4]*suMABBA
 
 (* Note that the 1/2 factor in MABAB *)
 MABAB[s_, t_, m_] := 1/2*s/(s-m^2)*LegendreP[J, (-m^4+s (-2 m^2+s+2 t))/(m^2-s)^2];
+(* Note that the 1/2 factor in MABBA *)
 MABBA[s_,t_,m_] := 1/2*s/(s-m^2)*LegendreP[J, 1+(2 s t)/(m^2-s)^2];
 (* BB -> AA scattering is NOT s <-> t symmetric? *)
 MBBAA[s_, t_, m_] := (s/(s-4m^2))^(1/4)*LegendreP[J,(-2 m^2+s+2 t)/Sqrt[s (-4 m^2+s)]];
@@ -66,12 +67,24 @@ uKer[sp_, m_, J_, k_, q_] := Assuming[ J \[Element] Integers && J >= 0 && m >= 0
 Xkq[k_Integer, q_Integer, J_, sp_, m_] := Simplify[ sKer[sp, m, J, k, q] - uKer[sp, m, J, k, q] ];
   
   
-kn = 4;
-qn = 2;
+k1 = 5;
+q1 = 2;
 
-Print["X[5,2] = ", Xkq[kn,qn,J,sp,m]//Simplify];
+Print["X[5,2] = ", Xkq[k1,q1,J,sp,m]//Simplify];
 
-Print["massless sKer[5,2] = ", sKer[sp,0,J,kn,qn]//Simplify];
+k2 = 4;
+q2 = 2;
 
-Print["massless uKer[5,2] = ", uKer[sp,0,J,kn,qn]//Simplify];
+Print["X[4,2] = ", Xkq[k2,q2,J,sp,m]//Simplify];
+
+(* term by term, n4ABBA *)
+n4ABBA[sp_, m_, J_, k_, q_] := Assuming[ J \[Element] Integers && J >= 0 && m >= 0 && sp >= 0, Simplify @ SeriesCoefficient[1/((sp-m^2)*t)*1/((sp-m^2)^(k-q)*t^q) * MABBA[sp, t, m]-1/(((2m^2-sp-t)-m^2)*t)*1/(((2m^2-sp-t)-m^2)^(k-q)*t^q) * MABBA[sp, t, m], {t,0,-1}] ];
+n4BBAA[sp_, m_, J_, k_, q_] := Assuming[ J \[Element] Integers && J >= 0 && m >= 0 && sp >= 0, Simplify @ SeriesCoefficient[- (1/((sp-m^2)*t))*1/((sp-m^2)^q*t^(k-q)) * MBBAA[sp, t, m], {t,0,-1}] ];
+n4ABAB[sp_, m_, J_, k_, q_] := Assuming[ J \[Element] Integers && J >= 0 && m >= 0 && sp >= 0, Simplify @ SeriesCoefficient[1/(((2m^2-sp-t)-m^2)*t)*1/(((2m^2-sp-t)-m^2)^q*t^(k-q)) * MABAB[sp, t, m], {t,0,-1}] ];
+
+Print["n4ABBA[4,2] = ", n4ABBA[sp,mA,J,k2,q2]//Simplify]
+Print["n4BBAA[4,2] = ", n4BBAA[sp,mA,J,k2,q2]//Simplify]
+Print["n4ABAB[4,2] = ", n4ABAB[sp,mA,J,k2,q2]//Simplify]
+
+
 
