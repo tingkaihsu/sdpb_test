@@ -29,7 +29,7 @@ suMABBA[s_, t_, mA_, Nmax_Integer] :=
 (* there is no physical meaning of forward limit for BBAA *)
 (* we should use a u <-> t symmetric ansatz*)
 
-tuMBBAA[s_, t_, mA_, Nmax_Integer] :=
+tuMAABB[s_, t_, mA_, Nmax_Integer] :=
     gBBB*gAAB * (1/s + 1/u) + gBBA^2 * (1/t) +
     gBBA*gAAA * (1/(s-mA^2) + 1/(u-mA^2)) + gBAA^2 * (1/(t-mA^2)) +
     Total[
@@ -51,16 +51,16 @@ Print["g[4,0] = ", SeriesCoefficient[ Residue[Ker[s,t,s1[m,t],s2[m,t],4]*suMABBA
 MABAB[s_, t_, m_] := 1/2*s/(s-m^2)*LegendreP[J, (-m^4+s (-2 m^2+s+2 t))/(m^2-s)^2];
 MABBA[s_,t_,m_] := 1/2*s/(s-m^2)*LegendreP[J, 1+(2 s t)/(m^2-s)^2];
 (* BB -> AA scattering is NOT s <-> t symmetric? *)
-MBBAA[s_, t_, m_] := (s/(s-m^2))^(1/4)*LegendreP[J,(-2 m^2+s+2 t)/Sqrt[s (-4 m^2+s)]];
+MBBAA[s_, t_, m_] := (s/(s-4m^2))^(1/4)*LegendreP[J,(-2 m^2+s+2 t)/Sqrt[s (-4 m^2+s)]];
 
 (* ---------- partial-wave kernels around crossing point ---------- *)
 
 
 (* AB -> AB s-channel *)
-sKer[sp_, m_, J_, k_, q_] := Assuming[ J \[Element] Integers && J >= 0 && m >= 0 && sp >= 0, Simplify @ SeriesCoefficient[ 1/((sp-m^2)*t)*1/((sp-m^2)^(k-q)*t^q) * MABAB[sp, t, m] - 1/((sp-m^2)*t)*1/((sp-m^2)^k*t^(k-q)) * MBBAA[sp, t, m], {t, 0, -1} ] ];
+sKer[sp_, m_, J_, k_, q_] := Assuming[ J \[Element] Integers && J >= 0 && m >= 0 && sp >= 0, Simplify @ SeriesCoefficient[ 1/((sp-m^2)*t)*1/((sp-m^2)^(k-q)*t^q) * MABBA[sp, t, m] - 1/((sp-m^2)*t)*1/((sp-m^2)^q*t^(k-q)) * MBBAA[sp, t, m], {t, 0, -1} ] ];
 
 (* crossed u-channel contribution *)
-uKer[sp_, m_, J_, k_, q_] := Assuming[ J \[Element] Integers && J >= 0 && m >= 0 && sp >= 0, Simplify @ SeriesCoefficient[ 1/(((2m^2-sp-t)-m^2)*t)*1/(((2m^2-sp-t)-m^2)^(k-q)*t^q) * MABAB[sp, t, m] - 1/(((2m^2-sp-t)-m^2)*t)*1/(((2m^2-sp-t)-m^2)^q*t^(k-q)) * MABBA[sp, 2m^2-sp-t, m], {t, 0, -1} ] ];
+uKer[sp_, m_, J_, k_, q_] := Assuming[ J \[Element] Integers && J >= 0 && m >= 0 && sp >= 0, Simplify @ SeriesCoefficient[ 1/(((2m^2-sp-t)-m^2)*t)*1/(((2m^2-sp-t)-m^2)^(k-q)*t^q) * MABBA[sp, t, m] - 1/(((2m^2-sp-t)-m^2)*t)*1/(((2m^2-sp-t)-m^2)^q*t^(k-q)) * MABAB[sp, t, m], {t, 0, -1} ] ];
 
 (* null kernel *)
 Xkq[k_Integer, q_Integer, J_, sp_, m_] := Simplify[ sKer[sp, m, J, k, q] - uKer[sp, m, J, k, q] ];
