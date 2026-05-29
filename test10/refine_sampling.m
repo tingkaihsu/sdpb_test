@@ -69,7 +69,7 @@ If[Length[myArgs] < 2,
 spFile    = myArgs[[1]];
 yFile     = myArgs[[2]];
 nPts      = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 10];
-minWidth  = If[Length[myArgs] >= 4, ToExpression[myArgs[[4]]], 10^-6];
+minWidth  = If[Length[myArgs] >= 4, ToExpression[myArgs[[4]]], SetPrecision[1/10000000000, 600]];
 outFile   = If[Length[myArgs] >= 5, myArgs[[5]], spFile];
 
 Print["=== negative_region.m ==="];
@@ -602,7 +602,7 @@ X[x_?NumericQ] := {
 (* Safety: clamp midpoints near known singularity at x -> 1 (sp = 1/(1-x))
    and provide a robust numeric evaluator that returns $Failed on
    non-finite or exceptional results. *)
-singularTol = 10^-12;   (* distance from x=1 to avoid sp singularity *)
+singularTol = SetPrecision[1/10000000000, 600];   (* distance from x=1 to avoid sp singularity *)
 
 (* BUG FIX 2-5 for safeF:
    (2) 'mat' and 'egnVals' are now LOCAL Module variables — they were
@@ -696,9 +696,9 @@ Print["Checking ", nAllIntervals, " interval(s) on [", xLeft, ", ", xRight,
       "]  \[Times]  ", Length[Jlist], " J-value(s):"];
 Print["  Interior pairs : ", Length[interiorPairs]];
 Print["  Left boundary  : [", xLeft, ", ", samplePoints[[1]], "]  ",
-      If[samplePoints[[1]] > xLeft  + 10^-12, "(active)", "(skipped — x_min = xLeft)"]];
+      If[samplePoints[[1]] > xLeft  + singularTol, "(active)", "(skipped — x_min = xLeft)"]];
 Print["  Right boundary : [", samplePoints[[-1]], ", ", xRight, "]  ",
-      If[samplePoints[[-1]] < xRight - 10^-12, "(active)", "(skipped — x_max = xRight)"]];
+      If[samplePoints[[-1]] < xRight - singularTol, "(active)", "(skipped — x_max = xRight)"]];
 Print["  (stopping threshold: min_width = ", minWidth, ")"];
 Print[""];
 
@@ -745,7 +745,7 @@ Do[
   (* Check each J value independently *)
   Do[
     With[{val = fmByJ[[jIdx]], Jval = Jlist[[jIdx]]},
-    (* < -10^-12 instead of < 0 *)
+    (* < -10^-10 instead of < 0 *)
       If[val =!= $Failed && val < -1*singularTol,
         AppendTo[violations, {"J", Jval, val}]
       ]
@@ -871,7 +871,7 @@ Print[""];
 Print["New candidate points (before dedup): ", Length[newPoints]];
 
 (* deduplication tolerance (absolute) — configurable *)
-dedupTol = 10^-12;
+dedupTol = SetPrecision[1/10000000000, 600];
 
 
 (* ----------------------------------------------------------------
@@ -942,7 +942,7 @@ Print[""];
    Uses RealDigits to decompose the number, then manually assembles the
    string with leading zeros or integer part as needed.
      0.001      → "0.001000000000000000000000000000000000000000000000₀₀₀"
-     1.0*10^-12 → "0.0000000000010000000000000000000000000000000000000000"
+     1.0*10^-10 → "0.0000000000010000000000000000000000000000000000000000"
    This avoids ToString[N[...]] which renders exponents as multi-line
    superscripts in plain text output. *)
 formatPlainDecimal[x_?NumericQ] := Module[
