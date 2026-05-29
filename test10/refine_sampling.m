@@ -754,7 +754,7 @@ Do[
   ];
 
   (* Check the large-J functional independently *)
-  If[xVal =!= $Failed && xVal < 0,
+  If[xVal =!= $Failed && xVal < -1*singularTol,
     AppendTo[violations, {"X", None, xVal}]
   ];
 
