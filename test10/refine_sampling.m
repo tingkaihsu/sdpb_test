@@ -172,7 +172,7 @@ Print[""];
    Tests2.m.  Each function accepts a numeric argument and returns
    a numeric value.  No symbolic form is required.
    ================================================================ *)
-maVal = N[1/1000, 600];
+maVal = N[1/10, 600];
 
 Print["mA = ", maVal]
 
@@ -789,7 +789,7 @@ Do[
     ],
 
     (* No violations at this midpoint: all F(mid,J) >= 0 and X(mid) >= 0 *)
-    Print["    ok — F(mid,J) >= 0 for all J and X(mid) >= 0"]
+    Print["    ok - F(mid,J) >= 0 for all J and X(mid) >= 0"]
   ];
 
   (* Diagnostic record: worst (most negative) value among violations,
