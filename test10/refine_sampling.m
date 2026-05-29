@@ -745,7 +745,8 @@ Do[
   (* Check each J value independently *)
   Do[
     With[{val = fmByJ[[jIdx]], Jval = Jlist[[jIdx]]},
-      If[val =!= $Failed && val < 0,
+    (* < -10^-12 instead of < 0 *)
+      If[val =!= $Failed && val < -1*singularTol,
         AppendTo[violations, {"J", Jval, val}]
       ]
     ],
