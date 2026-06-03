@@ -1,75 +1,22 @@
 (* ::Package:: *)
 
-(* ---------- coefficient helper ---------- *)
+fwdM[s_,u_,m_]:= g0 + g2*((s-2m^2)^2+(u-2m^2)^2)+d2*t^2+g3*((s-2m^2)^3+(u-2m^2)^3)+d3*t^3/.{t->4m^2-s-u};
 
-del[a_, b_] := delCoeff @@ Sort[{a, b}];
+Print[fwdM[s,u,m]//Simplify]
 
-c[a_, b_] := cCoeff @@ Sort[{a, b}];
+stuM[s_,u_,m_]:=G0+G2*((s-4m^2/3)^2+(u-4m^2/3)^2+(t-4m^2/3)^2)+G3((t-4m^2/3)^3+(s-4m^2/3)^3+(u-4m^2/3)^3)/.{t->4m^2-s-u};
 
-(* ---------- FIX: validTriples returns ALL ordered pairs ----------
-   Returns every {a,b} with a>=0, b>=0, a+b<=Nmax.
-   For a=/=b this includes BOTH {a,b} and {b,a}, giving the
-   s<->t-symmetric polynomial automatically via the del sort above. *)
+Print[stuM[s,u,m]//Simplify]
 
-(* This might be a problem since in the forward-limit expansion, we do NOT assume s <-> t symmetry. *)
+Print["G2 = ", SeriesCoefficient[stuM[s,u,m],{s,4m^2/3,2},{u,4m^2/3,0}]]
+Print["G2 = ", SeriesCoefficient[stuM[s,u,m],{s,4m^2/3,1},{u,4m^2/3,1}]]
+Print["G2 = ", SeriesCoefficient[stuM[s,u,m],{s,4m^2/3,0},{u,4m^2/3,2}]]
 
-validTriples[Nmax_Integer] :=
-    Flatten[Table[{a, b}, {a, 0, Nmax}, {b, 0, Nmax - a}], 1];
+Print["g[2,0] = ", SeriesCoefficient[stuM[s,u,m],{s,2m^2,2},{u,2m^2,0}]]
+Print["g[1,1] = ", SeriesCoefficient[stuM[s,u,m],{s,2m^2,1},{u,2m^2,1}]]
+Print["g[0,2] = ", SeriesCoefficient[stuM[s,u,m],{s,2m^2,0},{u,2m^2,2}]]
 
-(* Quick sanity check (comment out if not needed):
-   validTriples[2] should be:
-   {{0,0},{0,1},{0,2},{1,0},{1,1},{2,0}}  -- 6 pairs
-   validTriples[3] adds:
-   {{0,3},{1,2},{2,1},{3,0}}              -- 4 new pairs *)
-
-(* ---------- amplitude ansatz ---------- *)
-
-(* stu symmetric expansion point *)
-stuMlow[s_, t_, mA_, Nmax_Integer] :=
-    gAAB^2 * (1/s + 1/t + 1/u) +
-    gAAA^2 * (1/(s-mA^2) + 1/(t-mA^2) + 1/(u-mA^2)) +
-    Total[
-        Function[{ab},
-            c[ab[[1]], ab[[2]]]
-            * (s-4mA^2/3)^ab[[1]]
-            * (u-4mA^2/3)^ab[[2]]
-        ] /@ validTriples[Nmax]
-    ] /. {u -> 4mA^2 - s - t};
-
-(* Forward amplitude ansatz note that we choose s <-> u expansion points *)
-fwdMlow[s_, t_, mA_, Nmax_Integer] :=
-    gAAB^2 * (1/s + 1/t + 1/u) +
-    gAAA^2 * (1/(s-mA^2) + 1/(t-mA^2) + 1/(u-mA^2)) +
-    Total[
-        Function[{ab},
-            del[ab[[1]], ab[[2]]]
-            * (u-2mA^2)^ab[[1]]
-            * (s-2mA^2)^ab[[2]]
-        ] /@ validTriples[Nmax]
-    ] /. {u -> 4mA^2 - s - t};
-
-fwdKer[sp_, t_, s1_, s2_, k_] := 1/( (sp-s1)*( (sp-s1)*(sp-s2) )^(k/2) );
-
-g2 = -SeriesCoefficient[Residue[fwdKer[sp,t,2m^2,2m^2-t,2]*fwdMlow[sp, t, m, 10], {sp, Infinity}], {t,0,0}]//FullSimplify;
-
-Print["coefficient mapping g2 = ", g2];
-Print[""]
-g3 = -SeriesCoefficient[Residue[fwdKer[sp,t,2m^2,2m^2-t,2]*fwdMlow[sp,t,m,10], {sp,Infinity}], {t,0,1}]//FullSimplify;
-
-Print["coefficient mapping g3 = ", g3];
-Print[""]
-
-c2 = -SeriesCoefficient[Residue[fwdKer[sp,t,2m^2,2m^2-t,2]*stuMlow[sp,t,m,10], {sp, Infinity}], {t,0,0}]//FullSimplify;
-Print["coefficient mapping at stu expansion point: c2 = ", c2]
-
-
-
-(* Extract the fwd coeff directly *)
-Ker[s_, t_, mA_, k_, q_, s1_, s2_] := 1/(s-s1)*1/((s-s1)^(k-q)(4mA^2-s-t-s2)^q);
-
-Print["stu c[2,0] = ", SeriesCoefficient[Residue[Ker[s,t,m,2,0,4m^2/3,4m^2/3]stuMlow[s,t,m,10],{s,Infinity}],{t,4m^2/3,0}]]
-
-Print["fwd d[2,0] = ", SeriesCoefficient[Residue[Ker[s,t,m,2,1,4m^2/3,4m^2/3]fwdMlow[s,t,m,10],{s,Infinity}],{t,4m^2/3,0}]]
+Print["g[1,1]-2g[2,0] = ", SeriesCoefficient[stuM[s,u,m],{s,2m^2,1},{u,2m^2,1}]-2*SeriesCoefficient[stuM[s,u,m],{s,2m^2,2},{u,2m^2,0}]//Simplify]
 
 
 

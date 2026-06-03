@@ -1,3 +1,5 @@
+(* ::Package:: *)
+
 (* ---------- coefficient helper ---------- *)
 
 del[a_, b_] := delCoeff @@ Sort[{a, b}];
@@ -86,3 +88,14 @@ Print["(twice-subtracted) sum rule at fwd = ", SeriesCoefficient[fwdKersum[sp, t
 Print["Above under the massless limit = ", Limit[G3p, mA->0]//FullSimplify]
 
 Print[""]
+
+Print["at fwd expansion points, g4 = ", -SeriesCoefficient[Residue[fwdKer[sp, s, t, mA, s3, s4, 4, 10], {sp, Infinity}], {t, 0, 0}]//FullSimplify]
+G4p = SeriesCoefficient[fwdKersum[sp, t, mA, s3, s4, 4, J], {t, 0, 0}]//FullSimplify;
+
+Print["(forth-subtracted) sum rule at fwd = ", G4p]
+Print["Above under the massless limit = ", Limit[G4p, mA->0]//FullSimplify]
+
+Print[""]
+
+
+
