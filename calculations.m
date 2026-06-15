@@ -99,3 +99,12 @@ Print[""]
 
 
 
+maVal = N[1/100, 600];
+
+g2[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];    (* FIX 1: exact rational *)
+  N[((2 Sqrt[sp/(-4 mA^2+sp)])/(sp - 2 mA^2)^3), 600]
+];
+
+g2[0,0]
