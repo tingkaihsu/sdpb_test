@@ -172,7 +172,7 @@ Print[""];
    Tests2.m.  Each function accepts a numeric argument and returns
    a numeric value.  No symbolic form is required.
    ================================================================ *)
-maVal = N[1/10, 600];
+maVal = N[1/1000, 600];
 
 Print["mA = ", maVal]
 
@@ -538,8 +538,11 @@ j32List = j23List;
 (* extraTriplet = {0&, 0&, 0&, LargeJ}; *)
 
 (* optimal upper bound *)
-norm = {0, -1, 0, 0, 0, 0, 0, 0, 0, 0};
-obj  = {-1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+(* norm = {0, -1, 0, 0, 0, 0, 0, 0, 0, 0};
+obj  = {-1, 0, 0, 0, 0, 0, 0, 0, 0, 0}; *)
+
+norm = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0};
+obj = {-1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 (* ================================================================
    END OF PROBLEM-SPECIFIC SECTION

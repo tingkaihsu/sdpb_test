@@ -53,7 +53,7 @@ WritePmpJsonNumerical[
 (* problem-specific *)
 (* let the mass be 4mA^2 < M^2 = 1 where M  = 1 to infinity *)
 
-maVal = N[1/10, 600];
+maVal = N[1/1000, 600];
 
 Print["mA = ", maVal]
 
@@ -419,8 +419,11 @@ j32List = j23List;
 (* extraTriplet = {0&, 0&, 0&, LargeJ}; *)
 
 (* optimal upper bound *)
-norm = {0, -1, 0, 0, 0, 0, 0, 0, 0, 0};
-obj  = {-1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+(* norm = {0, -1, 0, 0, 0, 0, 0, 0, 0, 0};
+obj  = {-1, 0, 0, 0, 0, 0, 0, 0, 0, 0}; *)
+
+norm = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0};
+obj = {-1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 
 testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
