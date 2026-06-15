@@ -58,7 +58,7 @@ mgap = N[2, 600];
 
 maVal = N[1/100, 600];
 
-Print["mA = ", maVal]
+Print["mA = ", maVal];
 
 (* forward limit: use our own convention *)
 
@@ -95,10 +95,10 @@ M0[x_?NumericQ,J_?IntegerQ] := {
 	{0,0,0}
 };
 
-M41[x_?NumericQ] :={
-	{n4AAAA[x, J],0,0},
-	{0,0,0},
-	{0,0,0}
+M41[x_?NumericQ, J_?IntegerQ] := {
+  {n4AAAA[x, J], 0, 0},
+  {0, 0, 0},
+  {0, 0, 0}
 }
 
 M4j1[x_?NumericQ] :={
