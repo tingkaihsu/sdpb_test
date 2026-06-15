@@ -74,7 +74,7 @@ g31[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
 g4[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
   sp = N[1/(1-x), 600];
   mA = N[maVal, 600];
-  result = -((2 Sqrt[sp/(-4 mA^2+sp)])/(2 mA^2-sp)^5);
+  result = ((2 Sqrt[sp/(-4 mA^2+sp)])/(sp-2 mA^2)^5);
   Re[N[result, 600] ]
 ]
 
