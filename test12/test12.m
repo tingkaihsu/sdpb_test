@@ -52,9 +52,11 @@ WritePmpJsonNumerical[
 << "../SDPB.m";
 
 (* problem-specific *)
-(* let the mass be 4mA^2 < M^2 = 1 where M  = 1 to infinity *)
+(* let the mass be 4mA^2 < M^2 = 1 where M = 1 is the first isolated massive pole, and the mass gap is Mgap = 2 *)
 
-maVal = N[5/100, 600];
+mgap = N[2, 600];
+
+maVal = N[1/100, 600];
 
 Print["mA = ", maVal]
 
@@ -62,27 +64,15 @@ Print["mA = ", maVal]
 
 (* g2 > 0 *)
 g2[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
+  sp = N[2/(1-x), 600];
   mA = N[maVal, 600];    (* FIX 1: exact rational *)
   N[(2*Sqrt[sp/(sp -4*mA^2)])/(sp - 2*mA^2)^3, 600]
 ];
 
-(* g3 < 0 when J = 0 *)
-g3[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
-  mA = N[maVal, 600];    (* FIX 1: exact rational *)
-  N[(Sqrt[sp/(-4*mA^2 + sp)]*(-3 - (2*J*(1 + J)*(2*mA^2 - sp))/(-4*mA^2 + sp)))/(-2*mA^2 + sp)^4, 600]
-];
 
-g4[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
-  sp = N[1/(1-x), 600];
-  mA = N[maVal, 600];
-  result = ((2 Sqrt[sp/(-4 mA^2+sp)])/(sp-2 mA^2)^5);
-  Re[N[result, 600] ]
-]
 
 n4AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
-  sp   = N[1/(1 - x), 600];
+  sp   = N[2/(1 - x), 600];
   mA   = N[maVal, 600];
   result = (81*Sqrt[sp/(-4*mA^2 + sp)]*(
       8*mA^4*(14*mA^2 - 15*sp)*(-8*mA^2 + 3*sp)^(3/2)*
@@ -98,20 +88,20 @@ n4AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
 ];
 
 X52AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
+  sp = N[2/(1-x), 600];
   mA = N[maVal, 600];    (* FIX 1: exact rational *)
   N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
 ];
 
 X62AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
+  sp = N[2/(1-x), 600];
   mA = N[maVal, 600];    (* FIX 1: exact rational *)
   N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
 ];
 
 (* Large J limit k = 6, q = 2 *)
 LargeJAAAA[x_?NumericQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
+  sp = N[2/(1-x), 600];
   mA = N[maVal, 600];    (* FIX 1: exact rational *)
   N[-(((1/(-4 mA^2 + sp))^(15/2) (-32 mA^6 + 24 mA^4 sp - 6 mA^2 sp^2 + sp^3))/(288 sp^(5/2))), 600]
 ];
@@ -124,20 +114,6 @@ M0[x_?NumericQ,J_?IntegerQ] := {
 	{g2[x,J],0,0},
 	{0,0,0},
 	{0,0,0}
-};
-
-(* -3g[3,3] + g[3,2] *)
-M1[x_?NumericQ,J_?IntegerQ] := {
-	{g3[x,J],0,0},
-	{0,0,0},
-	{0,0,0}
-};
-
-(* 2g[4,4] - 2g[4,3] + g[2,2] *)
-M2[x_?NumericQ,J_?IntegerQ] := {
-  {g4[x,J],0,0},
-  {0,0,0},
-  {0,0,0}
 };
 
 M41[x_?NumericQ, J_?IntegerQ] :={
@@ -173,8 +149,6 @@ N0[x_?NumericQ] :={
 
 f11List ={
 	Function[{x,J}, M0[x,J][[1,1]]],
-	Function[{x,J}, M1[x,J][[1,1]]],
-  Function[{x,J}, M2[x,J][[1,1]]],
 	Function[{x,J}, M41[x,J][[1,1]]],
 	Function[{x,J}, M51[x,J][[1,1]]],
   Function[{x,J}, M61[x,J][[1,1]]]
@@ -182,8 +156,6 @@ f11List ={
 
 f22List ={
 	Function[{x,J}, M0[x,J][[2,2]]],
-	Function[{x,J}, M1[x,J][[2,2]]],
-  Function[{x,J}, M2[x,J][[2,2]]],
 	Function[{x,J}, M41[x,J][[2,2]]],
 	Function[{x,J}, M51[x,J][[2,2]]],
   Function[{x,J}, M61[x,J][[2,2]]]
@@ -191,8 +163,6 @@ f22List ={
 
 f33List = {
 	Function[{x,J}, M0[x,J][[3,3]]],
-	Function[{x,J}, M1[x,J][[3,3]]],
-  Function[{x,J}, M2[x,J][[3,3]]],
 	Function[{x,J}, M41[x,J][[3,3]]],
 	Function[{x,J}, M51[x,J][[3,3]]],
   Function[{x,J}, M61[x,J][[3,3]]]
@@ -200,8 +170,6 @@ f33List = {
 
 f12List ={
 	Function[{x,J}, M0[x,J][[1,2]]],
-	Function[{x,J}, M1[x,J][[1,2]]],
-  Function[{x,J}, M2[x,J][[1,2]]],
 	Function[{x,J}, M41[x,J][[1,2]]],
 	Function[{x,J}, M51[x,J][[1,2]]],
   Function[{x,J}, M61[x,J][[1,2]]]
@@ -211,8 +179,6 @@ f21List = f12List;
 
 f13List = {
 	Function[{x,J}, M0[x,J][[1,3]]],
-	Function[{x,J}, M1[x,J][[1,3]]],
-  Function[{x,J}, M2[x,J][[1,3]]],
 	Function[{x,J}, M41[x,J][[1,3]]],
 	Function[{x,J}, M51[x,J][[1,3]]],
   Function[{x,J}, M61[x,J][[1,3]]]
@@ -221,8 +187,6 @@ f31List = f13List;
 
 f23List = {
 	Function[{x,J}, M0[x,J][[2,3]]],
-	Function[{x,J}, M1[x,J][[2,3]]],
-  Function[{x,J}, M2[x,J][[2,3]]],
 	Function[{x,J}, M41[x,J][[2,3]]],
 	Function[{x,J}, M51[x,J][[2,3]]],
   Function[{x,J}, M61[x,J][[2,3]]]
@@ -233,21 +197,15 @@ j11List = {
 	Function[{x}, N0[x][[1,1]]],
 	Function[{x}, N0[x][[1,1]]],
   Function[{x}, N0[x][[1,1]]],
-	Function[{x}, N0[x][[1,1]]],
-  Function[{x}, N0[x][[1,1]]],
   Function[{x}, M6j1[x][[1,1]]]
 };
 j22List = {
 	Function[{x}, N0[x][[2,2]]],
 	Function[{x}, N0[x][[2,2]]],
   Function[{x}, N0[x][[2,2]]],
-	Function[{x}, N0[x][[2,2]]],
-  Function[{x}, N0[x][[2,2]]],
   Function[{x}, M6j1[x][[2,2]]]
 };
 j33List = {
-  Function[{x}, N0[x][[3,3]]],
-	Function[{x}, N0[x][[3,3]]],
   Function[{x}, N0[x][[3,3]]],
   Function[{x}, N0[x][[3,3]]],
 	Function[{x}, N0[x][[3,3]]],
@@ -255,8 +213,6 @@ j33List = {
 };
 
 j12List = {
-  Function[{x}, N0[x][[1,2]]],
-	Function[{x}, N0[x][[1,2]]],
   Function[{x}, N0[x][[1,2]]],
   Function[{x}, N0[x][[1,2]]],
 	Function[{x}, N0[x][[1,2]]],
@@ -267,8 +223,6 @@ j21List = j12List;
 j13List = {
   Function[{x}, N0[x][[1,3]]],
 	Function[{x}, N0[x][[1,3]]],
-  Function[{x}, N0[x][[1,3]]],
-	Function[{x}, N0[x][[1,3]]],
 	Function[{x}, N0[x][[1,3]]],
   Function[{x}, M6j1[x][[1,3]]]
 };
@@ -277,20 +231,15 @@ j31List = j13List;
 j23List = {
   Function[{x}, N0[x][[2,3]]],
 	Function[{x}, N0[x][[2,3]]],
-  Function[{x}, N0[x][[2,3]]],
-	Function[{x}, N0[x][[2,3]]],
 	Function[{x}, N0[x][[2,3]]],
   Function[{x}, M6j1[x][[2,3]]]
 };
 j32List = j23List;
 
 (* optimal upper bound *)
-norm = {0, 0, -1, 0, 0, 0};
+norm = {2.00160084036814685570059153235152904446732133947378474706516249593632\5993972267825380746596280976623580279479407037030477889721920582014832\2594262922915458082259472258588680730110145201958327226509613585650569\9179828993091128269921136792923162725673791884914977790524548454375978\1254872123591596752153925465216959813510075639527373200809208178985221\3438214432962138219566424069345997054839632236051578320016839122415094\3990341746783393266692318963768948726358972360886149621529211348619365\9655918089714349839963053687627698890439773561161558666650325804894950\52162398862494737376256573764953719958928, 0, 0, 0};
 
-(* g3 between -1.5 and 5.3 *)
-g30 = N[-14/10, 600];
-
-obj  = {-1, -g30, 0, 0, 0, 0};
+obj  = {-1, 0, 0, 0};
 
 
 testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
