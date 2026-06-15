@@ -182,7 +182,7 @@ j32List = j23List;
 (* optimal upper bound *)
 norm = {1, 0};
 
-obj  = {1, 0};
+obj  = {-1, 0};
 
 
 testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
