@@ -54,10 +54,11 @@ WritePmpJsonNumerical[
 (* problem-specific *)
 (* let the mass be 4mA^2 < M^2 = 1 where M = 1 is the first isolated massive pole, and the mass gap is Mgap = 2 *)
 
-mgap = N[2, 600];
+mgap = N[5, 600];
 
 maVal = N[1/100, 600];
 
+Print["mass gap  = ", mgap];
 Print["mA = ", maVal];
 
 (* forward limit: use our own convention *)
@@ -234,7 +235,7 @@ G2[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   N[((2 Sqrt[sp/(-4 mA^2+sp)])/(sp - 2 mA^2)^3), 600]
 ];
 
-norm = {G2[0, 0], 0, 0, 0};
+norm = {G2[0, 2], 0, 0, 0};
 
 obj  = {-1, 0, 0, 0};
 

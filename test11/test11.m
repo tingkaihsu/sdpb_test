@@ -284,11 +284,14 @@ j23List = {
 };
 j32List = j23List;
 
+(* optimal lower bound *)
+(* norm = {0, 0, 1, 0, 0, 0}; *)
+
 (* optimal upper bound *)
 norm = {0, 0, -1, 0, 0, 0};
 
 (* g3 between -1.5 and 5.3 *)
-g30 = N[-14/10, 600];
+g30 = N[52/10, 600];
 
 obj  = {-1, -g30, 0, 0, 0, 0};
 
