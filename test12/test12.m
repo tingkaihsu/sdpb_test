@@ -193,7 +193,7 @@ j22List = {
 	Function[{x}, N0[x][[2,2]]],
   Function[{x}, N0[x][[2,2]]],
   Function[{x}, N0[x][[2,2]]],
-  Function[{x}, M6j1[x][[2,2]]],
+  Function[{x}, M6j1[x][[2,2]]]
 };
 j33List = {
   Function[{x}, N0[x][[3,3]]],
