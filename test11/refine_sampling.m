@@ -172,7 +172,8 @@ Print[""];
    Tests2.m.  Each function accepts a numeric argument and returns
    a numeric value.  No symbolic form is required.
    ================================================================ *)
-maVal = N[5/100, 600];
+
+maVal = N[1/1000, 600];
 
 Print["mA = ", maVal]
 

@@ -172,66 +172,35 @@ Print[""];
    Tests2.m.  Each function accepts a numeric argument and returns
    a numeric value.  No symbolic form is required.
    ================================================================ *)
-maVal = N[5/100, 600];
+mgap = N[2, 600];
 
-Print["mA = ", maVal]
+maVal = N[1/100, 600];
+
+Print["mA = ", maVal];
 
 (* forward limit: use our own convention *)
 
 (* g2 > 0 *)
 g2[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
+  sp = N[2/(1-x), 600];
   mA = N[maVal, 600];    (* FIX 1: exact rational *)
-  N[(2*Sqrt[sp/(sp -4*mA^2)])/(sp - 2*mA^2)^3, 600]
+  N[1/sp^2, 600]
 ];
 
-(* g3 < 0 when J = 0 *)
-g3[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
-  mA = N[maVal, 600];    (* FIX 1: exact rational *)
-  N[(Sqrt[sp/(-4*mA^2 + sp)]*(-3 - (2*J*(1 + J)*(2*mA^2 - sp))/(-4*mA^2 + sp)))/(-2*mA^2 + sp)^4, 600]
-];
 
-g4[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
-  sp = N[1/(1-x), 600];
-  mA = N[maVal, 600];
-  result = ((2 Sqrt[sp/(-4 mA^2+sp)])/(sp-2 mA^2)^5);
-  Re[N[result, 600] ]
-]
 
 n4AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
-  sp   = N[1/(1 - x), 600];
+  sp   = N[2/(1 - x), 600];
   mA   = N[maVal, 600];
-  result = (81*Sqrt[sp/(-4*mA^2 + sp)]*(
-      8*mA^4*(14*mA^2 - 15*sp)*(-8*mA^2 + 3*sp)^(3/2)*
-        Hypergeometric2F1[-J, 1 + J, 1, (4*mA^2)/(12*mA^2 - 3*sp)] +
-      (8*mA^4 - 18*mA^2*sp + 9*sp^2)*(
-        (-2*I)*mA*(10*mA^2 - 9*sp)*(8*mA^2 - 3*sp)*
-          LegendreP[J, 1, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))] +
-        Sqrt[-8*mA^2 + 3*sp]*(-8*mA^4 + 18*mA^2*sp - 9*sp^2)*
-          LegendreP[J, 2, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))]
-      )
-    ))/(4*mA^2*(-2*mA^2 + sp)*(-8*mA^2 + 3*sp)^(3/2)*(8*mA^4 - 18*mA^2*sp + 9*sp^2)^3);
+  result = ( (4-5*4)*J*(J+1) + 2*(J*(J+1))^2 ) / sp^4;
   Re[N[result, 600] ]
 ];
 
-X52AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
-  mA = N[maVal, 600];    (* FIX 1: exact rational *)
-  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
-];
-
-X62AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
-  mA = N[maVal, 600];    (* FIX 1: exact rational *)
-  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
-];
-
-(* Large J limit k = 6, q = 2 *)
-LargeJAAAA[x_?NumericQ] := Module[{sp, mA},
-  sp = N[1/(1-x), 600];
-  mA = N[maVal, 600];    (* FIX 1: exact rational *)
-  N[-(((1/(-4 mA^2 + sp))^(15/2) (-32 mA^6 + 24 mA^4 sp - 6 mA^2 sp^2 + sp^3))/(288 sp^(5/2))), 600]
+LargeJAAAA[x_?NumericQ] := Module[{sp, mA, result},
+  sp = N[2/(1 - x), 600];
+  mA = N[maVal, 600];
+  result = 2 / sp^4;
+  Re[N[result, 600] ]
 ];
 
 Jmax = 60;
@@ -239,44 +208,18 @@ Jlist = Range[0, Jmax, 2];
 
 (* 2g[2,2] - g[2,1] *)
 M0[x_?NumericQ,J_?IntegerQ] := {
-	{g2[x,J],0,0},
+	{g2[x, J],0,0},
 	{0,0,0},
 	{0,0,0}
 };
 
-(* -3g[3,3] + g[3,2] *)
-M1[x_?NumericQ,J_?IntegerQ] := {
-	{g3[x,J],0,0},
-	{0,0,0},
-	{0,0,0}
-};
+M41[x_?NumericQ, J_?IntegerQ] := {
+  {n4AAAA[x, J], 0, 0},
+  {0, 0, 0},
+  {0, 0, 0}
+}
 
-(* 2g[4,4] - 2g[4,3] + g[2,2] *)
-M2[x_?NumericQ,J_?IntegerQ] := {
-  {g4[x,J],0,0},
-  {0,0,0},
-  {0,0,0}
-};
-
-M41[x_?NumericQ, J_?IntegerQ] :={
-	{n4AAAA[x,J],0,0},
-	{0,0,0},
-	{0,0,0}
-};
-
-M51[x_?NumericQ, J_?IntegerQ] :={
-	{X52AAAA[x,J],0,0},
-	{0,0,0},
-	{0,0,0}
-};
-
-M61[x_?NumericQ, J_?IntegerQ] :={
-	{X62AAAA[x,J],0,0},
-	{0,0,0},
-	{0,0,0}
-};
-
-M6j1[x_?NumericQ] :={
+M4j1[x_?NumericQ] :={
 	{LargeJAAAA[x],0,0},
 	{0,0,0},
 	{0,0,0}
@@ -291,124 +234,73 @@ N0[x_?NumericQ] :={
 
 f11List ={
 	Function[{x,J}, M0[x,J][[1,1]]],
-	Function[{x,J}, M1[x,J][[1,1]]],
-  Function[{x,J}, M2[x,J][[1,1]]],
-	Function[{x,J}, M41[x,J][[1,1]]],
-	Function[{x,J}, M51[x,J][[1,1]]],
-  Function[{x,J}, M61[x,J][[1,1]]]
+	Function[{x,J}, M41[x,J][[1,1]]]
 };
 
 f22List ={
 	Function[{x,J}, M0[x,J][[2,2]]],
-	Function[{x,J}, M1[x,J][[2,2]]],
-  Function[{x,J}, M2[x,J][[2,2]]],
-	Function[{x,J}, M41[x,J][[2,2]]],
-	Function[{x,J}, M51[x,J][[2,2]]],
-  Function[{x,J}, M61[x,J][[2,2]]]
+	Function[{x,J}, M41[x,J][[2,2]]]
 };
 
 f33List = {
 	Function[{x,J}, M0[x,J][[3,3]]],
-	Function[{x,J}, M1[x,J][[3,3]]],
-  Function[{x,J}, M2[x,J][[3,3]]],
-	Function[{x,J}, M41[x,J][[3,3]]],
-	Function[{x,J}, M51[x,J][[3,3]]],
-  Function[{x,J}, M61[x,J][[3,3]]]
+	Function[{x,J}, M41[x,J][[3,3]]]
 };
 
 f12List ={
 	Function[{x,J}, M0[x,J][[1,2]]],
-	Function[{x,J}, M1[x,J][[1,2]]],
-  Function[{x,J}, M2[x,J][[1,2]]],
-	Function[{x,J}, M41[x,J][[1,2]]],
-	Function[{x,J}, M51[x,J][[1,2]]],
-  Function[{x,J}, M61[x,J][[1,2]]]
+	Function[{x,J}, M41[x,J][[1,2]]]
 };
 
 f21List = f12List;
 
 f13List = {
 	Function[{x,J}, M0[x,J][[1,3]]],
-	Function[{x,J}, M1[x,J][[1,3]]],
-  Function[{x,J}, M2[x,J][[1,3]]],
-	Function[{x,J}, M41[x,J][[1,3]]],
-	Function[{x,J}, M51[x,J][[1,3]]],
-  Function[{x,J}, M61[x,J][[1,3]]]
+	Function[{x,J}, M41[x,J][[1,3]]]
 };
 f31List = f13List;
 
 f23List = {
 	Function[{x,J}, M0[x,J][[2,3]]],
-	Function[{x,J}, M1[x,J][[2,3]]],
-  Function[{x,J}, M2[x,J][[2,3]]],
-	Function[{x,J}, M41[x,J][[2,3]]],
-	Function[{x,J}, M51[x,J][[2,3]]],
-  Function[{x,J}, M61[x,J][[2,3]]]
+	Function[{x,J}, M41[x,J][[2,3]]]
 };
 f32List = f23List;
 
 j11List = {
 	Function[{x}, N0[x][[1,1]]],
-	Function[{x}, N0[x][[1,1]]],
-  Function[{x}, N0[x][[1,1]]],
-	Function[{x}, N0[x][[1,1]]],
-  Function[{x}, N0[x][[1,1]]],
-  Function[{x}, M6j1[x][[1,1]]]
+	Function[{x}, M4j1[x][[1,1]]]
 };
 j22List = {
 	Function[{x}, N0[x][[2,2]]],
-	Function[{x}, N0[x][[2,2]]],
-  Function[{x}, N0[x][[2,2]]],
-	Function[{x}, N0[x][[2,2]]],
-  Function[{x}, N0[x][[2,2]]],
-  Function[{x}, M6j1[x][[2,2]]]
+	Function[{x}, M4j1[x][[2,2]]]
 };
 j33List = {
   Function[{x}, N0[x][[3,3]]],
-	Function[{x}, N0[x][[3,3]]],
-  Function[{x}, N0[x][[3,3]]],
-  Function[{x}, N0[x][[3,3]]],
-	Function[{x}, N0[x][[3,3]]],
-  Function[{x}, M6j1[x][[3,3]]]
+  Function[{x}, M4j1[x][[3,3]]]
 };
 
 j12List = {
   Function[{x}, N0[x][[1,2]]],
-	Function[{x}, N0[x][[1,2]]],
-  Function[{x}, N0[x][[1,2]]],
-  Function[{x}, N0[x][[1,2]]],
-	Function[{x}, N0[x][[1,2]]],
-  Function[{x}, M6j1[x][[1,2]]]
+  Function[{x}, M4j1[x][[1,2]]]
 };
 j21List = j12List;
 
 j13List = {
   Function[{x}, N0[x][[1,3]]],
-	Function[{x}, N0[x][[1,3]]],
-  Function[{x}, N0[x][[1,3]]],
-	Function[{x}, N0[x][[1,3]]],
-	Function[{x}, N0[x][[1,3]]],
-  Function[{x}, M6j1[x][[1,3]]]
+	Function[{x}, M4j1[x][[1,3]]]
 };
 j31List = j13List;
 
 j23List = {
   Function[{x}, N0[x][[2,3]]],
-	Function[{x}, N0[x][[2,3]]],
-  Function[{x}, N0[x][[2,3]]],
-	Function[{x}, N0[x][[2,3]]],
-	Function[{x}, N0[x][[2,3]]],
-  Function[{x}, M6j1[x][[2,3]]]
+	Function[{x}, M4j1[x][[2,3]]]
 };
 j32List = j23List;
 
 (* optimal upper bound *)
-norm = {0, 0, -1, 0, 0, 0};
+norm = {1, 0};
 
-(* g3 between -1.5 and 5.3 *)
-g30 = N[-14/10, 600];
-
-obj  = {-1, -g30, 0, 0, 0, 0};
+obj  = {-1, 0};
 
 (* ================================================================
    END OF PROBLEM-SPECIFIC SECTION
