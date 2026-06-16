@@ -74,16 +74,7 @@ g31[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
 n4AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
   sp   = N[1/(1 - x), 600];
   mA   = N[maVal, 600];
-  result = (81*Sqrt[sp/(-4*mA^2 + sp)]*(
-      8*mA^4*(14*mA^2 - 15*sp)*(-8*mA^2 + 3*sp)^(3/2)*
-        Hypergeometric2F1[-J, 1 + J, 1, (4*mA^2)/(12*mA^2 - 3*sp)] +
-      (8*mA^4 - 18*mA^2*sp + 9*sp^2)*(
-        (-2*I)*mA*(10*mA^2 - 9*sp)*(8*mA^2 - 3*sp)*
-          LegendreP[J, 1, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))] +
-        Sqrt[-8*mA^2 + 3*sp]*(-8*mA^4 + 18*mA^2*sp - 9*sp^2)*
-          LegendreP[J, 2, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))]
-      )
-    ))/(4*mA^2*(-2*mA^2 + sp)*(-8*mA^2 + 3*sp)^(3/2)*(8*mA^4 - 18*mA^2*sp + 9*sp^2)^3);
+  result = -((243 Sqrt[-(sp/(4 mA^2-sp))] (-6 I (8 mA^3-3 mA sp) LegendreP[J,1,1+(8 mA^2)/(3 (-4 mA^2+sp))]+Sqrt[-8 mA^2+3 sp] (-4 mA^2+3 sp) LegendreP[J,2,1+(8 mA^2)/(3 (-4 mA^2+sp))]))/(4 mA^2 (4 mA^2-3 sp)^4 (-8 mA^2+3 sp)^(3/2)));
   Re[N[result, 600] ]
 ];
 
