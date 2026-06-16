@@ -54,7 +54,7 @@ WritePmpJsonNumerical[
 (* problem-specific *)
 (* let the mass be 4mA^2 < M^2 = 1 where M = 1 is the first isolated massive pole, and the mass gap is Mgap = 2 *)
 
-mgap = N[5, 600];
+mgap = N[2, 600];
 
 maVal = N[1/100, 600];
 
@@ -73,7 +73,7 @@ g2[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
 n4AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
   sp   = N[mgap/(1 - x), 600];
   mA   = N[maVal, 600];
-  result = (81*Sqrt[sp/(-4*mA^2 + sp)]*(8*mA^4*(14*mA^2 - 15*sp)*(-8*mA^2 + 3*sp)^(3/2)*Hypergeometric2F1[-J, 1 + J, 1, (4*mA^2)/(12*mA^2 - 3*sp)] + (8*mA^4 - 18*mA^2*sp + 9*sp^2)*((-2*I)*mA*(10*mA^2 - 9*sp)*(8*mA^2 - 3*sp)*LegendreP[J, 1, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))] + Sqrt[-8*mA^2 + 3*sp]*(-8*mA^4 + 18*mA^2*sp - 9*sp^2)*LegendreP[J, 2, 1 + (8*mA^2)/(3*(-4*mA^2 + sp))])))/(4*mA^2*(-2*mA^2 + sp)*(-8*mA^2 + 3*sp)^(3/2)*(8*mA^4 - 18*mA^2*sp + 9*sp^2)^3);
+  result = (81 Sqrt[sp/(-4 mA^2+sp)] (8 mA^4 (14 mA^2-15 sp) (-8 mA^2+3 sp)^(3/2) Hypergeometric2F1[-J,1+J,1,(4 mA^2)/(12 mA^2-3 sp)]+(8 mA^4-18 mA^2 sp+9 sp^2) (-2 I mA (10 mA^2-9 sp) (8 mA^2-3 sp) LegendreP[J,1,1+(8 mA^2)/(3 (-4 mA^2+sp))]+Sqrt[-8 mA^2+3 sp] (-8 mA^4+18 mA^2 sp-9 sp^2) LegendreP[J,2,1+(8 mA^2)/(3 (-4 mA^2+sp))])))/(4 mA^2 (-2 mA^2+sp) (-8 mA^2+3 sp)^(3/2) (8 mA^4-18 mA^2 sp+9 sp^2)^3);
   Re[N[result, 600] ]
 ];
 
@@ -227,15 +227,23 @@ j23List = {
 };
 j32List = j23List;
 
-(* optimal upper bound *)
-
 G2[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   sp = N[1/(1-x), 600];
   mA = N[maVal, 600];    (* FIX 1: exact rational *)
   N[((2 Sqrt[sp/(-4 mA^2+sp)])/(sp - 2 mA^2)^3), 600]
 ];
 
-norm = {G2[0, 2], 0, 0, 0};
+N4AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
+  sp   = N[1/(1 - x), 600];
+  mA   = N[maVal, 600];
+  result = (81 Sqrt[sp/(-4 mA^2+sp)] (8 mA^4 (14 mA^2-15 sp) (-8 mA^2+3 sp)^(3/2) Hypergeometric2F1[-J,1+J,1,(4 mA^2)/(12 mA^2-3 sp)]+(8 mA^4-18 mA^2 sp+9 sp^2) (-2 I mA (10 mA^2-9 sp) (8 mA^2-3 sp) LegendreP[J,1,1+(8 mA^2)/(3 (-4 mA^2+sp))]+Sqrt[-8 mA^2+3 sp] (-8 mA^4+18 mA^2 sp-9 sp^2) LegendreP[J,2,1+(8 mA^2)/(3 (-4 mA^2+sp))])))/(4 mA^2 (-2 mA^2+sp) (-8 mA^2+3 sp)^(3/2) (8 mA^4-18 mA^2 sp+9 sp^2)^3);
+  Re[N[result, 600] ]
+];
+
+Jphi = 0;
+Print["Jphi = ", Jphi];
+
+norm = {G2[0, Jphi], N4AAAA[0, Jphi], 0, 0};
 
 obj  = {-1, 0, 0, 0};
 
