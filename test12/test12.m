@@ -240,10 +240,23 @@ N4AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
   Re[N[result, 600] ]
 ];
 
+x52AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
+  sp = N[mgap/(1-x), 600];
+  mA = N[maVal, 600];
+  result = (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6);
+  Re[N[result, 600] ]
+];
+
+x62AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];    (* FIX 1: exact rational *)
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
+];
+
 Jphi = 0;
 Print["Jphi = ", Jphi];
 
-norm = {G2[0, Jphi], N4AAAA[0, Jphi], 0, 0};
+norm = {G2[0, Jphi], N4AAAA[0, Jphi], x52AAAA[0, Jphi], x62AAAA[0, Jphi]};
 
 obj  = {-1, 0, 0, 0};
 
