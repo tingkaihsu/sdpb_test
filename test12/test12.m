@@ -253,7 +253,7 @@ x62AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
 ];
 
-Jphi = 0;
+Jphi = 2;
 Print["Jphi = ", Jphi];
 
 norm = {G2[0, Jphi], N4AAAA[0, Jphi], x52AAAA[0, Jphi], x62AAAA[0, Jphi]};
