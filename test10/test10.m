@@ -308,9 +308,7 @@ f11List ={
   Function[{x,J}, M61[x,J][[1,1]]],
   Function[{x,J}, M62[x,J][[1,1]]],
   Function[{x,J}, M71[x,J][[1,1]]],
-  Function[{x,J}, M72[x,J][[1,1]]],
-  Function[{x,J}, M81[x,J][[1,1]]],
-  Function[{x,J}, M82[x,J][[1,1]]]
+  Function[{x,J}, M81[x,J][[1,1]]]
 };
 
 f22List ={
@@ -325,9 +323,7 @@ f22List ={
   Function[{x,J}, M61[x,J][[2,2]]],
   Function[{x,J}, M62[x,J][[2,2]]],
   Function[{x,J}, M71[x,J][[2,2]]],
-  Function[{x,J}, M72[x,J][[2,2]]],
-  Function[{x,J}, M81[x,J][[2,2]]],
-  Function[{x,J}, M82[x,J][[2,2]]]
+  Function[{x,J}, M81[x,J][[2,2]]]
 };
 
 f33List = {
@@ -341,10 +337,8 @@ f33List = {
   Function[{x,J}, M53[x,J][[3,3]]],
   Function[{x,J}, M61[x,J][[3,3]]],
   Function[{x,J}, M62[x,J][[3,3]]],
-  Function[{x,J}, M71[x,J][[3,3]]],
-  Function[{x,J}, M72[x,J][[3,3]]],
-  Function[{x,J}, M81[x,J][[3,3]]],
-  Function[{x,J}, M82[x,J][[3,3]]]
+  Function[{x,J}, M71[x,J][[3,3]]]
+  Function[{x,J}, M81[x,J][[3,3]]]
 };
 
 f12List ={
@@ -359,9 +353,7 @@ f12List ={
   Function[{x,J}, M61[x,J][[1,2]]],
   Function[{x,J}, M62[x,J][[1,2]]],
   Function[{x,J}, M71[x,J][[1,2]]],
-  Function[{x,J}, M72[x,J][[1,2]]],
-  Function[{x,J}, M81[x,J][[1,2]]],
-  Function[{x,J}, M82[x,J][[1,2]]]
+  Function[{x,J}, M81[x,J][[1,2]]]
 };
 
 f21List = f12List;
@@ -378,9 +370,7 @@ f13List = {
   Function[{x,J}, M61[x,J][[1,3]]],
   Function[{x,J}, M62[x,J][[1,3]]],
   Function[{x,J}, M71[x,J][[1,3]]],
-  Function[{x,J}, M72[x,J][[1,3]]],
-  Function[{x,J}, M81[x,J][[1,3]]],
-  Function[{x,J}, M82[x,J][[1,3]]]
+  Function[{x,J}, M81[x,J][[1,3]]]
 };
 f31List = f13List;
 
@@ -396,9 +386,7 @@ f23List = {
   Function[{x,J}, M61[x,J][[2,3]]],
   Function[{x,J}, M62[x,J][[2,3]]],
   Function[{x,J}, M71[x,J][[2,3]]],
-  Function[{x,J}, M72[x,J][[2,3]]],
-  Function[{x,J}, M81[x,J][[2,3]]],
-  Function[{x,J}, M82[x,J][[2,3]]]
+  Function[{x,J}, M81[x,J][[2,3]]]
 };
 f32List = f23List;
 
@@ -414,9 +402,7 @@ j11List = {
   Function[{x}, N0[x][[1,1]]],
   Function[{x}, N0[x][[1,1]]],
   Function[{x}, N0[x][[1,1]]],
-  Function[{x}, N0[x][[1,1]]],
-  Function[{x}, M8j1[x][[1,1]]],
-	Function[{x}, N0[x][[1,1]]]
+  Function[{x}, M8j1[x][[1,1]]]
 };
 j22List = {
 	Function[{x}, N0[x][[2,2]]],
@@ -430,9 +416,7 @@ j22List = {
   Function[{x}, N0[x][[2,2]]],
   Function[{x}, N0[x][[2,2]]],
   Function[{x}, N0[x][[2,2]]],
-  Function[{x}, N0[x][[2,2]]],
-  Function[{x}, M8j1[x][[2,2]]],
-	Function[{x}, N0[x][[2,2]]]
+  Function[{x}, M8j1[x][[2,2]]]
 };
 j33List = {
   Function[{x}, N0[x][[3,3]]],
@@ -446,9 +430,7 @@ j33List = {
   Function[{x}, N0[x][[3,3]]],
   Function[{x}, N0[x][[3,3]]],
   Function[{x}, N0[x][[3,3]]],
-  Function[{x}, N0[x][[3,3]]],
-  Function[{x}, M8j1[x][[3,3]]],
-	Function[{x}, N0[x][[3,3]]]
+  Function[{x}, M8j1[x][[3,3]]]
 };
 
 j12List = {
@@ -463,9 +445,7 @@ j12List = {
   Function[{x}, N0[x][[1,2]]],
   Function[{x}, N0[x][[1,2]]],
   Function[{x}, N0[x][[1,2]]],
-  Function[{x}, N0[x][[1,2]]],
-  Function[{x}, M8j1[x][[1,2]]],
-	Function[{x}, N0[x][[1,2]]]
+  Function[{x}, M8j1[x][[1,2]]]
 };
 j21List = j12List;
 
@@ -481,9 +461,7 @@ j13List = {
   Function[{x}, N0[x][[1,3]]],
   Function[{x}, N0[x][[1,3]]],
   Function[{x}, N0[x][[1,3]]],
-  Function[{x}, N0[x][[1,3]]],
-  Function[{x}, M8j1[x][[1,3]]],
-	Function[{x}, N0[x][[1,3]]]
+  Function[{x}, M8j1[x][[1,3]]]
 };
 j31List = j13List;
 
@@ -498,10 +476,8 @@ j23List = {
   Function[{x}, N0[x][[2,3]]],
   Function[{x}, N0[x][[2,3]]],
   Function[{x}, N0[x][[2,3]]],
-  Function[{x}, N0[x][[2,3]]],
-  Function[{x}, N0[x][[2,3]]],
-  Function[{x}, M8j1[x][[2,3]]],
-	Function[{x}, N0[x][[2,3]]]
+  Function[{x}, N0[x][[2,3]]]
+  Function[{x}, M8j1[x][[2,3]]]
 };
 j32List = j23List;
 
@@ -513,8 +489,8 @@ j32List = j23List;
 (* norm = {0, -1, 0, 0, 0, 0, 0, 0, 0, 0};
 obj  = {-1, 0, 0, 0, 0, 0, 0, 0, 0, 0}; *)
 
-norm = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-obj = {-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+norm = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+obj = {-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 
 testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
