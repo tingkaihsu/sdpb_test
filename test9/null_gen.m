@@ -29,17 +29,17 @@ Mfwdlow[s_, t_, mA_, Nmax_Integer] :=
 
 DblCtrTest[mA_, k_Integer, q_Integer, Nmax_Integer] := Residue[ Residue[ 1/(s*t) ( Mfwdlow[s, t, mA, Nmax]/(s^(k-q)*t^q) - Mfwdlow[t, s, mA, Nmax]/(t^(k-q)*s^q) ), {s, Infinity}], {t, 0}];
 
-Print["M(s,t)/((s)^(k-q+1)*(t)^(q+1)) = ", Residue[Residue[1/(s*t)*Mfwdlow[s,t,mA,10]/(s^(5-2)*t^(2)),{s,Infinity}],{t,0}]//FullSimplify]
-Print["M(t,s)/((t)^(k-q+1)*(s)^(q+1)) = ", Residue[Residue[1/(s*t)*Mfwdlow[t,s,mA,10]/(t^(5-2)*s^(2)),{s,Infinity}],{t,0}]//FullSimplify]
+Print["M(s,t)/((s)^(k-q+1)*(t)^(q+1)) = ", Residue[Residue[1/(s*t)*Mfwdlow[s,t,mA,10]/(s^(7-2)*t^(2)),{s,Infinity}],{t,0}]//FullSimplify]
+Print["M(t,s)/((t)^(k-q+1)*(s)^(q+1)) = ", Residue[Residue[1/(s*t)*Mfwdlow[t,s,mA,10]/(t^(7-2)*s^(2)),{s,Infinity}],{t,0}]//FullSimplify]
 
 
-Print["Double contour test: ", DblCtrTest[mA, 5, 2, 10] ];
+Print["Double contour test: ", DblCtrTest[mA, 7, 2, 10] ];
 
-Print["M(s,t)/((s)^(k-q+1)*(t)^(q+1)) = ", Residue[Residue[1/(s*t)*Mfwdlow[s,t,mA,10]/(s^(5-3)*t^(3)),{s,Infinity}],{t,0}]//FullSimplify]
-Print["M(t,s)/((t)^(k-q+1)*(s)^(q+1)) = ", Residue[Residue[1/(s*t)*Mfwdlow[t,s,mA,10]/(t^(5-3)*s^(3)),{s,Infinity}],{t,0}]//FullSimplify]
+Print["M(s,t)/((s)^(k-q+1)*(t)^(q+1)) = ", Residue[Residue[1/(s*t)*Mfwdlow[s,t,mA,10]/(s^(7-3)*t^(3)),{s,Infinity}],{t,0}]//FullSimplify]
+Print["M(t,s)/((t)^(k-q+1)*(s)^(q+1)) = ", Residue[Residue[1/(s*t)*Mfwdlow[t,s,mA,10]/(t^(7-3)*s^(3)),{s,Infinity}],{t,0}]//FullSimplify]
 
 
-Print["Double contour test: ", DblCtrTest[mA, 5, 3, 10] ];
+Print["Double contour test: ", DblCtrTest[mA, 7, 3, 10] ];
 
 (* Null constraints *)
 
@@ -201,6 +201,7 @@ Print["Large J limit: ", Limit[combined[kn, qn]/J^12, {J -> Infinity},Assumption
 Limit[ ((-2+J) J (1+J) (3+J) Sqrt[sp/(-4 mA^2+sp)] (-((-6+J) (-4+J) (5+J) (7+J))+((-1+J) (2+J) (-4 mA^2+sp)^4 (64 mA^2+(-28+J+J^2) sp))/sp^5))/(576 (-4 mA^2+sp)^8),mA->0]//FullSimplify
 
 Limit[  -((Sqrt[sp/(-4 mA^2+sp)] (-32 mA^6+24 mA^4 sp-6 mA^2 sp^2+sp^3))/(288 sp^3 (-4 mA^2+sp)^7)),mA->0]//FullSimplify
+
 
 
 
