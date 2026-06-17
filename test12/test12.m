@@ -287,7 +287,7 @@ x72AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
 Jphi = 2;
 Print["Jphi = ", Jphi];
 
-norm = {G2[0, Jphi], N4AAAA[0, Jphi], x52AAAA[0, Jphi], x62AAAA[0, Jphi], x72[0, Jphi]};
+norm = {G2[0, Jphi], N4AAAA[0, Jphi], x52AAAA[0, Jphi], x62AAAA[0, Jphi], x72AAAA[0, Jphi]};
 
 obj  = {-1, 0, 0, 0, 0};
 

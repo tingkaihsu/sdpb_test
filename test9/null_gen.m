@@ -198,7 +198,7 @@ Print["Combined Piece X", kn, qn, " : ", combined[kn, qn] ];
 Print["Large J limit: ", Limit[combined[kn, qn]/J^12, {J -> Infinity},Assumptions->{sp>0,mA>0}]//FullSimplify];
 
 
-Limit[ (J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-(((-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J) (-47+J+J^2))/(-4 mA^2+sp)^8)+((-1+J) (2+J) (((-4+J) (-3+J) (-2+J) (3+J) (4+J) (5+J) sp^3)/(4 mA^2-sp)^5+3600/(-4 mA^2+sp)^2))/sp^6))/14400,mA->0]//FullSimplify
+Limit[ ((-2+J) J (1+J) (3+J) Sqrt[sp/(-4 mA^2+sp)] (-((-6+J) (-4+J) (5+J) (7+J))+((-1+J) (2+J) (-4 mA^2+sp)^4 (64 mA^2+(-28+J+J^2) sp))/sp^5))/(576 (-4 mA^2+sp)^8),mA->0]//FullSimplify
 
 Limit[  -((Sqrt[sp/(-4 mA^2+sp)] (-32 mA^6+24 mA^4 sp-6 mA^2 sp^2+sp^3))/(288 sp^3 (-4 mA^2+sp)^7)),mA->0]//FullSimplify
 
