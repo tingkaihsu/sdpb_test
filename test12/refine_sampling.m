@@ -172,7 +172,7 @@ Print[""];
    Tests2.m.  Each function accepts a numeric argument and returns
    a numeric value.  No symbolic form is required.
    ================================================================ *)
-mgap = N[2, 600];
+mgap = N[3, 600];
 
 maVal = N[1/100, 600];
 

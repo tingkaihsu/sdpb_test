@@ -54,7 +54,7 @@ WritePmpJsonNumerical[
 (* problem-specific *)
 (* let the mass be 4mA^2 < M^2 = 1 where M = 1 is the first isolated massive pole, and the mass gap is Mgap = 2 *)
 
-mgap = N[2, 600];
+mgap = N[3, 600];
 
 maVal = N[1/100, 600];
 
