@@ -337,7 +337,7 @@ f33List = {
   Function[{x,J}, M53[x,J][[3,3]]],
   Function[{x,J}, M61[x,J][[3,3]]],
   Function[{x,J}, M62[x,J][[3,3]]],
-  Function[{x,J}, M71[x,J][[3,3]]]
+  Function[{x,J}, M71[x,J][[3,3]]],
   Function[{x,J}, M81[x,J][[3,3]]]
 };
 
@@ -476,7 +476,7 @@ j23List = {
   Function[{x}, N0[x][[2,3]]],
   Function[{x}, N0[x][[2,3]]],
   Function[{x}, N0[x][[2,3]]],
-  Function[{x}, N0[x][[2,3]]]
+  Function[{x}, N0[x][[2,3]]],
   Function[{x}, M8j1[x][[2,3]]]
 };
 j32List = j23List;
