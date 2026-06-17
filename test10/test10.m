@@ -259,33 +259,16 @@ M71[x_?NumericQ, J_?IntegerQ] :={
 	{0,0,0}
 };
 
-M72[x_?NumericQ, J_?IntegerQ] :={
-	{X73AAAA[x,J],0,0},
-	{0,0,0},
-	{0,0,0}
-};
-
 M81[x_?NumericQ, J_?IntegerQ] :={
 	{X82AAAA[x,J],0,0},
 	{0,0,0},
 	{0,0,0}
 };
 
-M82[x_?NumericQ, J_?IntegerQ] :={
-	{X83AAAA[x,J],0,0},
-	{0,0,0},
-	{0,0,0}
-};
 
 M8j1[x_?NumericQ] :={
 	{LargeJAAAA[x],0,0},
 	{0,0,0},
-	{0,0,0}
-}
-
-M8j2[x_?NumericQ] :={
-	{0,0,0},
-	{0,LargeJBBBB[x],0},
 	{0,0,0}
 }
 
@@ -300,13 +283,8 @@ f11List ={
 	Function[{x,J}, M0[x,J][[1,1]]],
 	Function[{x,J}, M1[x,J][[1,1]]],
 	Function[{x,J}, M41[x,J][[1,1]]],
-  Function[{x,J}, M42[x,J][[1,1]]],
-  Function[{x,J}, M43[x,J][[1,1]]],
 	Function[{x,J}, M51[x,J][[1,1]]],
-  Function[{x,J}, M52[x,J][[1,1]]],
-  Function[{x,J}, M53[x,J][[1,1]]],
   Function[{x,J}, M61[x,J][[1,1]]],
-  Function[{x,J}, M62[x,J][[1,1]]],
   Function[{x,J}, M71[x,J][[1,1]]],
   Function[{x,J}, M81[x,J][[1,1]]]
 };
@@ -315,13 +293,8 @@ f22List ={
 	Function[{x,J}, M0[x,J][[2,2]]],
 	Function[{x,J}, M1[x,J][[2,2]]],
 	Function[{x,J}, M41[x,J][[2,2]]],
-  Function[{x,J}, M42[x,J][[2,2]]],
-  Function[{x,J}, M43[x,J][[2,2]]],
 	Function[{x,J}, M51[x,J][[2,2]]],
-  Function[{x,J}, M52[x,J][[2,2]]],
-  Function[{x,J}, M53[x,J][[2,2]]],
   Function[{x,J}, M61[x,J][[2,2]]],
-  Function[{x,J}, M62[x,J][[2,2]]],
   Function[{x,J}, M71[x,J][[2,2]]],
   Function[{x,J}, M81[x,J][[2,2]]]
 };
@@ -330,13 +303,8 @@ f33List = {
 	Function[{x,J}, M0[x,J][[3,3]]],
 	Function[{x,J}, M1[x,J][[3,3]]],
 	Function[{x,J}, M41[x,J][[3,3]]],
-  Function[{x,J}, M42[x,J][[3,3]]],
-  Function[{x,J}, M43[x,J][[3,3]]],
 	Function[{x,J}, M51[x,J][[3,3]]],
-  Function[{x,J}, M52[x,J][[3,3]]],
-  Function[{x,J}, M53[x,J][[3,3]]],
   Function[{x,J}, M61[x,J][[3,3]]],
-  Function[{x,J}, M62[x,J][[3,3]]],
   Function[{x,J}, M71[x,J][[3,3]]],
   Function[{x,J}, M81[x,J][[3,3]]]
 };
@@ -345,13 +313,8 @@ f12List ={
 	Function[{x,J}, M0[x,J][[1,2]]],
 	Function[{x,J}, M1[x,J][[1,2]]],
 	Function[{x,J}, M41[x,J][[1,2]]],
-  Function[{x,J}, M42[x,J][[1,2]]],
-  Function[{x,J}, M43[x,J][[1,2]]],
 	Function[{x,J}, M51[x,J][[1,2]]],
-  Function[{x,J}, M52[x,J][[1,2]]],
-  Function[{x,J}, M53[x,J][[1,2]]],
   Function[{x,J}, M61[x,J][[1,2]]],
-  Function[{x,J}, M62[x,J][[1,2]]],
   Function[{x,J}, M71[x,J][[1,2]]],
   Function[{x,J}, M81[x,J][[1,2]]]
 };
@@ -362,13 +325,8 @@ f13List = {
 	Function[{x,J}, M0[x,J][[1,3]]],
 	Function[{x,J}, M1[x,J][[1,3]]],
 	Function[{x,J}, M41[x,J][[1,3]]],
-  Function[{x,J}, M42[x,J][[1,3]]],
-  Function[{x,J}, M43[x,J][[1,3]]],
 	Function[{x,J}, M51[x,J][[1,3]]],
-  Function[{x,J}, M52[x,J][[1,3]]],
-  Function[{x,J}, M53[x,J][[1,3]]],
   Function[{x,J}, M61[x,J][[1,3]]],
-  Function[{x,J}, M62[x,J][[1,3]]],
   Function[{x,J}, M71[x,J][[1,3]]],
   Function[{x,J}, M81[x,J][[1,3]]]
 };
@@ -378,13 +336,8 @@ f23List = {
 	Function[{x,J}, M0[x,J][[2,3]]],
 	Function[{x,J}, M1[x,J][[2,3]]],
 	Function[{x,J}, M41[x,J][[2,3]]],
-  Function[{x,J}, M42[x,J][[2,3]]],
-  Function[{x,J}, M43[x,J][[2,3]]],
 	Function[{x,J}, M51[x,J][[2,3]]],
-  Function[{x,J}, M52[x,J][[2,3]]],
-  Function[{x,J}, M53[x,J][[2,3]]],
   Function[{x,J}, M61[x,J][[2,3]]],
-  Function[{x,J}, M62[x,J][[2,3]]],
   Function[{x,J}, M71[x,J][[2,3]]],
   Function[{x,J}, M81[x,J][[2,3]]]
 };
@@ -397,22 +350,12 @@ j11List = {
   Function[{x}, N0[x][[1,1]]],
   Function[{x}, N0[x][[1,1]]],
   Function[{x}, N0[x][[1,1]]],
-  Function[{x}, N0[x][[1,1]]],
-  Function[{x}, N0[x][[1,1]]],
-  Function[{x}, N0[x][[1,1]]],
-  Function[{x}, N0[x][[1,1]]],
-  Function[{x}, N0[x][[1,1]]],
   Function[{x}, M8j1[x][[1,1]]]
 };
 j22List = {
 	Function[{x}, N0[x][[2,2]]],
 	Function[{x}, N0[x][[2,2]]],
 	Function[{x}, N0[x][[2,2]]],
-  Function[{x}, N0[x][[2,2]]],
-  Function[{x}, N0[x][[2,2]]],
-  Function[{x}, N0[x][[2,2]]],
-  Function[{x}, N0[x][[2,2]]],
-  Function[{x}, N0[x][[2,2]]],
   Function[{x}, N0[x][[2,2]]],
   Function[{x}, N0[x][[2,2]]],
   Function[{x}, N0[x][[2,2]]],
@@ -425,11 +368,6 @@ j33List = {
 	Function[{x}, N0[x][[3,3]]],
   Function[{x}, N0[x][[3,3]]],
   Function[{x}, N0[x][[3,3]]],
-  Function[{x}, N0[x][[3,3]]],
-  Function[{x}, N0[x][[3,3]]],
-  Function[{x}, N0[x][[3,3]]],
-  Function[{x}, N0[x][[3,3]]],
-  Function[{x}, N0[x][[3,3]]],
   Function[{x}, M8j1[x][[3,3]]]
 };
 
@@ -438,11 +376,6 @@ j12List = {
 	Function[{x}, N0[x][[1,2]]],
 	Function[{x}, N0[x][[1,2]]],
 	Function[{x}, N0[x][[1,2]]],
-  Function[{x}, N0[x][[1,2]]],
-  Function[{x}, N0[x][[1,2]]],
-  Function[{x}, N0[x][[1,2]]],
-  Function[{x}, N0[x][[1,2]]],
-  Function[{x}, N0[x][[1,2]]],
   Function[{x}, N0[x][[1,2]]],
   Function[{x}, N0[x][[1,2]]],
   Function[{x}, M8j1[x][[1,2]]]
@@ -456,11 +389,6 @@ j13List = {
 	Function[{x}, N0[x][[1,3]]],
   Function[{x}, N0[x][[1,3]]],
   Function[{x}, N0[x][[1,3]]],
-  Function[{x}, N0[x][[1,3]]],
-  Function[{x}, N0[x][[1,3]]],
-  Function[{x}, N0[x][[1,3]]],
-  Function[{x}, N0[x][[1,3]]],
-  Function[{x}, N0[x][[1,3]]],
   Function[{x}, M8j1[x][[1,3]]]
 };
 j31List = j13List;
@@ -470,11 +398,6 @@ j23List = {
 	Function[{x}, N0[x][[2,3]]],
 	Function[{x}, N0[x][[2,3]]],
 	Function[{x}, N0[x][[2,3]]],
-  Function[{x}, N0[x][[2,3]]],
-  Function[{x}, N0[x][[2,3]]],
-  Function[{x}, N0[x][[2,3]]],
-  Function[{x}, N0[x][[2,3]]],
-  Function[{x}, N0[x][[2,3]]],
   Function[{x}, N0[x][[2,3]]],
   Function[{x}, N0[x][[2,3]]],
   Function[{x}, M8j1[x][[2,3]]]
@@ -489,8 +412,8 @@ j32List = j23List;
 (* norm = {0, -1, 0, 0, 0, 0, 0, 0, 0, 0};
 obj  = {-1, 0, 0, 0, 0, 0, 0, 0, 0, 0}; *)
 
-norm = {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-obj = {-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+norm = {0, 1, 0, 0, 0, 0, 0};
+obj = {-1, 0, 0, 0, 0, 0, 0};
 
 
 testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
