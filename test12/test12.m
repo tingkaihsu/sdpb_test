@@ -182,6 +182,7 @@ f23List = {
   Function[{x,J}, M51[x,J][[2,3]]],
   Function[{x,J}, M61[x,J][[2,3]]]
 };
+
 f32List = f23List;
 
 j11List = {
@@ -190,12 +191,14 @@ j11List = {
   Function[{x}, N0[x][[1,1]]],
   Function[{x}, M6j1[x][[1,1]]]
 };
+
 j22List = {
 	Function[{x}, N0[x][[2,2]]],
   Function[{x}, N0[x][[2,2]]],
   Function[{x}, N0[x][[2,2]]],
   Function[{x}, M6j1[x][[2,2]]]
 };
+
 j33List = {
   Function[{x}, N0[x][[3,3]]],
   Function[{x}, N0[x][[3,3]]],
