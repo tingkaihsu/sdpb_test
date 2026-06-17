@@ -115,6 +115,9 @@ Print["Combined Piece: ", combined[kn, qn] ];
 Print["Large J limit: ", Limit[combined[kn, qn]/J^8, {J -> Infinity},Assumptions->{sp>0,mA>0}]//FullSimplify];
 
 
+Limit[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6)/J^8,J->Infinity]
+
+
 kn = 7;
 qn = 2;
 combined[k_Integer, q_Integer] := FullSimplify[directRes[k, q] - crossRes[k, q] ];
