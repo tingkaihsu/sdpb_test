@@ -86,41 +86,116 @@ Print["Combined Piece: ", combined[kn, qn] ];
 Print["Large J limit: ", Limit[combined[kn, qn]/J^6, {J -> Infinity}]//FullSimplify];
 
 
-(* n4 null constraint from stu low-energy ansatz *)
+Print["X62 differs X63 by a minus sign..."]
+kn = 6;
+qn = 2;
+combined[k_Integer, q_Integer] := FullSimplify[directRes[k, q] - crossRes[k, q] ];
 
-ClearAll[t0,KerstuMsumStable,KerstuCoeffStable,KerstuMsumStableN];
+Print["Combined Piece: ", combined[kn, qn] ];
+(* large J limit *)
 
-t0[mA_]:=4 mA^2/3;
+Print["Large J limit: ", Limit[combined[kn, qn]/J^8, {J -> Infinity},Assumptions->{sp>0,mA>0}]//FullSimplify];
 
-(*Stable exact rewrite for k=2 or 4*)
-KerstuMsumStable[sp_,t_,mA_,k_Integer?((#==2||#==4)&),J_]:=Module[{\[Delta],a,b,c,pref},\[Delta]=t-t0[mA];
-a=sp-2 mA^2;
-b=sp-t0[mA];
-c=sp-2 mA^2/3+\[Delta];
-pref=Sqrt[sp/(sp-4 mA^2)]*LegendreP[J,1+2 t/(sp-4 mA^2)];
-pref*(1/a+1/c)/(b*(b+\[Delta]))^(k/2)];
+kn = 6;
+qn = 3;
+combined[k_Integer, q_Integer] := FullSimplify[directRes[k, q] - crossRes[k, q] ];
 
-(*Series coefficient about t=4/3 mA^2,using the shifted variable \[Delta]*)
-KerstuCoeffStable[sp_,mA_,k_Integer?((#==2||#==4)&),J_,n_Integer?NonNegative]:=Module[{\[Delta],expr,assm},expr=KerstuMsumStable[sp,t0[mA]+\[Delta],mA,k,J];
-assm=sp>4 mA^2&&0<=mA<=2/5&&Element[J,Integers]&&J>=0;
-Assuming[assm,FullSimplify[SeriesCoefficient[expr,{\[Delta],0,n}] ] ] ];
+Print["Combined Piece: ", combined[kn, qn] ];
+(* large J limit *)
 
-(*High-precision numerical evaluation*)
-KerstuMsumStableN[sp_?NumericQ,t_?NumericQ,mA_?NumericQ,k_Integer?((#==2||#==4)&),J_Integer?NonNegative,wp_:80]:=Module[{expr},expr=KerstuMsumStable[SetPrecision[sp,wp],SetPrecision[t,wp],SetPrecision[mA,wp],k,J];
-Block[{$MaxExtraPrecision=2 wp},Chop[N[expr,wp] ] ] ];
+Print["Large J limit: ", Limit[combined[kn, qn]/J^8, {J -> Infinity},Assumptions->{sp>0,mA>0}]//FullSimplify];
 
-Print["n4 = ",KerstuCoeffStable[sp,mA,2,J,2]-2*KerstuCoeffStable[sp,mA,4,J,0]//FullSimplify];
+kn = 6;
+qn = 4;
+combined[k_Integer, q_Integer] := FullSimplify[directRes[k, q] - crossRes[k, q] ];
 
-(* Large J limit *)
-(* Print["Large J limit of n4 = ", Limit[(KerstuCoeffStable[sp,mA,2,J,2]-2*KerstuCoeffStable[sp,mA,4,J,0])/J^4, J -> Infinity]//FullSimplify]; *)
+Print["Combined Piece: ", combined[kn, qn] ];
+(* large J limit *)
 
-(* take the massless limit *)
-Limit[KerstuCoeffStable[sp,mA,2,J,2],mA->0,Direction->"FromAbove",Assumptions->{J\[Element]Integers,sp>0,sp\[Element]Reals}]
-Limit[KerstuCoeffStable[sp,mA,4,J,0],mA->0]
-
-(* KerstuCoeffStable[sp,mA,2,J,2]-2*KerstuCoeffStable[sp,mA,4,J,0] *)
-(8-8 J-7 J^2+2 J^3+J^4)/(2 sp^5)-2*2/sp^5//FullSimplify
+Print["Large J limit: ", Limit[combined[kn, qn]/J^8, {J -> Infinity},Assumptions->{sp>0,mA>0}]//FullSimplify];
 
 
+kn = 7;
+qn = 2;
+combined[k_Integer, q_Integer] := FullSimplify[directRes[k, q] - crossRes[k, q] ];
 
-81/4 Sqrt[sp/(-4 mA^2+sp)] (-((8 (22 mA^4-39 mA^2 sp+18 sp^2) LegendreP[J,1+(8 mA^2)/(3 (-4 mA^2+sp))])/((2 mA^2-sp) (8 mA^4-18 mA^2 sp+9 sp^2)^3))+(-2 Sqrt[(8 mA^4-3 mA^2 sp)/(-4 mA^2+sp)^2] (40 mA^4-46 mA^2 sp+9 sp^2) LegendreP[J,1,1+(8 mA^2)/(3 (-4 mA^2+sp))]+(-8 mA^4+18 mA^2 sp-9 sp^2) LegendreP[J,2,1+(8 mA^2)/(3 (-4 mA^2+sp))])/((16 mA^4-14 mA^2 sp+3 sp^2) (8 mA^5-18 mA^3 sp+9 mA sp^2)^2))//FullSimplify
+Print["Combined Piece X", kn, qn, " : ", combined[kn, qn] ];
+(* large J limit *)
+
+Print["Large J limit: ", Limit[combined[kn, qn]/J^10, {J -> Infinity},Assumptions->{sp>0,mA>0}]//FullSimplify];
+
+kn = 7;
+qn = 3;
+combined[k_Integer, q_Integer] := FullSimplify[directRes[k, q] - crossRes[k, q] ];
+
+Print["Combined Piece X", kn, qn, " : ", combined[kn, qn] ];
+(* large J limit *)
+
+Print["Large J limit: ", Limit[combined[kn, qn]/J^10, {J -> Infinity},Assumptions->{sp>0,mA>0}]//FullSimplify];
+
+kn = 7;
+qn = 4;
+combined[k_Integer, q_Integer] := FullSimplify[directRes[k, q] - crossRes[k, q] ];
+
+Print["Combined Piece X", kn, qn, " : ", combined[kn, qn] ];
+(* large J limit *)
+
+Print["Large J limit: ", Limit[combined[kn, qn]/J^10, {J -> Infinity},Assumptions->{sp>0,mA>0}]//FullSimplify];
+
+kn = 7;
+qn = 5;
+combined[k_Integer, q_Integer] := FullSimplify[directRes[k, q] - crossRes[k, q] ];
+
+Print["Combined Piece X", kn, qn, " : ", combined[kn, qn] ];
+(* large J limit *)
+
+Print["Large J limit: ", Limit[combined[kn, qn]/J^10, {J -> Infinity},Assumptions->{sp>0,mA>0}]//FullSimplify];
+
+
+kn = 8;
+qn = 2;
+combined[k_Integer, q_Integer] := FullSimplify[directRes[k, q] - crossRes[k, q] ];
+
+Print["Combined Piece X", kn, qn, " : ", combined[kn, qn] ];
+(* large J limit *)
+
+Print["Large J limit: ", Limit[combined[kn, qn]/J^12, {J -> Infinity},Assumptions->{sp>0,mA>0}]//FullSimplify];
+
+kn = 8;
+qn = 3;
+combined[k_Integer, q_Integer] := FullSimplify[directRes[k, q] - crossRes[k, q] ];
+
+Print["Combined Piece X", kn, qn, " : ", combined[kn, qn] ];
+(* large J limit *)
+
+Print["Large J limit: ", Limit[combined[kn, qn]/J^12, {J -> Infinity},Assumptions->{sp>0,mA>0}]//FullSimplify];
+
+kn = 8;
+qn = 4;
+combined[k_Integer, q_Integer] := FullSimplify[directRes[k, q] - crossRes[k, q] ];
+
+Print["Combined Piece X", kn, qn, " : ", combined[kn, qn] ];
+(* large J limit *)
+
+Print["Large J limit: ", Limit[combined[kn, qn]/J^12, {J -> Infinity},Assumptions->{sp>0,mA>0}]//FullSimplify];
+
+kn = 8;
+qn = 5;
+combined[k_Integer, q_Integer] := FullSimplify[directRes[k, q] - crossRes[k, q] ];
+
+Print["Combined Piece X", kn, qn, " : ", combined[kn, qn] ];
+(* large J limit *)
+
+Print["Large J limit: ", Limit[combined[kn, qn]/J^12, {J -> Infinity},Assumptions->{sp>0,mA>0}]//FullSimplify];
+
+kn = 8;
+qn = 6;
+combined[k_Integer, q_Integer] := FullSimplify[directRes[k, q] - crossRes[k, q] ];
+
+Print["Combined Piece X", kn, qn, " : ", combined[kn, qn] ];
+(* large J limit *)
+
+Print["Large J limit: ", Limit[combined[kn, qn]/J^12, {J -> Infinity},Assumptions->{sp>0,mA>0}]//FullSimplify];
+
+
+Limit[-((Sqrt[sp/(-4 mA^2+sp)] (-32 mA^6+24 mA^4 sp-6 mA^2 sp^2+sp^3))/(259200 sp^3 (-4 mA^2+sp)^9)),mA->0]
