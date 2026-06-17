@@ -92,7 +92,7 @@ X62AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
 ];
 
 X72AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
-  sp = N[mgap/(1-x). 600];
+  sp = N[mgap/(1-x), 600];
   mA = N[maVal, 600];
   result = (J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-(((-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J) (-47+J+J^2))/(-4 mA^2+sp)^8)+((-1+J) (2+J) (((-4+J) (-3+J) (-2+J) (3+J) (4+J) (5+J) sp^3)/(4 mA^2-sp)^5+3600/(-4 mA^2+sp)^2))/sp^6))/14400;
   Re[N[result, 600] ]
