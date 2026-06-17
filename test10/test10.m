@@ -153,7 +153,7 @@ X62BBBB[x_?NumericQ, J_?IntegerQ] := Module[{sp},
 X72AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
   sp = N[1/(1-x), 600];
   mA = N[maVal, 600];
-  result = (J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-(((-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J) (-47+J+J^2))/(-4 mA^2+sp)^8)+((-1+J) (2+J) (((-4+J) (-3+J) (-2+J) (3+J) (4+J) (5+J) sp^3)/(4 mA^2-sp)^5+3600/(-4 mA^2+sp)^2))/sp^6))/14400;
+  result = -(J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-(((-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J) (-47+J+J^2))/(-4 mA^2+sp)^8)+((-1+J) (2+J) (((-4+J) (-3+J) (-2+J) (3+J) (4+J) (5+J) sp^3)/(4 mA^2-sp)^5+3600/(-4 mA^2+sp)^2))/sp^6))/14400;
   Re[N[result, 600] ]
 ];
 
@@ -167,7 +167,7 @@ X73AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
 X82AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
   sp = N[1/(1-x), 600];
   mA = N[maVal, 600];
-  result = ((J (1+J) Sqrt[sp/(-4 mA^2+sp)] (((-8+J) (-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J) (9+J) (-38+J+J^2))/(4 mA^2-sp)^9+((-1+J) (2+J) (-(((-5+J) (-4+J) (-3+J) (-2+J) (3+J) (4+J) (5+J) (6+J) sp^4)/(-4 mA^2+sp)^6)+129600/(-4 mA^2+sp)^2))/sp^7))/518400);
+  result = -((J (1+J) Sqrt[sp/(-4 mA^2+sp)] (((-8+J) (-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J) (9+J) (-38+J+J^2))/(4 mA^2-sp)^9+((-1+J) (2+J) (-(((-5+J) (-4+J) (-3+J) (-2+J) (3+J) (4+J) (5+J) (6+J) sp^4)/(-4 mA^2+sp)^6)+129600/(-4 mA^2+sp)^2))/sp^7))/518400);
   Re[N[result, 600] ]
 ];
 
@@ -182,12 +182,12 @@ X83AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
 LargeJAAAA[x_?NumericQ] := Module[{sp, mA},
   sp = N[1/(1-x), 600];
   mA = N[maVal, 600];    (* FIX 1: exact rational *)
-  N[ -(Sqrt[sp/(-4 mA^2+sp)] (-32 mA^6+24 mA^4 sp-6 mA^2 sp^2+sp^3))/(259200 sp^3 (-4 mA^2+sp)^9), 600]
+  N[ (Sqrt[sp/(-4 mA^2+sp)] (-32 mA^6+24 mA^4 sp-6 mA^2 sp^2+sp^3))/(259200 sp^3 (-4 mA^2+sp)^9), 600]
 ];
 
 LargeJBBBB[x_?NumericQ] := Module[{sp},
   sp = N[1/(1-x), 600];
-  N[-(1/(259200 sp^9)), 600]
+  N[(1/(259200 sp^9)), 600]
 ];
 
 Jmax = 60;
