@@ -495,8 +495,8 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
   pols2State = Table[
     NumericalPositiveMatrixWithPrefactor[<|
       "prefactor"      -> DampedRational[1, {}, 1/E, x],
-      "samplePoints"   -> {SetPrecision[0, prec]},
-      "sampleScalings" -> {SetPrecision[1, prec]},
+      "samplePoints"   -> {samplePoints[[i]]},
+      "sampleScalings" -> {sampleScalings[[i]]},
       "polynomials" -> {
 	      { 
           Table[{SetPrecision[f11ShftList[[k]], prec]}, {k, Length[f11ShftList]}],
@@ -514,11 +514,13 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
 			    Table[{SetPrecision[f33ShftList[[k]], prec]}, {k, Length[f33ShftList]}]
 	      }
       }
-    |>]
+    |>],
+    {i, 1}
   ];
 
   Print["  Regular blocks : ", Length[samplePoints] * Length[Jlist]];
   Print["  Extra blocks   : ", Length[polsExtra]];
+  Print["  Shift blocks   : ", Length[pols2State]];
   Print["  Total blocks   : ", Length[samplePoints] * Length[Jlist] + Length[polsExtra]];
 
   WritePmpJsonNumerical[
