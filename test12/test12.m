@@ -280,55 +280,55 @@ f23List = {
 f32List = f23List;
 
 f11ShftList = {
-  g2shft[[1, 1]],
-  n4AAAAshft[[1, 1]],
-  X52AAAAshft[[1, 1]],
-  X62AAAAshft[[1, 1]],
-  X72AAAAshft[[1, 1]]
+  M0shft[[1, 1]],
+  M41shft[[1, 1]],
+  M51shft[[1, 1]],
+  M61shft[[1, 1]],
+  M71shft[[1, 1]]
 };
 
 f22ShftList = {
-  g2shft[[2, 2]],
-  n4AAAAshft[[2, 2]],
-  X52AAAAshft[[2, 2]],
-  X62AAAAshft[[2, 2]],
-  X72AAAAshft[[2, 2]]
+  M0shft[[2, 2]],
+  M41shft[[2, 2]],
+  M51shft[[2, 2]],
+  M61shft[[2, 2]],
+  M71shft[[2, 2]]
 };
 
 f33ShftList = {
-  g2shft[[3, 3]],
-  n4AAAAshft[[3, 3]],
-  X52AAAAshft[[3, 3]],
-  X62AAAAshft[[3, 3]],
-  X72AAAAshft[[3, 3]]
+  M0shft[[3, 3]],
+  M41shft[[3, 3]],
+  M51shft[[3, 3]],
+  M61shft[[3, 3]],
+  M71shft[[3, 3]]
 };
 
 f12ShftList = {
-  g2shft[[1, 2]],
-  n4AAAAshft[[1, 2]],
-  X52AAAAshft[[1, 2]],
-  X62AAAAshft[[1, 2]],
-  X72AAAAshft[[1, 2]]
+  M0shft[[1, 2]],
+  M41shft[[1, 2]],
+  M51shft[[1, 2]],
+  M61shft[[1, 2]],
+  M71shft[[1, 2]]
 }
 
 f21ShftList = f12ShftList;
 
 f13ShftList = {
-  g2shft[[1, 3]],
-  n4AAAAshft[[1, 3]],
-  X52AAAAshft[[1, 3]],
-  X62AAAAshft[[1, 3]],
-  X72AAAAshft[[1, 3]]
+  M0shft[[1, 3]],
+  M41shft[[1, 3]],
+  M51shft[[1, 3]],
+  M61shft[[1, 3]],
+  M71shft[[1, 3]]
 }
 
 f31ShftList = f13ShftList;
 
 f23ShftList = {
-  g2shft[[2, 3]],
-  n4AAAAshft[[2, 3]],
-  X52AAAAshft[[2, 3]],
-  X62AAAAshft[[2, 3]],
-  X72AAAAshft[[2, 3]]
+  M0shft[[2, 3]],
+  M41shft[[2, 3]],
+  M51shft[[2, 3]],
+  M61shft[[2, 3]],
+  M71shft[[2, 3]]
 }
 
 f32ShftList = f23ShftList;
@@ -495,8 +495,8 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
   pols2State = Table[
     NumericalPositiveMatrixWithPrefactor[<|
       "prefactor"      -> DampedRational[1, {}, 1/E, x],
-      "samplePoints"   -> {samplePoints[[0]]},
-      "sampleScalings" -> {sampleScalings[[0]]},
+      "samplePoints"   -> {SetPrecision[0, prec]},
+      "sampleScalings" -> {SetPrecision[1, prec]},
       "polynomials" -> {
 	      { 
           Table[{SetPrecision[f11ShftList[[k]], prec]}, {k, Length[f11ShftList]}],
