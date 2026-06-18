@@ -520,7 +520,7 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
           Table[{SetPrecision[f31ShftList[[k]][samplePoints[[i]]], prec]}, {k, Length[f31ShftList]}]
 	      },
 	      {
-	        Table[{SetPrecision[f12ShftList[[k]][samplePoints[[i]]] prec]}, {k, Length[f12ShftList]}],
+	        Table[{SetPrecision[f12ShftList[[k]][samplePoints[[i]]], prec]}, {k, Length[f12ShftList]}],
 			    Table[{SetPrecision[f22ShftList[[k]][samplePoints[[i]]], prec]}, {k, Length[f22ShftList]}],
 			    Table[{SetPrecision[f32ShftList[[k]][samplePoints[[i]]], prec]}, {k, Length[f32ShftList]}]
 	      },
@@ -541,7 +541,7 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
 
   WritePmpJsonNumerical[
     jsonFile,
-    SDP[obj, norm, Join[Flatten[polsRegular], polsExtra, plos2State]],
+    SDP[obj, norm, Join[Flatten[polsRegular], polsExtra, pols2State]],
     prec
   ];
   Print["Wrote PMP JSON to ", jsonFile]
