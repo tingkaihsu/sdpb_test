@@ -53,28 +53,65 @@ WritePmpJsonNumerical[
 
 (* problem-specific *)
 (* let the mass be 4mA^2 < M^2 = 1 where M = 1 is the first isolated massive pole, and the mass gap is Mgap = 2 *)
+Print["Mass scales are normalized by the first isolated state..."]
+Print[""]
+J1 = 2;
+Print["J1 = ", J1];
+m2 = N[6/5, 600];
+Print["m2^2 = ", m2];
+J2 = 4;
+Print["J2 = ", J2];
 
 mgap = N[3, 600];
 
-maVal = N[1/100, 600];
+maVal = N[1/1000, 600];
 
-Print["mass gap  = ", mgap];
+Print["m_gap^2  = ", mgap];
 Print["mA = ", maVal];
 
 (* forward limit: use our own convention *)
+g2shft = With[
+  {sp = SetPrecision[m2, 600], mA = SetPrecision[maVal, 600]},
+  N[(2 Sqrt[sp/(-4 mA^2 + sp)])/(sp - 2 mA^2)^3, 600]
+];
+
+n4AAAAshft = With[
+  {sp = SetPrecision[m2, 600], mA = SetPrecision[maVal, 600], J = J2},
+  Re[N[-((243 Sqrt[-(sp/(4 mA^2-sp))] (-6 I (8 mA^3-3 mA sp) LegendreP[J,1,1+(8 mA^2)/(3 (-4 mA^2+sp))]+Sqrt[-8 mA^2+3 sp] (-4 mA^2+3 sp) LegendreP[J,2,1+(8 mA^2)/(3 (-4 mA^2+sp))]))/(4 mA^2 (4 mA^2-3 sp)^4 (-8 mA^2+3 sp)^(3/2))), 600] ]
+];
+
+X52AAAAshft = With[
+  {sp = SetPrecision[m2, 600], mA = SetPrecision[maVal, 600], J = J2},
+  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
+];
+
+X62AAAAshft = With[
+  {sp = SetPrecision[m2, 600], mA = SetPrecision[maVal, 600], J = J2},
+  N[((J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-((-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J))-((-1+J) (2+J) (-4 mA^2+sp)^3 (-2304 mA^4+1152 mA^2 sp+(-72+J (1+J) (-18+J+J^2)) sp^2))/sp^5))/(576 (-4 mA^2+sp)^7)), 600]
+];
+
+X72AAAAshft = With[
+  {sp = SetPrecision[m2, 600], mA = SetPrecision[maVal, 600], J = J2},
+  N[((J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-(((-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J) (-47+J+J^2))/(-4 mA^2+sp)^8)+((-1+J) (2+J) (((-4+J) (-3+J) (-2+J) (3+J) (4+J) (5+J) sp^3)/(4 mA^2-sp)^5+3600/(-4 mA^2+sp)^2))/sp^6))/14400), 600]
+];
+
+LargeJAAAAshft = With[
+  {sp = SetPrecision[m2, 600], mA = SetPrecision[maVal, 600], J = J2},
+  N[-(((1/(-4 mA^2+sp))^(17/2) (-32 mA^6+24 mA^4 sp-6 mA^2 sp^2+sp^3))/(7200 sp^(5/2))), 600]
+];
 
 (* g2 > 0 *)
 g2[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   sp = N[mgap/(1-x), 600];
   mA = N[maVal, 600];    (* FIX 1: exact rational *)
-  N[((2 Sqrt[sp/(-4 mA^2+sp)])/(sp - 2 mA^2)^3), 600]
+  N[((2 Sqrt[sp/(-4 mA^2+sp)])/(sp - 2 mA^2)^3), 600]+g2shft
 ];
 
 n4AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
   sp   = N[mgap/(1 - x), 600];
   mA   = N[maVal, 600];
   result = -((243 Sqrt[-(sp/(4 mA^2-sp))] (-6 I (8 mA^3-3 mA sp) LegendreP[J,1,1+(8 mA^2)/(3 (-4 mA^2+sp))]+Sqrt[-8 mA^2+3 sp] (-4 mA^2+3 sp) LegendreP[J,2,1+(8 mA^2)/(3 (-4 mA^2+sp))]))/(4 mA^2 (4 mA^2-3 sp)^4 (-8 mA^2+3 sp)^(3/2)));
-  Re[N[result, 600] ]
+  Re[N[result, 600] ]+n4AAAAshft
 ];
 
 
@@ -82,13 +119,13 @@ X52AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
   sp = N[mgap/(1-x), 600];
   mA = N[maVal, 600];
   result = (J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6);
-  Re[N[result, 600] ]
+  Re[N[result, 600] ]+X52AAAAshft
 ];
 
 X62AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   sp = N[mgap/(1-x), 600];
   mA = N[maVal, 600];    (* FIX 1: exact rational *)
-  N[((J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-((-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J))-((-1+J) (2+J) (-4 mA^2+sp)^3 (-2304 mA^4+1152 mA^2 sp+(-72+J (1+J) (-18+J+J^2)) sp^2))/sp^5))/(576 (-4 mA^2+sp)^7)), 600]
+  N[((J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-((-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J))-((-1+J) (2+J) (-4 mA^2+sp)^3 (-2304 mA^4+1152 mA^2 sp+(-72+J (1+J) (-18+J+J^2)) sp^2))/sp^5))/(576 (-4 mA^2+sp)^7)), 600]+X62AAAAshft
 ];
 
 
@@ -96,14 +133,14 @@ X72AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
   sp = N[mgap/(1-x), 600];
   mA = N[maVal, 600];
   result = ((J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-(((-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J) (-47+J+J^2))/(-4 mA^2+sp)^8)+((-1+J) (2+J) (((-4+J) (-3+J) (-2+J) (3+J) (4+J) (5+J) sp^3)/(4 mA^2-sp)^5+3600/(-4 mA^2+sp)^2))/sp^6))/14400);
-  Re[N[result, 600] ]
+  Re[N[result, 600] ]+X72AAAAshft
 ]
   
 (* k = 7, q = 2 *)
 LargeJAAAA[x_?NumericQ] := Module[{sp, mA},
   sp = N[mgap/(1-x), 600];
   mA = N[maVal, 600];    (* FIX 1: exact rational *)
-  N[-(((1/(-4 mA^2+sp))^(17/2) (-32 mA^6+24 mA^4 sp-6 mA^2 sp^2+sp^3))/(7200 sp^(5/2))), 600]
+  N[-(((1/(-4 mA^2+sp))^(17/2) (-32 mA^6+24 mA^4 sp-6 mA^2 sp^2+sp^3))/(7200 sp^(5/2))), 600]+LargeJAAAAshft
 ];
 
 Jmax = 60;
@@ -289,10 +326,7 @@ x72AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   N[(J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-(((-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J) (-47+J+J^2))/(-4 mA^2+sp)^8)+((-1+J) (2+J) (((-4+J) (-3+J) (-2+J) (3+J) (4+J) (5+J) sp^3)/(4 mA^2-sp)^5+3600/(-4 mA^2+sp)^2))/sp^6))/14400, 600]
 ];
 
-Jphi = 2;
-Print["Jphi = ", Jphi];
-
-norm = {G2[0, Jphi], N4AAAA[0, Jphi], x52AAAA[0, Jphi], x62AAAA[0, Jphi], x72AAAA[0, Jphi]};
+norm = {G2[0, J1], N4AAAA[0, J1], x52AAAA[0, J1], x62AAAA[0, J1], x72AAAA[0, J1]};
 
 obj  = {-1, 0, 0, 0, 0};
 
