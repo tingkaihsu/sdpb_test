@@ -70,33 +70,49 @@ Print["m_gap^2  = ", mgap];
 Print["mA = ", maVal];
 
 (* forward limit: use our own convention *)
-g2shft = With[
-  {sp = SetPrecision[m2, 600], mA = SetPrecision[maVal, 600]},
+g2shft[x_?NumericQ] := Module[
+  {sp, mA},
+  sp = SetPrecision[m2, 600];
+  mA = SetPrecision[maVal, 600];
   N[(2 Sqrt[sp/(-4 mA^2 + sp)])/(sp - 2 mA^2)^3, 600]
 ];
 
-n4AAAAshft = With[
-  {sp = SetPrecision[m2, 600], mA = SetPrecision[maVal, 600], J = J2},
+n4AAAAshft[x_?NumericQ] := Module[
+  {sp, mA, J},
+  sp = SetPrecision[m2, 600];
+  mA = SetPrecision[maVal, 600];
+  J  = J2;
   Re[N[-((243 Sqrt[-(sp/(4 mA^2-sp))] (-6 I (8 mA^3-3 mA sp) LegendreP[J,1,1+(8 mA^2)/(3 (-4 mA^2+sp))]+Sqrt[-8 mA^2+3 sp] (-4 mA^2+3 sp) LegendreP[J,2,1+(8 mA^2)/(3 (-4 mA^2+sp))]))/(4 mA^2 (4 mA^2-3 sp)^4 (-8 mA^2+3 sp)^(3/2))), 600] ]
 ];
 
-X52AAAAshft = With[
-  {sp = SetPrecision[m2, 600], mA = SetPrecision[maVal, 600], J = J2},
+X52AAAAshft[x_?NumericQ] := Module[
+  {sp, mA, J},
+  sp = SetPrecision[m2, 600];
+  mA = SetPrecision[maVal, 600];
+  J  = J2;
   N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
 ];
 
-X62AAAAshft = With[
-  {sp = SetPrecision[m2, 600], mA = SetPrecision[maVal, 600], J = J2},
+X62AAAAshft[x_?NumericQ] := Module[
+  {sp, mA, J},
+  sp = SetPrecision[m2, 600];
+  mA = SetPrecision[maVal, 600];
+  J  = J2;
   N[((J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-((-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J))-((-1+J) (2+J) (-4 mA^2+sp)^3 (-2304 mA^4+1152 mA^2 sp+(-72+J (1+J) (-18+J+J^2)) sp^2))/sp^5))/(576 (-4 mA^2+sp)^7)), 600]
 ];
 
-X72AAAAshft = With[
-  {sp = SetPrecision[m2, 600], mA = SetPrecision[maVal, 600], J = J2},
+X72AAAAshft[x_?NumericQ] := Module[
+  {sp, mA, J},
+  sp = SetPrecision[m2, 600];
+  mA = SetPrecision[maVal, 600];
+  J  = J2;
   N[((J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-(((-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J) (-47+J+J^2))/(-4 mA^2+sp)^8)+((-1+J) (2+J) (((-4+J) (-3+J) (-2+J) (3+J) (4+J) (5+J) sp^3)/(4 mA^2-sp)^5+3600/(-4 mA^2+sp)^2))/sp^6))/14400), 600]
 ];
 
-LargeJAAAAshft = With[
-  {sp = SetPrecision[m2, 600], mA = SetPrecision[maVal, 600], J = J2},
+LargeJAAAAshft[x_?NumericQ] := Module[
+  {sp, mA},
+  sp = SetPrecision[m2, 600];
+  mA = SetPrecision[maVal, 600];
   N[-(((1/(-4 mA^2+sp))^(17/2) (-32 mA^6+24 mA^4 sp-6 mA^2 sp^2+sp^3))/(7200 sp^(5/2))), 600]
 ];
 
@@ -153,8 +169,8 @@ M0[x_?NumericQ,J_?IntegerQ] := {
 	{0,0,0}
 };
 
-M0shft = {
-  {g2shft, 0, 0},
+M0shft[x_?NumericQ] := {
+  {g2shft[x], 0, 0},
   {0, 0, 0},
   {0, 0, 0}
 }
@@ -165,8 +181,8 @@ M41[x_?NumericQ, J_?IntegerQ] := {
   {0, 0, 0}
 }
 
-M41shft = {
-  {n4AAAAshft, 0, 0},
+M41shft[x_?NumericQ] := {
+  {n4AAAAshft[x], 0, 0},
   {0, 0, 0},
   {0, 0, 0}
 }
@@ -177,8 +193,8 @@ M51[x_?NumericQ, J_?IntegerQ] := {
   {0, 0, 0}
 }
 
-M51shft = {
-  {X52AAAAshft, 0, 0},
+M51shft[x_?NumericQ] := {
+  {X52AAAAshft[x], 0, 0},
   {0, 0, 0},
   {0, 0, 0}
 }
@@ -189,8 +205,8 @@ M61[x_?NumericQ, J_?IntegerQ] := {
   {0, 0, 0}
 }
 
-M61shft = {
-  {X62AAAAshft, 0, 0},
+M61shft[x_?NumericQ] := {
+  {X62AAAAshft[x], 0, 0},
   {0, 0, 0},
   {0, 0, 0}
 }
@@ -201,8 +217,8 @@ M71[x_?NumericQ, J_?IntegerQ] := {
   {0, 0, 0}
 }
 
-M71shft = {
-  {X72AAAAshft, 0, 0},
+M71shft[x_?NumericQ] := {
+  {X72AAAAshft[x], 0, 0},
   {0, 0, 0},
   {0, 0, 0}
 }
@@ -213,8 +229,8 @@ M7j1[x_?NumericQ] :={
 	{0,0,0}
 }
 
-M7j1shft = {
-  {LargeJAAAAshft, 0, 0},
+M7j1shft[x_?NumericQ] := {
+  {LargeJAAAAshft[x], 0, 0},
   {0, 0, 0},
   {0, 0, 0}
 }
@@ -280,55 +296,55 @@ f23List = {
 f32List = f23List;
 
 f11ShftList = {
-  M0shft[[1, 1]],
-  M41shft[[1, 1]],
-  M51shft[[1, 1]],
-  M61shft[[1, 1]],
-  M71shft[[1, 1]]
+  Function[{x}, M0shft[x][[1, 1]]],
+  Function[{x}, M41shft[x][[1, 1]]],
+  Function[{x}, M51shft[x][[1, 1]]],
+  Function[{x}, M61shft[x][[1, 1]]],
+  Function[{x}, M71shft[x][[1, 1]]]
 };
 
 f22ShftList = {
-  M0shft[[2, 2]],
-  M41shft[[2, 2]],
-  M51shft[[2, 2]],
-  M61shft[[2, 2]],
-  M71shft[[2, 2]]
+  Function[{x}, M0shft[x][[2, 2]]],
+  Function[{x}, M41shft[x][[2, 2]]],
+  Function[{x}, M51shft[x][[2, 2]]],
+  Function[{x}, M61shft[x][[2, 2]]],
+  Function[{x}, M71shft[x][[2, 2]]]
 };
 
 f33ShftList = {
-  M0shft[[3, 3]],
-  M41shft[[3, 3]],
-  M51shft[[3, 3]],
-  M61shft[[3, 3]],
-  M71shft[[3, 3]]
+  Function[{x}, M0shft[x][[3, 3]]],
+  Function[{x}, M41shft[x][[3, 3]]],
+  Function[{x}, M51shft[x][[3, 3]]],
+  Function[{x}, M61shft[x][[3, 3]]],
+  Function[{x}, M71shft[x][[3, 3]]]
 };
 
 f12ShftList = {
-  M0shft[[1, 2]],
-  M41shft[[1, 2]],
-  M51shft[[1, 2]],
-  M61shft[[1, 2]],
-  M71shft[[1, 2]]
+  Function[{x}, M0shft[x][[1, 2]]],
+  Function[{x}, M41shft[x][[1, 2]]],
+  Function[{x}, M51shft[x][[1, 2]]],
+  Function[{x}, M61shft[x][[1, 2]]],
+  Function[{x}, M71shft[x][[1, 2]]]
 }
 
 f21ShftList = f12ShftList;
 
 f13ShftList = {
-  M0shft[[1, 3]],
-  M41shft[[1, 3]],
-  M51shft[[1, 3]],
-  M61shft[[1, 3]],
-  M71shft[[1, 3]]
+  Function[{x}, M0shft[x][[1, 3]]],
+  Function[{x}, M41shft[x][[1, 3]]],
+  Function[{x}, M51shft[x][[1, 3]]],
+  Function[{x}, M61shft[x][[1, 3]]],
+  Function[{x}, M71shft[x][[1, 3]]]
 }
 
 f31ShftList = f13ShftList;
 
 f23ShftList = {
-  M0shft[[2, 3]],
-  M41shft[[2, 3]],
-  M51shft[[2, 3]],
-  M61shft[[2, 3]],
-  M71shft[[2, 3]]
+  Function[{x}, M0shft[x][[2, 3]]],
+  Function[{x}, M41shft[x][[2, 3]]],
+  Function[{x}, M51shft[x][[2, 3]]],
+  Function[{x}, M61shft[x][[2, 3]]],
+  Function[{x}, M71shft[x][[2, 3]]]
 }
 
 f32ShftList = f23ShftList;
@@ -499,19 +515,19 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
       "sampleScalings" -> {sampleScalings[[i]]},
       "polynomials" -> {
 	      { 
-          Table[{SetPrecision[f11ShftList[[k]], prec]}, {k, Length[f11ShftList]}],
-          Table[{SetPrecision[f21ShftList[[k]], prec]}, {k, Length[f21ShftList]}],
-          Table[{SetPrecision[f31ShftList[[k]], prec]}, {k, Length[f31ShftList]}]
+          Table[{SetPrecision[f11ShftList[[k]][samplePoints[[i]]], prec]}, {k, Length[f11ShftList]}],
+          Table[{SetPrecision[f21ShftList[[k]][samplePoints[[i]]], prec]}, {k, Length[f21ShftList]}],
+          Table[{SetPrecision[f31ShftList[[k]][samplePoints[[i]]], prec]}, {k, Length[f31ShftList]}]
 	      },
 	      {
-	        Table[{SetPrecision[f12ShftList[[k]], prec]}, {k, Length[f12ShftList]}],
-			    Table[{SetPrecision[f22ShftList[[k]], prec]}, {k, Length[f22ShftList]}],
-			    Table[{SetPrecision[f32ShftList[[k]], prec]}, {k, Length[f32ShftList]}]
+	        Table[{SetPrecision[f12ShftList[[k]][samplePoints[[i]]] prec]}, {k, Length[f12ShftList]}],
+			    Table[{SetPrecision[f22ShftList[[k]][samplePoints[[i]]], prec]}, {k, Length[f22ShftList]}],
+			    Table[{SetPrecision[f32ShftList[[k]][samplePoints[[i]]], prec]}, {k, Length[f32ShftList]}]
 	      },
 	      {
-	        Table[{SetPrecision[f13ShftList[[k]], prec]}, {k, Length[f13ShftList]}],
-			    Table[{SetPrecision[f23ShftList[[k]], prec]}, {k, Length[f23ShftList]}],
-			    Table[{SetPrecision[f33ShftList[[k]], prec]}, {k, Length[f33ShftList]}]
+	        Table[{SetPrecision[f13ShftList[[k]][samplePoints[[i]]], prec]}, {k, Length[f13ShftList]}],
+			    Table[{SetPrecision[f23ShftList[[k]][samplePoints[[i]]], prec]}, {k, Length[f23ShftList]}],
+			    Table[{SetPrecision[f33ShftList[[k]][samplePoints[[i]]], prec]}, {k, Length[f33ShftList]}]
 	      }
       }
     |>],
