@@ -451,8 +451,10 @@ x72AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   N[(J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-(((-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J) (-47+J+J^2))/(-4 mA^2+sp)^8)+((-1+J) (2+J) (((-4+J) (-3+J) (-2+J) (3+J) (4+J) (5+J) sp^3)/(4 mA^2-sp)^5+3600/(-4 mA^2+sp)^2))/sp^6))/14400, 600]
 ];
 
-m1 = SetPrecision[1/3, 600];
+m1 = SetPrecision[5/9, 600];
 
+Print["m1^2 = ", 1/(1-m1)];
+Print[""]
 norm = {G2[m1, J1], N4AAAA[m1, J1], x52AAAA[m1, J1], x62AAAA[m1, J1], x72AAAA[m1, J1]};
 
 obj  = {-1, 0, 0, 0, 0};
