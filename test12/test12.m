@@ -67,20 +67,17 @@ WritePmpJsonNumerical[
      (B) Raise m2:   m2^2 >= (m1^2+M^2)/2 = 3/2   (e.g., m2 = 3/2 or 8/5)
      (C) Use a 3+ state ansatz including ell=6 at m3^2=7/5, etc.
 *)
-Print["Mass scales are normalized by the first isolated state..."]
+Print["Mass scales are normalized by the second isolated state..."]
 Print[""]
-J1 = 4;
-Print["J1 = ", J1];
-
-m2 = N[1, 600];
-Print["m2^2 = ", m2];
-J2 = 2;
-Print["J2 = ", J2];
-
+J1 = 2;
+(*  *)
+m1 = N[1/2, 600];
 mgap = N[2, 600];
-
 maVal = N[1/1000, 600];
 
+
+Print["J1 = ", J1];
+Print["m1^2 = ", m1];
 Print["m_gap^2  = ", mgap];
 Print["mA = ", maVal];
 
@@ -451,9 +448,8 @@ x72AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   N[(J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-(((-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J) (-47+J+J^2))/(-4 mA^2+sp)^8)+((-1+J) (2+J) (((-4+J) (-3+J) (-2+J) (3+J) (4+J) (5+J) sp^3)/(4 mA^2-sp)^5+3600/(-4 mA^2+sp)^2))/sp^6))/14400, 600]
 ];
 
-m1 = SetPrecision[1/3, 600];
-
-norm = {G2[m1, J1], N4AAAA[m1, J1], x52AAAA[m1, J1], x62AAAA[m1, J1], x72AAAA[m1, J1]};
+J2 = 4;
+norm = {G2[0, J2], N4AAAA[0, J2], x52AAAA[0, J2], x62AAAA[0, J2], x72AAAA[0, J2]};
 
 obj  = {-1, 0, 0, 0, 0};
 
