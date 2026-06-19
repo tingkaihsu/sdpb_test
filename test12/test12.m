@@ -89,6 +89,13 @@ g2shft[x_?NumericQ] := Module[
   N[(2 Sqrt[sp/(-4 mA^2 + sp)])/(sp - 2 mA^2)^3, 600]
 ];
 
+g0shft[x_?NumericQ] := Module[
+  {sp, mA},
+  sp = SetPrecision[m1, 600];
+  mA = SetPrecision[maVal, 600];
+  N[((2 Sqrt[sp/(-4 mA^2+sp)])/(-2 mA^2+sp)), 600]
+];
+
 n4AAAAshft[x_?NumericQ] := Module[
   {sp, mA, J},
   sp = SetPrecision[m1, 600];
@@ -127,6 +134,13 @@ g2[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   mA = N[maVal, 600];    (* FIX 1: exact rational *)
   N[((2 Sqrt[sp/(-4 mA^2+sp)])/(sp - 2 mA^2)^3), 600]
 ];
+
+g0[x_?NumericQ, J_?IntegerQ] := Module[
+  {sp, mA},
+  sp = N[mgap/(1-x), 600];
+  mA = N[maVal, 600];
+  N[((2 Sqrt[sp/(-4 mA^2+sp)])/(-2 mA^2+sp)), 600]
+]
 
 n4AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
   sp   = N[mgap/(1 - x), 600];
@@ -172,13 +186,13 @@ Jlist = Range[0, Jmax, 2];
 
 (* 2g[2,2] - g[2,1] *)
 M0[x_?NumericQ,J_?IntegerQ] := {
-	{g2[x, J],0,0},
+	{g0[x, J],0,0},
 	{0,0,0},
 	{0,0,0}
 };
 
 M0shft[x_?NumericQ] := {
-  {g2shft[x], 0, 0},
+  {g0shft[x], 0, 0},
   {0, 0, 0},
   {0, 0, 0}
 }
@@ -421,6 +435,13 @@ G2[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   N[((2 Sqrt[sp/(-4 mA^2+sp)])/(sp - 2 mA^2)^3), 600]
 ];
 
+G0[x_?NumericQ, J_?IntegerQ] := Module[
+  {sp, mA},
+  sp = N[1/(1-x), 600];
+  mA = N[maVal, 600];
+  N[((2 Sqrt[sp/(-4 mA^2+sp)])/(-2 mA^2+sp)), 600]
+]
+
 N4AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
   sp   = N[1/(1 - x), 600];
   mA   = N[maVal, 600];
@@ -449,7 +470,7 @@ x72AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
 ];
 
 J2 = 2;
-norm = {G2[0, J2], N4AAAA[0, J2], x52AAAA[0, J2], x62AAAA[0, J2], x72AAAA[0, J2]};
+norm = {G0[0, J2], N4AAAA[0, J2], x52AAAA[0, J2], x62AAAA[0, J2], x72AAAA[0, J2]};
 
 obj  = {-1, 0, 0, 0, 0};
 

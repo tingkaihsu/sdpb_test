@@ -21,6 +21,7 @@ validTriples[Nmax_Integer] :=
    {{0,3},{1,2},{2,1},{3,0}}              -- 4 new pairs *)
 
 (* ---------- amplitude ansatz ---------- *)
+gAAA = 0;
 
 (* stu symmetric expansion point *)
 stuMlow[s_, t_, mA_, Nmax_Integer] :=
@@ -76,6 +77,16 @@ Print["at fwd expansion points and leading order sum rule= ", SeriesCoefficient[
 G2p = SeriesCoefficient[fwdKersum[sp, t, mA, s3, s4, 2, J], {t, 0, 0}]//FullSimplify;
 
 Print["Above under the massless limit = ", Limit[G2p, mA->0]//FullSimplify]
+
+Print[""]
+
+Print["at fwd expansion points and leading order= ", -SeriesCoefficient[Residue[fwdKer[sp, s, t, mA, s3, s4, 0, 8], {sp, Infinity}], {t, 0, 0}]//FullSimplify]
+
+Print["at fwd expansion points and leading order sum rule= ", SeriesCoefficient[fwdKersum[sp, t, mA, s3, s4, 0, J], {t, 0, 0}]//FullSimplify]
+
+G0p = SeriesCoefficient[fwdKersum[sp, t, mA, s3, s4, 0, J], {t, 0, 0}]//FullSimplify;
+
+Print["Above under the massless limit = ", Limit[G0p, mA->0]//FullSimplify]
 
 Print[""]
 
