@@ -53,6 +53,20 @@ WritePmpJsonNumerical[
 
 (* problem-specific *)
 (* let the mass be 4mA^2 < M^2 = 1 where M = 1 is the first isolated massive pole, and the mass gap is Mgap = 2 *)
+(* 
+   LINEAR TRAJECTORY CONDITION (from arXiv:2510.07991, Eq. 13):
+   For a 2-state system with (m1^2, J1) and (m2^2, J2=J1+2), the next state on
+   a linear trajectory sits at m3^2 = 2*m2^2 - m1^2. For this to be in the UV
+   (above M^2), we need: m1^2 <= 2*m2^2 - M^2.
+   
+   Current: m1^2=1, m2^2=6/5, M^2=2  =>  m1,c^2 = 2(6/5)-2 = 2/5 = 0.4
+   Since m1^2=1 > 0.4, the linear trajectory CANNOT form with these parameters.
+   
+   To find a linear trajectory, choose one of:
+     (A) Lower mgap: M^2 <= 2*m2^2 - m1^2 = 7/5  (e.g., mgap = 7/5 or 13/10)
+     (B) Raise m2:   m2^2 >= (m1^2+M^2)/2 = 3/2   (e.g., m2 = 3/2 or 8/5)
+     (C) Use a 3+ state ansatz including ell=6 at m3^2=7/5, etc.
+*)
 Print["Mass scales are normalized by the first isolated state..."]
 Print[""]
 J1 = 2;
@@ -154,7 +168,10 @@ LargeJAAAA[x_?NumericQ] := Module[{sp, mA},
 ];
 
 Jmax = 66;
-Jlist = Range[6, Jmax, 2];
+(* FIX: Jlist must start from J=0 to include all even spins in UV continuum.
+   The paper imposes positivity over all even spins l in [0, 500].
+   Missing J=0,2,4 removes nontrivial positivity conditions. *)
+Jlist = Range[0, Jmax, 2];
 
 (* 2g[2,2] - g[2,1] *)
 M0[x_?NumericQ,J_?IntegerQ] := {
@@ -222,6 +239,13 @@ M7j1[x_?NumericQ] :={
 	{0,0,0},
 	{0,0,0}
 }
+
+(* FIX: Define LargeJAAAAshft — was referenced in M7j1shft but never defined *)
+LargeJAAAAshft[x_?NumericQ] := Module[{sp, mA},
+  sp = SetPrecision[m2, 600];
+  mA = SetPrecision[maVal, 600];
+  N[-(((1/(-4 mA^2+sp))^(17/2) (-32 mA^6+24 mA^4 sp-6 mA^2 sp^2+sp^3))/(7200 sp^(5/2))), 600]
+];
 
 M7j1shft[x_?NumericQ] := {
   {LargeJAAAAshft[x], 0, 0},
@@ -416,8 +440,9 @@ x52AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
 
 x62AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   sp = N[1/(1-x), 600];
-  mA = N[maVal, 600];    (* FIX 1: exact rational *)
-  N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
+  mA = N[maVal, 600];
+  (* FIX: was copy-pasted from x52AAAA; now uses correct X62 formula *)
+  N[((J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-((-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J))-((-1+J) (2+J) (-4 mA^2+sp)^3 (-2304 mA^4+1152 mA^2 sp+(-72+J (1+J) (-18+J+J^2)) sp^2))/sp^5))/(576 (-4 mA^2+sp)^7)), 600]
 ];
 
 x72AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
