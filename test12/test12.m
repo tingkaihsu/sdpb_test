@@ -57,12 +57,13 @@ Print["Mass scales are normalized by the first isolated state..."]
 Print[""]
 J1 = 2;
 Print["J1 = ", J1];
+
 m2 = N[6/5, 600];
 Print["m2^2 = ", m2];
 J2 = 4;
 Print["J2 = ", J2];
 
-mgap = N[3, 600];
+mgap = N[2, 600];
 
 maVal = N[1/1000, 600];
 
@@ -109,13 +110,6 @@ X72AAAAshft[x_?NumericQ] := Module[
   N[((J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-(((-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J) (-47+J+J^2))/(-4 mA^2+sp)^8)+((-1+J) (2+J) (((-4+J) (-3+J) (-2+J) (3+J) (4+J) (5+J) sp^3)/(4 mA^2-sp)^5+3600/(-4 mA^2+sp)^2))/sp^6))/14400), 600]
 ];
 
-LargeJAAAAshft[x_?NumericQ] := Module[
-  {sp, mA},
-  sp = SetPrecision[m2, 600];
-  mA = SetPrecision[maVal, 600];
-  N[-(((1/(-4 mA^2+sp))^(17/2) (-32 mA^6+24 mA^4 sp-6 mA^2 sp^2+sp^3))/(7200 sp^(5/2))), 600]
-];
-
 (* g2 > 0 *)
 g2[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   sp = N[mgap/(1-x), 600];
@@ -159,8 +153,8 @@ LargeJAAAA[x_?NumericQ] := Module[{sp, mA},
   N[-(((1/(-4 mA^2+sp))^(17/2) (-32 mA^6+24 mA^4 sp-6 mA^2 sp^2+sp^3))/(7200 sp^(5/2))), 600]
 ];
 
-Jmax = 60;
-Jlist = Range[0, Jmax, 2];
+Jmax = 66;
+Jlist = Range[6, Jmax, 2];
 
 (* 2g[2,2] - g[2,1] *)
 M0[x_?NumericQ,J_?IntegerQ] := {
