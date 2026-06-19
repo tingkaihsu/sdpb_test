@@ -69,7 +69,7 @@ WritePmpJsonNumerical[
 *)
 Print["Mass scales are normalized by the second isolated state..."]
 Print[""]
-J1 = 2;
+J1 = 0;
 (*  *)
 m1 = N[1/2, 600];
 mgap = N[2, 600];
@@ -164,7 +164,7 @@ LargeJAAAA[x_?NumericQ] := Module[{sp, mA},
   N[-(((1/(-4 mA^2+sp))^(17/2) (-32 mA^6+24 mA^4 sp-6 mA^2 sp^2+sp^3))/(7200 sp^(5/2))), 600]
 ];
 
-Jmax = 66;
+Jmax = 60;
 (* FIX: Jlist must start from J=0 to include all even spins in UV continuum.
    The paper imposes positivity over all even spins l in [0, 500].
    Missing J=0,2,4 removes nontrivial positivity conditions. *)
@@ -448,7 +448,7 @@ x72AAAA[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA},
   N[(J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-(((-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J) (-47+J+J^2))/(-4 mA^2+sp)^8)+((-1+J) (2+J) (((-4+J) (-3+J) (-2+J) (3+J) (4+J) (5+J) sp^3)/(4 mA^2-sp)^5+3600/(-4 mA^2+sp)^2))/sp^6))/14400, 600]
 ];
 
-J2 = 4;
+J2 = 2;
 norm = {G2[0, J2], N4AAAA[0, J2], x52AAAA[0, J2], x62AAAA[0, J2], x72AAAA[0, J2]};
 
 obj  = {-1, 0, 0, 0, 0};
