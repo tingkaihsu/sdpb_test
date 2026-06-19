@@ -84,40 +84,40 @@ Print["mA = ", maVal];
 (* forward limit: use our own convention *)
 g2shft[x_?NumericQ] := Module[
   {sp, mA},
-  sp = SetPrecision[m2, 600];
+  sp = SetPrecision[m1, 600];
   mA = SetPrecision[maVal, 600];
   N[(2 Sqrt[sp/(-4 mA^2 + sp)])/(sp - 2 mA^2)^3, 600]
 ];
 
 n4AAAAshft[x_?NumericQ] := Module[
   {sp, mA, J},
-  sp = SetPrecision[m2, 600];
+  sp = SetPrecision[m1, 600];
   mA = SetPrecision[maVal, 600];
-  J  = J2;
+  J  = J1;
   Re[N[-((243 Sqrt[-(sp/(4 mA^2-sp))] (-6 I (8 mA^3-3 mA sp) LegendreP[J,1,1+(8 mA^2)/(3 (-4 mA^2+sp))]+Sqrt[-8 mA^2+3 sp] (-4 mA^2+3 sp) LegendreP[J,2,1+(8 mA^2)/(3 (-4 mA^2+sp))]))/(4 mA^2 (4 mA^2-3 sp)^4 (-8 mA^2+3 sp)^(3/2))), 600] ]
 ];
 
 X52AAAAshft[x_?NumericQ] := Module[
   {sp, mA, J},
-  sp = SetPrecision[m2, 600];
+  sp = SetPrecision[m1, 600];
   mA = SetPrecision[maVal, 600];
-  J  = J2;
+  J  = J1;
   N[(J*(1 + J)*Sqrt[sp/(-4*mA^2 + sp)]*(-((-4 + J)*(-2 + J)*(3 + J)*(5 + J)) - ((-1 + J)*(2 + J)*(-4*mA^2 + sp)^3*(36*mA^2 + (-15 + J + J^2)*sp))/sp^4))/(36*(-4*mA^2 + sp)^6), 600]
 ];
 
 X62AAAAshft[x_?NumericQ] := Module[
   {sp, mA, J},
-  sp = SetPrecision[m2, 600];
+  sp = SetPrecision[m1, 600];
   mA = SetPrecision[maVal, 600];
-  J  = J2;
+  J  = J1;
   N[((J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-((-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J))-((-1+J) (2+J) (-4 mA^2+sp)^3 (-2304 mA^4+1152 mA^2 sp+(-72+J (1+J) (-18+J+J^2)) sp^2))/sp^5))/(576 (-4 mA^2+sp)^7)), 600]
 ];
 
 X72AAAAshft[x_?NumericQ] := Module[
   {sp, mA, J},
-  sp = SetPrecision[m2, 600];
+  sp = SetPrecision[m1, 600];
   mA = SetPrecision[maVal, 600];
-  J  = J2;
+  J  = J1;
   N[((J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-(((-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J) (-47+J+J^2))/(-4 mA^2+sp)^8)+((-1+J) (2+J) (((-4+J) (-3+J) (-2+J) (3+J) (4+J) (5+J) sp^3)/(4 mA^2-sp)^5+3600/(-4 mA^2+sp)^2))/sp^6))/14400), 600]
 ];
 
