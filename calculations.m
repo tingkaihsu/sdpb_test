@@ -21,12 +21,9 @@ validTriples[Nmax_Integer] :=
    {{0,3},{1,2},{2,1},{3,0}}              -- 4 new pairs *)
 
 (* ---------- amplitude ansatz ---------- *)
-gAAA = 0;
 
 (* stu symmetric expansion point *)
 stuMlow[s_, t_, mA_, Nmax_Integer] :=
-    gAAB^2 * (1/s + 1/t + 1/u) +
-    gAAA^2 * (1/(s-mA^2) + 1/(t-mA^2) + 1/(u-mA^2)) +
     Total[
         Function[{ab},
             del[ab[[1]], ab[[2]]]
@@ -37,8 +34,6 @@ stuMlow[s_, t_, mA_, Nmax_Integer] :=
 
 (* Forward amplitude ansatz note that we choose s <-> u expansion points *)
 fwdMlow[s_, t_, mA_, Nmax_Integer] :=
-    gAAB^2 * (1/s + 1/t + 1/u) +
-    gAAA^2 * (1/(s-mA^2) + 1/(t-mA^2) + 1/(u-mA^2)) +
     Total[
         Function[{ab},
             del[ab[[1]], ab[[2]]]
