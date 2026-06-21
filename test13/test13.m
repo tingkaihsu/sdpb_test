@@ -123,134 +123,164 @@ mgap = N[165/100, 600];
 (* heavy-sum *)
 g0[x_?NumericQ, J_?IntegerQ] := Module[{s},
   s = N[mgap/(1-x), 600];
-  N[(2 Pochhammer[8, J])/(s J!), 600]
+  N[2/s, 600]
 ];
 
-n2[x_?NumericQ, J_?IntegerQ] := Module[{s},
+x10[x_?NumericQ, J_?IntegerQ] := Module[{s},
   s = N[mgap/(1-x), 600];
-  N[-((-2+7 J+J^2)/(2 s^3)), 600]
+  N[(2-J (7+J))/(2 s^2), 600]
 ];
 
-n4[x_?NumericQ, J_?IntegerQ] :=  Module[{s},
+x20[x_?NumericQ, J_?IntegerQ] :=  Module[{s},
   s = N[mgap/(1-x), 600];
-  N[(J (8 + J) (-51 + 2 J (8 + J)) Pochhammer[8, J])/(396 s^5 J!), 600]
+  N[(20-J (7+J) (-13+J (7+J)))/(20 s^3), 600]
 ];
 
-x52[x_?NumericQ, J_?IntegerQ] := Module[{s},
+x30[x_?NumericQ, J_?IntegerQ] := Module[{s},
   s = N[mgap/(1-x), 600];
-  N[(J (1+J) (150+J (1+J) (-43+2 J (1+J))))/(36 s^6), 600]
+  N[-(((-12+J (7+J)) (30+J (7+J) (-23+J (7+J))))/(360 s^4)), 600]
 ];
 
-x62[x_?NumericQ, J_?IntegerQ] := Module[{s},
+x40[x_?NumericQ, J_?IntegerQ] := Module[{s},
   s = N[mgap/(1-x), 600];
-  N[((-3+J) J (1+J) (4+J) (204+J (1+J) (-32+J+J^2)))/(288 s^7), 600]
+  N[1/s^5-1/(10080 s^5)(-2+J) J (7+J) (9+J) (604+J (7+J) (-52+J (7+J))), 600]
 ];
 
-x72[x_?NumericQ, J_?IntegerQ] := Module[{s},
+x41[x_?NumericQ, J_?IntegerQ] := Module[{s},
   s = N[mgap/(1-x), 600];
-  N[1/(14400 s^8)J (1+J) (246960+J (1+J) (-67908+J (1+J) (4916+J (1+J) (-155+2 J (1+J))))), 600]
+  N[-((J (7+J) (-23+J (7+J)))/(20 s^5)), 600]
+];
+
+x42[x_?NumericQ, J_?IntegerQ] := Module[{s},
+  s = N[mgap/(1-x), 600];
+  N[(J (7+J) (-23+J (7+J)))/(160 s^5), 600]
+];
+
+x50[x_?NumericQ, J_?IntegerQ] := Module[{s},
+  s = N[mgap/(1-x), 600];
+  N[1/s^6-1/(403200 s^6)(-4+J) (-2+J) J (7+J) (9+J) (11+J) (-34+J (5+J)) (-20+J (9+J)), 600]
 ];
 
 largeJ[x_?NumericQ] := Module[{s},
   s = N[mgap/(1-x), 600];
-  N[1/(7200 s^8), 600]
+  N[-(1/(403200 s^6)), 600]
 ];
 
-g0shft[x_?NumericQ] := Module[{s, J},
+(* first state resonance *)
+
+g0fst[x_?NumericQ ] := Module[{s},
+  s = N[m1, 600];
+  N[2/s, 600]
+];
+
+x10fst[x_?NumericQ ] := Module[{s, J},
   s = N[m1, 600];
   J = J1;
-  N[(2 Pochhammer[8, J])/(s J!), 600]
+  N[(2-J (7+J))/(2 s^2), 600]
 ];
 
-n2shft[x_?NumericQ] := Module[{s, J},
+x20fst[x_?NumericQ ] := Module[{s, J},
   s = N[m1, 600];
   J = J1;
-  N[-((-2+7 J+J^2)/(2 s^3)), 600]
+  N[(20-J (7+J) (-13+J (7+J)))/(20 s^3), 600]
 ];
 
-n4shft[x_?NumericQ] :=  Module[{s, J},
+x30fst[x_?NumericQ ] := Module[{s, J},
   s = N[m1, 600];
   J = J1;
-  N[(J (8 + J) (-51 + 2 J (8 + J)) Pochhammer[8, J])/(396 s^5 J!), 600]
+  N[-(((-12+J (7+J)) (30+J (7+J) (-23+J (7+J))))/(360 s^4)), 600]
 ];
 
-x52shft[x_?NumericQ] := Module[{s, J},
+x40fst[x_?NumericQ ] := Module[{s, J},
   s = N[m1, 600];
   J = J1;
-  N[(J (1+J) (150+J (1+J) (-43+2 J (1+J))))/(36 s^6), 600]
+  N[1/s^5-1/(10080 s^5)(-2+J) J (7+J) (9+J) (604+J (7+J) (-52+J (7+J))), 600]
 ];
 
-x62shft[x_?NumericQ] := Module[{s, J},
+x41fst[x_?NumericQ ] := Module[{s, J},
   s = N[m1, 600];
   J = J1;
-  N[((-3+J) J (1+J) (4+J) (204+J (1+J) (-32+J+J^2)))/(288 s^7), 600]
+  N[-((J (7+J) (-23+J (7+J)))/(20 s^5)), 600]
 ];
 
-x72shft[x_?NumericQ] := Module[{s, J},
+x42fst[x_?NumericQ ] := Module[{s, J},
   s = N[m1, 600];
   J = J1;
-  N[1/(14400 s^8)J (1+J) (246960+J (1+J) (-67908+J (1+J) (4916+J (1+J) (-155+2 J (1+J))))), 600]
+  N[(J (7+J) (-23+J (7+J)))/(160 s^5), 600]
 ];
 
-G0 = Module[{s, J},
+x50fst[x_?NumericQ ] := Module[{s, J},
+  s = N[m1, 600];
+  J = J1;
+  N[1/s^6-1/(403200 s^6)(-4+J) (-2+J) J (7+J) (9+J) (11+J) (-34+J (5+J)) (-20+J (9+J)), 600]
+];
+
+(* norm vector (snd state resonance) *)
+
+g0snd = Module[{s},
+  s = N[1, 600];
+  N[2/s, 600]
+];
+
+x10snd = Module[{s, J},
   s = N[1, 600];
   J = J2;
-  N[(2 Pochhammer[8, J])/(s J!), 600]
+  N[(2-J (7+J))/(2 s^2), 600]
 ];
 
-N2 = Module[{s, J},
+x20snd = Module[{s, J},
   s = N[1, 600];
   J = J2;
-  N[-((-2+7 J+J^2)/(2 s^3)), 600]
+  N[(20-J (7+J) (-13+J (7+J)))/(20 s^3), 600]
 ];
 
-N4 = Module[{s, J},
+x30snd = Module[{s, J},
   s = N[1, 600];
   J = J2;
-  N[(J (8 + J) (-51 + 2 J (8 + J)) Pochhammer[8, J])/(396 s^5 J!), 600]
+  N[-(((-12+J (7+J)) (30+J (7+J) (-23+J (7+J))))/(360 s^4)), 600]
 ];
 
-X52 = Module[{s, J},
+x40snd = Module[{s, J},
   s = N[1, 600];
   J = J2;
-  N[(J (1+J) (150+J (1+J) (-43+2 J (1+J))))/(36 s^6), 600]
+  N[1/s^5-1/(10080 s^5)(-2+J) J (7+J) (9+J) (604+J (7+J) (-52+J (7+J))), 600]
 ];
 
-X62 = Module[{s, J},
+x41snd = Module[{s, J},
   s = N[1, 600];
   J = J2;
-  N[((-3+J) J (1+J) (4+J) (204+J (1+J) (-32+J+J^2)))/(288 s^7), 600]
+  N[-((J (7+J) (-23+J (7+J)))/(20 s^5)), 600]
 ];
 
-X72 = Module[{s, J},
+x42snd = Module[{s, J},
   s = N[1, 600];
   J = J2;
-  N[1/(14400 s^8)J (1+J) (246960+J (1+J) (-67908+J (1+J) (4916+J (1+J) (-155+2 J (1+J))))), 600]
+  N[(J (7+J) (-23+J (7+J)))/(160 s^5), 600]
 ];
 
-largeJ1[x_?NumericQ] := Module[
-  {s},
-  s = N[mgap/(1-x), 600];
-  N[225/(32 s^5), 600]
+x50snd = Module[{s, J},
+  s = N[1, 600];
+  J = J2;
+  N[1/s^6-1/(403200 s^6)(-4+J) (-2+J) J (7+J) (9+J) (11+J) (-34+J (5+J)) (-20+J (9+J)), 600]
 ];
 
 (* fList = {g0, n2, n4, x52, x62, x72};   (* one entry per component of y; must match Length[norm] *)
 jList = {0&, 0&, 0&, 0&, 0&, largeJ};
 ResList = {g0shft, n2shft, n4shft, x52shft, x62shft, x72shft}; *)
 
-fList = {g0, n2, n4};
-jList = {0&, 0&, largeJ1};
-ResList = {g0shft, n2shft, n4shft};
+fList = {g0, x10, x20, x30, x40, x41, x42, x50};
+jList = {0&, 0&, 0&, 0&, 0&, 0&, 0&, largeJ};
+ResList = {g0fst, x10fst, x20fst, x30fst, x40fst, x41fst, x42fst, x50fst};
 
 (* norm = {G0, N2, N4, X52, X62, X72}; *)
-norm = {G0, N2, N4};
+norm = {g0snd, x10snd, x20snd, x30snd, x40snd, x41snd, x42snd, x50snd};
 
 Jmax  = 60;
 Jlist = Range[0, Jmax, 2];   (* J = 0, 2, 4, …, 40 — exact discrete constraints *)
 
 (* obj  = {-1, 0, 0, 0, 0, 0};   objective: maximise -y1 = minimise y1 *)
 
-obj = {-1, 0, 0};
+obj = {-1, 0, 0, 0, 0, 0, 0, 0};
 
 (* ================================================================
    END OF PROBLEM-SPECIFIC SECTION
