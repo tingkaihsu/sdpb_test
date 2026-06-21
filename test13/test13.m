@@ -128,7 +128,7 @@ g0[x_?NumericQ, J_?IntegerQ] := Module[{s},
 
 n2[x_?NumericQ, J_?IntegerQ] := Module[{s},
   s = N[mgap/(1-x), 600];
-  N[((-99 + 2 J (8 + J) (-29 + 2 J (8 + J))) Pochhammer[8, J])/(198 s^3 J!), 600]
+  N[-((-2+7 J+J^2)/(2 s^3)), 600]
 ];
 
 n4[x_?NumericQ, J_?IntegerQ] :=  Module[{s},
@@ -165,7 +165,7 @@ g0shft[x_?NumericQ] := Module[{s, J},
 n2shft[x_?NumericQ] := Module[{s, J},
   s = N[m1, 600];
   J = J1;
-  N[((-99 + 2 J (8 + J) (-29 + 2 J (8 + J))) Pochhammer[8, J])/(198 s^3 J!), 600]
+  N[-((-2+7 J+J^2)/(2 s^3)), 600]
 ];
 
 n4shft[x_?NumericQ] :=  Module[{s, J},
@@ -201,7 +201,7 @@ G0 = Module[{s, J},
 N2 = Module[{s, J},
   s = N[1, 600];
   J = J2;
-  N[-(-2+7*J+J^2)/(2*s^3), 600]
+  N[-((-2+7 J+J^2)/(2 s^3)), 600]
 ];
 
 N4 = Module[{s, J},
