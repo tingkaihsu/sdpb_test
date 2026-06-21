@@ -120,7 +120,7 @@ J1 = 0;
 J2 = 2;
 mgap = N[165/100, 600];
 
-
+(* heavy-sum *)
 g0[x_?NumericQ, J_?IntegerQ] := Module[{s},
   s = N[mgap/(1-x), 600];
   N[2/s, 600]
