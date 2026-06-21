@@ -123,17 +123,17 @@ mgap = N[165/100, 600];
 (* heavy-sum *)
 g0[x_?NumericQ, J_?IntegerQ] := Module[{s},
   s = N[mgap/(1-x), 600];
-  N[2/s, 600]
+  N[(2 Pochhammer[8, J])/(s J!), 600]
 ];
 
 n2[x_?NumericQ, J_?IntegerQ] := Module[{s},
   s = N[mgap/(1-x), 600];
-  N[(-2+J (1+J) (-4+J+J^2))/(2 s^3), 600]
+  N[((-99 + 2 J (8 + J) (-29 + 2 J (8 + J))) Pochhammer[8, J])/(198 s^3 J!), 600]
 ];
 
 n4[x_?NumericQ, J_?IntegerQ] :=  Module[{s},
   s = N[mgap/(1-x), 600];
-  N[(J (1+J) (-8+J+J^2))/(2 s^5), 600]
+  N[(J (8 + J) (-51 + 2 J (8 + J)) Pochhammer[8, J])/(396 s^5 J!), 600]
 ];
 
 x52[x_?NumericQ, J_?IntegerQ] := Module[{s},
@@ -156,24 +156,22 @@ largeJ[x_?NumericQ] := Module[{s},
   N[1/(7200 s^8), 600]
 ];
 
-fList = {g0, n2, n4, x52, x62, x72};   (* one entry per component of y; must match Length[norm] *)
-jList = {0&, 0&, 0&, 0&, 0&, largeJ};
-
-g0shft[x_?NumericQ] := Module[{s},
+g0shft[x_?NumericQ] := Module[{s, J},
   s = N[m1, 600];
-  N[2/s, 600]
+  J = J1;
+  N[(2 Pochhammer[8, J])/(s J!), 600]
 ];
 
 n2shft[x_?NumericQ] := Module[{s, J},
   s = N[m1, 600];
   J = J1;
-  N[(-2+J (1+J) (-4+J+J^2))/(2 s^3), 600]
+  N[((-99 + 2 J (8 + J) (-29 + 2 J (8 + J))) Pochhammer[8, J])/(198 s^3 J!), 600]
 ];
 
 n4shft[x_?NumericQ] :=  Module[{s, J},
   s = N[m1, 600];
   J = J1;
-  N[(J (1+J) (-8+J+J^2))/(2 s^5), 600]
+  N[(J (8 + J) (-51 + 2 J (8 + J)) Pochhammer[8, J])/(396 s^5 J!), 600]
 ];
 
 x52shft[x_?NumericQ] := Module[{s, J},
@@ -194,23 +192,22 @@ x72shft[x_?NumericQ] := Module[{s, J},
   N[1/(14400 s^8)J (1+J) (246960+J (1+J) (-67908+J (1+J) (4916+J (1+J) (-155+2 J (1+J))))), 600]
 ];
 
-ResList = {g0shft, n2shft, n4shft, x52shft, x62shft, x72shft};
-
-G0 = Module[{s},
+G0 = Module[{s, J},
   s = N[1, 600];
-  N[2/s, 600]
+  J = J2;
+  N[(2 Pochhammer[8, J])/(s J!), 600]
 ];
 
 N2 = Module[{s, J},
   s = N[1, 600];
   J = J2;
-  N[(-2+J (1+J) (-4+J+J^2))/(2 s^3), 600]
+  N[((-99 + 2 J (8 + J) (-29 + 2 J (8 + J))) Pochhammer[8, J])/(198 s^3 J!), 600]
 ];
 
 N4 = Module[{s, J},
   s = N[1, 600];
   J = J2;
-  N[(J (1+J) (-8+J+J^2))/(2 s^5), 600]
+  N[(J (8 + J) (-51 + 2 J (8 + J)) Pochhammer[8, J])/(396 s^5 J!), 600]
 ];
 
 X52 = Module[{s, J},
@@ -231,12 +228,29 @@ X72 = Module[{s, J},
   N[1/(14400 s^8)J (1+J) (246960+J (1+J) (-67908+J (1+J) (4916+J (1+J) (-155+2 J (1+J))))), 600]
 ];
 
-norm = {G0, N2, N4, X52, X62, X72};
+largeJ1[x_?NumericQ] := Module[
+  {s},
+  s = N[mgap/(1-x), 600];
+  N[225/(32 s^5), 600]
+];
+
+(* fList = {g0, n2, n4, x52, x62, x72};   (* one entry per component of y; must match Length[norm] *)
+jList = {0&, 0&, 0&, 0&, 0&, largeJ};
+ResList = {g0shft, n2shft, n4shft, x52shft, x62shft, x72shft}; *)
+
+fList = {g0, n2, n4};
+jList = {0&, 0&, largeJ1};
+ResList = {g0shft, n2shft, n4shft};
+
+(* norm = {G0, N2, N4, X52, X62, X72}; *)
+norm = {G0, N2, N4};
 
 Jmax  = 60;
 Jlist = Range[0, Jmax, 2];   (* J = 0, 2, 4, …, 40 — exact discrete constraints *)
 
-obj  = {-1, 0, 0, 0, 0, 0};   (* objective: maximise -y1 = minimise y1 *)
+(* obj  = {-1, 0, 0, 0, 0, 0};   objective: maximise -y1 = minimise y1 *)
+
+obj = {-1, 0, 0};
 
 (* ================================================================
    END OF PROBLEM-SPECIFIC SECTION
