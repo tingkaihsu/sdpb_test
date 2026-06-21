@@ -118,7 +118,7 @@ WritePmpJsonNumerical[
 m1 = N[1/2, 600];
 J1 = 0;
 J2 = 2;
-mgap = N[165/100, 600];
+mgap = N[166/100, 600];
 
 (* heavy-sum *)
 g0[x_?NumericQ, J_?IntegerQ] := Module[{s},
@@ -149,11 +149,6 @@ x40[x_?NumericQ, J_?IntegerQ] := Module[{s},
 x41[x_?NumericQ, J_?IntegerQ] := Module[{s},
   s = N[mgap/(1-x), 600];
   N[-((J (7+J) (-23+J (7+J)))/(20 s^5)), 600]
-];
-
-x42[x_?NumericQ, J_?IntegerQ] := Module[{s},
-  s = N[mgap/(1-x), 600];
-  N[(J (7+J) (-23+J (7+J)))/(160 s^5), 600]
 ];
 
 x50[x_?NumericQ, J_?IntegerQ] := Module[{s},
@@ -203,12 +198,6 @@ x41fst[x_?NumericQ ] := Module[{s, J},
   N[-((J (7+J) (-23+J (7+J)))/(20 s^5)), 600]
 ];
 
-x42fst[x_?NumericQ ] := Module[{s, J},
-  s = N[m1, 600];
-  J = J1;
-  N[(J (7+J) (-23+J (7+J)))/(160 s^5), 600]
-];
-
 x50fst[x_?NumericQ ] := Module[{s, J},
   s = N[m1, 600];
   J = J1;
@@ -252,12 +241,6 @@ x41snd = Module[{s, J},
   N[-((J (7+J) (-23+J (7+J)))/(20 s^5)), 600]
 ];
 
-x42snd = Module[{s, J},
-  s = N[1, 600];
-  J = J2;
-  N[(J (7+J) (-23+J (7+J)))/(160 s^5), 600]
-];
-
 x50snd = Module[{s, J},
   s = N[1, 600];
   J = J2;
@@ -268,19 +251,19 @@ x50snd = Module[{s, J},
 jList = {0&, 0&, 0&, 0&, 0&, largeJ};
 ResList = {g0shft, n2shft, n4shft, x52shft, x62shft, x72shft}; *)
 
-fList = {g0, x10, x20, x30, x40, x41, x42, x50};
-jList = {0&, 0&, 0&, 0&, 0&, 0&, 0&, largeJ};
-ResList = {g0fst, x10fst, x20fst, x30fst, x40fst, x41fst, x42fst, x50fst};
+fList = {g0, x10, x20, x30, x40, x41, x50};
+jList = {0&, 0&, 0&, 0&, 0&, 0&, largeJ};
+ResList = {g0fst, x10fst, x20fst, x30fst, x40fst, x41fst, x50fst};
 
 (* norm = {G0, N2, N4, X52, X62, X72}; *)
-norm = {g0snd, x10snd, x20snd, x30snd, x40snd, x41snd, x42snd, x50snd};
+norm = {g0snd, x10snd, x20snd, x30snd, x40snd, x41snd, x50snd};
 
 Jmax  = 60;
 Jlist = Range[0, Jmax, 2];   (* J = 0, 2, 4, …, 40 — exact discrete constraints *)
 
 (* obj  = {-1, 0, 0, 0, 0, 0};   objective: maximise -y1 = minimise y1 *)
 
-obj = {-1, 0, 0, 0, 0, 0, 0, 0};
+obj = {-1, 0, 0, 0, 0, 0, 0};
 
 (* ================================================================
    END OF PROBLEM-SPECIFIC SECTION
