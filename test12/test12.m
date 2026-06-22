@@ -696,21 +696,21 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
       "samplePoints"   -> {samplePoints[[i]]},
       "sampleScalings" -> {sampleScalings[[i]]},
       "polynomials" -> {
-	      { 
-          Table[{SetPrecision[f11ShftList[[k]][samplePoints[[i]]], prec]}, {k, Length[f11ShftList]}],
-          Table[{SetPrecision[f21ShftList[[k]][samplePoints[[i]]], prec]}, {k, Length[f21ShftList]}],
-          Table[{SetPrecision[f31ShftList[[k]][samplePoints[[i]]], prec]}, {k, Length[f31ShftList]}]
-	      },
-	      {
-	        Table[{SetPrecision[f12ShftList[[k]][samplePoints[[i]]], prec]}, {k, Length[f12ShftList]}],
-			    Table[{SetPrecision[f22ShftList[[k]][samplePoints[[i]]], prec]}, {k, Length[f22ShftList]}],
-			    Table[{SetPrecision[f32ShftList[[k]][samplePoints[[i]]], prec]}, {k, Length[f32ShftList]}]
-	      },
-	      {
-	        Table[{SetPrecision[f13ShftList[[k]][samplePoints[[i]]], prec]}, {k, Length[f13ShftList]}],
-			    Table[{SetPrecision[f23ShftList[[k]][samplePoints[[i]]], prec]}, {k, Length[f23ShftList]}],
-			    Table[{SetPrecision[f33ShftList[[k]][samplePoints[[i]]], prec]}, {k, Length[f33ShftList]}]
-	      }
+        {
+          Table[{SetPrecision[f11FstList[[k]][samplePoints[[i]]], prec]}, {k, Length[f11FstList]}],
+          Table[{SetPrecision[f21FstList[[k]][samplePoints[[i]]], prec]}, {k, Length[f21FstList]}],
+          Table[{SetPrecision[f31FstList[[k]][samplePoints[[i]]], prec]}, {k, Length[f31FstList]}]
+        },
+        {
+          Table[{SetPrecision[f12FstList[[k]][samplePoints[[i]]], prec]}, {k, Length[f12FstList]}],
+          Table[{SetPrecision[f22FstList[[k]][samplePoints[[i]]], prec]}, {k, Length[f22FstList]}],
+          Table[{SetPrecision[f32FstList[[k]][samplePoints[[i]]], prec]}, {k, Length[f32FstList]}]
+        },
+        {
+          Table[{SetPrecision[f13FstList[[k]][samplePoints[[i]]], prec]}, {k, Length[f13FstList]}],
+          Table[{SetPrecision[f23FstList[[k]][samplePoints[[i]]], prec]}, {k, Length[f23FstList]}],
+          Table[{SetPrecision[f33FstList[[k]][samplePoints[[i]]], prec]}, {k, Length[f33FstList]}]
+        }
       }
     |>],
     {i, Length[samplePoints]}
