@@ -197,7 +197,7 @@ largeJ[x_?NumericQ] := Module[{sp, mA, result},
 ];
 
 fList = {g2, g3, x42, x52, x62, x72, x73, x82,    x83};
-jList = {0&, 0&, 0&,  0&,  0&,  0&,  0&,  largeJ, 0&};
+largeJList = {0&, 0&, 0&,  0&,  0&,  0&,  0&,  largeJ, 0&};
 
 
 Jmax  = 60;
@@ -280,8 +280,8 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:1000] := Module[
       "samplePoints"   -> {samplePoints[[i]]},
       "sampleScalings" -> {sampleScalings[[i]]},
       "polynomials" -> {{ Table[
-        {SetPrecision[jList[[k]][samplePoints[[i]]], prec]},
-        {k, Length[jList]}
+        {SetPrecision[largeJList[[k]][samplePoints[[i]]], prec]},
+        {k, Length[largeJList]}
       ] }}
     |>],
     {i, Length[samplePoints]}

@@ -269,7 +269,7 @@ largeJ[x_?NumericQ] := Module[{sp, mA, result},
 ];
 
 fList = {g2, g3, x42, x52, x62, x72, x73, x82,    x83};
-jList = {0&, 0&, 0&,  0&,  0&,  0&,  0&,  largeJ, 0&};
+largeJList = {0&, 0&, 0&,  0&,  0&,  0&,  0&,  largeJ, 0&};
 
 
 Jmax  = 60;
@@ -297,8 +297,8 @@ If[Length[yVec] != Length[fList],
 ];
 
 
-If[Length[extraTriplet] != Length[fList],
-  Print["ERROR: extraTriplet has ", Length[extraTriplet],
+If[Length[largeJList] != Length[fList],
+  Print["ERROR: largeJList has ", Length[largeJList],
         " entries but fList has ", Length[fList], ". They must match."];
   Quit[2]
 ];
@@ -310,7 +310,7 @@ If[Length[extraTriplet] != Length[fList],
 F[x_?NumericQ, J_?IntegerQ] := Sum[yVec[[k]] * fList[[k]][x, J], {k, Length[yVec]}];
 
 (* large J limit check *)
-X[x_?NumericQ] := Sum[yVec[[k]] * extraTriplet[[k]][x], {k, Length[yVec]}];
+X[x_?NumericQ] := Sum[yVec[[k]] * largeJList[[k]][x], {k, Length[yVec]}];
 
 (* Safety: clamp midpoints near known singularity at x -> 1 (sp = 1/(1-x))
    and provide a robust numeric evaluator that returns $Failed on
