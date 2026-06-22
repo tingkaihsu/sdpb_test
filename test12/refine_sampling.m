@@ -175,7 +175,7 @@ Print[""];
 Print["Mass scales are normalized by the first isolated state..."];
 Print[""];
 J1 = 2;
-m1 = N[1/2, 600];
+m1 = N[1/4, 600];
 mgap = N[2, 600];
 mAval = N[1/1000, 600];
 

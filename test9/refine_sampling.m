@@ -189,7 +189,7 @@ Print[""];
    ================================================================ *)
 (* problem-specific *)
 (* 4mA^2 < M^2 *)
-mAval = N[1/2, 600];
+mAval = N[1/10, 600];
 Print["mA = ", mAval];
 
 (* 2 delCoeff[0,2]-delCoeff[1,1] *)
@@ -276,7 +276,7 @@ Jmax  = 60;
 Jlist = Range[0, Jmax, 2];   (* J = 0, 2, 4, …, 60 — exact discrete constraints *)
 
 (* 1 for optimal lower bound, -1 for optimal upper bound *)
-norm = {0, 1, 0, 0, 0, 0, 0, 0, 0};
+norm = {0, -1, 0, 0, 0, 0, 0, 0, 0};
 obj = {-1, 0, 0, 0, 0, 0, 0, 0, 0};
 
 xLeft  = SetPrecision[0, 600];   (* physical domain left endpoint  — check includes [xLeft,  x_min] *)
