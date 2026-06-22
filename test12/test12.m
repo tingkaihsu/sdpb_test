@@ -545,7 +545,7 @@ Print["J2 = ", J2];
 
 (* norm, which is second state resonance *)
 (* 2 delCoeff[0,2]-delCoeff[1,1] *)
-g2norm[x_?NumericQ] := Module[{sp, mA, J, result},
+g2norm = Module[{sp, mA, J, result},
   sp = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -555,7 +555,7 @@ g2norm[x_?NumericQ] := Module[{sp, mA, J, result},
 
 (* number of null constraints = 30 *)
 (* n4 *)
-x42norm[x_?NumericQ] := Module[{sp, mA, J, result},
+x42norm = Module[{sp, mA, J, result},
   sp = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -563,7 +563,7 @@ x42norm[x_?NumericQ] := Module[{sp, mA, J, result},
   N[result, 600]
 ];
 
-x52norm[x_?NumericQ] := Module[{sp, mA, J, result},
+x52norm = Module[{sp, mA, J, result},
   sp = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -571,7 +571,7 @@ x52norm[x_?NumericQ] := Module[{sp, mA, J, result},
   N[result, 600]
 ];
 
-x62norm[x_?NumericQ] := Module[{sp, mA, J, result},
+x62norm = Module[{sp, mA, J, result},
   sp = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -579,7 +579,7 @@ x62norm[x_?NumericQ] := Module[{sp, mA, J, result},
   N[result, 600]
 ];
 
-x72norm[x_?NumericQ] := Module[{sp, mA, J, result},
+x72norm = Module[{sp, mA, J, result},
   sp = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -587,7 +587,7 @@ x72norm[x_?NumericQ] := Module[{sp, mA, J, result},
   N[result, 600]
 ];
 
-x73norm[x_?NumericQ] := Module[{sp, mA, J, result},
+x73norm = Module[{sp, mA, J, result},
   sp = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -595,7 +595,7 @@ x73norm[x_?NumericQ] := Module[{sp, mA, J, result},
   N[result, 600]
 ];
 
-x82norm[x_?NumericQ] := Module[{sp, mA, J, result},
+x82norm = Module[{sp, mA, J, result},
   sp = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -603,7 +603,7 @@ x82norm[x_?NumericQ] := Module[{sp, mA, J, result},
   N[result, 600]
 ];
 
-x83norm[x_?NumericQ] := Module[{sp, mA, J, result},
+x83norm = Module[{sp, mA, J, result},
   sp = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -736,7 +736,6 @@ Module[{myArgs, spFile, jsonFile, prec},
     prec     = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 600];
 
     Print["=== test12.m ==="];
-    Print["  sample_points = ", spFile];
     Print["  output_json   = ", jsonFile];
     Print["  precision     = ", prec];
 
