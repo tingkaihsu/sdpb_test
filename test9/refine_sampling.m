@@ -639,8 +639,6 @@ Print["Wrote ", Length[dedupPoints], " sampling points to: ", outFile,
       "  (", Length[samplePoints], " original + ",
       Length[dedupPoints] - Length[samplePoints], " new refined)"];
 Print[""];
-Print["New sampling points:"];
-Print["  ", dedupPoints];
 Print[""];
 Print["STATUS: Refinement needed. Re-run pmp2sdp + sdpb with updated ", outFile, "."];
 
