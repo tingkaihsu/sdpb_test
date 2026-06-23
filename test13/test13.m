@@ -115,7 +115,7 @@ WritePmpJsonNumerical[
      So extraTriplet = {0, 0, 2}.
      This enforces  0·y1 + 0·y2 + 2·y3 ≥ 0  in the J→∞ limit.
    ================================================================ *)
-m1 = N[1/2, 600];
+m1 = N[1/4, 600];
 J1 = 0;
 J2 = 2;
 mgap = N[166/100, 600];
