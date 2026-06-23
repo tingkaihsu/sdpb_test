@@ -265,7 +265,7 @@ x60[x_?NumericQ, J_?IntegerQ] := Module[{s, mA, result},
   N[result, 600]
 ];
 
-(* x61[x_?NumericQ, J_?IntegerQ] := Module[{s, mA, result},
+x61[x_?NumericQ, J_?IntegerQ] := Module[{s, mA, result},
   s = N[mgap/(1-x), 600];
   mA = N[mAval, 600];
   result = 1/(100800 s^6 (-4 mA^2+s)^7)J (7+J) (103219200 mA^12-154828800 mA^10 s+96768000 mA^8 s^2-32256000 mA^6 s^3-2 (-2833920+J (7+J) (-44976+J (7+J) (3388+J (7+J) (-100+J (7+J))))) mA^4 s^4+(1+J) (6+J) (-69120+J (7+J) (4024+J (7+J) (-106+J (7+J)))) mA^2 s^5-10 (-31032+J (7+J) (3024+(-7+J) J (7+J) (14+J))) s^6);
@@ -279,7 +279,7 @@ x70[x_?NumericQ, J_?IntegerQ] := Module[{s, mA, result},
   N[result, 600]
 ]
 
-x71[x_?NumericQ, J_?IntegerQ] := Module[{s, mA, result},
+(* x71[x_?NumericQ, J_?IntegerQ] := Module[{s, mA, result},
   s = N[mgap/(1-x), 600];
   mA = N[mAval, 600];
   result = 1/(10886400 s^7 (-4 mA^2+s)^8)J (7+J) (-44590694400 mA^14+78033715200 mA^12 s-58525286400 mA^10 s^2+24385536000 mA^8 s^3-6096384000 mA^6 s^4-4 (-240019200+J (7+J) (2888640+J (7+J) (-248256+J (7+J) (9388+J (7+J) (-160+J (7+J)))))) mA^4 s^5+2 (-49507200+J (7+J) (2888640+J (7+J) (-248256+J (7+J) (9388+J (7+J) (-160+J (7+J)))))) mA^2 s^6-27 (1578240+J (7+J) (-209056+J (7+J) (8988+J (7+J) (-160+J (7+J))))) s^7);
@@ -370,11 +370,11 @@ x110[x_?NumericQ, J_?IntegerQ] := Module[{s, mA, result},
   N[result, 600]
 ]; *)
 
-(* from x60 *)
+(* from x70 *)
 largeJ[x_?NumericQ] := Module[{s, mA},
   s = N[mgap/(1-x), 600];
   mA = N[mAval, 600];
-  result = (-2 mA^2+s)/(21772800 (4 mA^2-s)^7 s);
+  result = -((-2 mA^2+s)/(1524096000 s (-4 mA^2+s)^8));
   N[result, 600]
 ];
 
@@ -453,7 +453,7 @@ x60fst[x_?NumericQ] := Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-(* x61fst[x_?NumericQ] := Module[{s, mA, J, result},
+x61fst[x_?NumericQ] := Module[{s, mA, J, result},
   s = N[m1, 600];
   mA = N[mAval, 600];
   J = J1;
@@ -469,7 +469,7 @@ x70fst[x_?NumericQ] := Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x71fst[x_?NumericQ] := Module[{s, mA, J, result},
+(* x71fst[x_?NumericQ] := Module[{s, mA, J, result},
   s = N[m1, 600];
   mA = N[mAval, 600];
   J = J1;
@@ -647,7 +647,7 @@ x60snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-(* x61snd = Module[{s, mA, J, result},
+x61snd = Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -663,7 +663,7 @@ x70snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x71snd = Module[{s, mA, J, result},
+(* x71snd = Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
