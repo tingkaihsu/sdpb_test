@@ -7,6 +7,9 @@ DATA_DIR="/data"
 N_PMP_JSON="${DATA_DIR}/n_pmp.json"
 OUT_PREFIX="${DATA_DIR}/out"
 
+# 0) Run the PMP generator
+wolframscript -file test9.m spts.txt n_pmp.json
+
 # 1) Remove old checkpoint file
 docker run --rm \
   -v "${WORKDIR}:${DATA_DIR}" \

@@ -115,11 +115,11 @@ WritePmpJsonNumerical[
      So extraTriplet = {0, 0, 2}.
      This enforces  0·y1 + 0·y2 + 2·y3 ≥ 0  in the J→∞ limit.
    ================================================================ *)
-m1 = N[6/10, 600];
+m1 = N[1/2, 600];
 J1 = 0;
 J2 = 2;
 mgap = N[166/100, 600];
-mAval = N[1/0.001, 600];
+mAval = N[1/1000, 600];
 
 (* heavy-sum *)
 g0[x_?NumericQ, J_?IntegerQ] := Module[{s, mA, result},
@@ -483,8 +483,8 @@ Module[{myArgs, spFile, jsonFile, prec},
 
   If[Length[myArgs] >= 1,
     spFile   = myArgs[[1]];
-    jsonFile = If[Length[myArgs] >= 2, myArgs[[2]], "numeric_pmp.json"];
-    prec     = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 1000];
+    jsonFile = If[Length[myArgs] >= 2, myArgs[[2]], "n_pmp.json"];
+    prec     = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 600];
 
     Print["=== g3_ExtremalEFT_2.m ==="];
     Print["  sample_points = ", spFile];

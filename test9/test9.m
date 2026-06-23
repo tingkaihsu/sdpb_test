@@ -117,7 +117,7 @@ WritePmpJsonNumerical[
    ================================================================ *)
 
 (* 4mA^2 < M^2 *)
-mAval = N[1/100, 600];
+mAval = N[1/5, 600];
 Print["mA = ", mAval];
 
 (* 2 delCoeff[0,2]-delCoeff[1,1] *)
