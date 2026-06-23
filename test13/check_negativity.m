@@ -335,13 +335,6 @@ x93[x_?NumericQ, J_?IntegerQ] := Module[{s, mA, result},
   N[result, 600]
 ];
 
-x94[x_?NumericQ, J_?IntegerQ] := Module[{s, mA, result},
-  s = N[mgap/(1-x), 600];
-  mA = N[mAval, 600];
-  result = 1/(403200 s^9 (-4 mA^2+s)^5)J (7+J) (-361267200 mA^8-9031680 (-48+J (7+J)) mA^6 s-80640 (-6+J) (13+J) (-32+J (7+J)) mA^4 s^2-80 (-545760+J (7+J) (38892+J (7+J) (-784+5 J (7+J)))) mA^2 s^3-(-2+J) (9+J) (-216000+J (7+J) (10752+J (7+J) (-182+J (7+J)))) s^4);
-  N[result, 600]
-];
-
 x100[x_?NumericQ, J_?IntegerQ] := Module[{s, mA, result},
   s = N[mgap/(1-x), 600];
   mA = N[mAval, 600];
@@ -535,14 +528,6 @@ x93fst[x_?NumericQ] := Module[{s, mA, J, result},
   mA = N[mAval, 600];
   J = J1;
   result = 1/(201600 s^9 (-4 mA^2+s)^5)J (7+J) (-361267200 mA^8-9031680 (-48+J (7+J)) mA^6 s-80640 (-6+J) (13+J) (-32+J (7+J)) mA^4 s^2-80 (-545760+J (7+J) (38892+J (7+J) (-784+5 J (7+J)))) mA^2 s^3-(-2+J) (9+J) (-216000+J (7+J) (10752+J (7+J) (-182+J (7+J)))) s^4);
-  N[result, 600]
-];
-
-x94fst[x_?NumericQ] := Module[{s, mA, J, result},
-  s = N[m1, 600];
-  mA = N[mAval, 600];
-  J = J1;
-  result = 1/(403200 s^9 (-4 mA^2+s)^5)J (7+J) (-361267200 mA^8-9031680 (-48+J (7+J)) mA^6 s-80640 (-6+J) (13+J) (-32+J (7+J)) mA^4 s^2-80 (-545760+J (7+J) (38892+J (7+J) (-784+5 J (7+J)))) mA^2 s^3-(-2+J) (9+J) (-216000+J (7+J) (10752+J (7+J) (-182+J (7+J)))) s^4);
   N[result, 600]
 ];
 
@@ -754,20 +739,6 @@ x93snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x94snd = Module[{s, mA, J, result},
-  s = N[1, 600];
-  mA = N[mAval, 600];
-  J = J2;
-  result = 1/(403200 s^9 (-4 mA^2 + s)^5) J (7 + J) (
-     -361267200 mA^8
-     - 9031680 (-48 + J (7 + J)) mA^6 s
-     - 80640 (-6 + J) (13 + J) (-32 + J (7 + J)) mA^4 s^2
-     - 80 (-545760 + J (7 + J) (38892 + J (7 + J) (-784 + 5 J (7 + J)))) mA^2 s^3
-     - (-2 + J) (9 + J) (-216000 + J (7 + J) (10752 + J (7 + J) (-182 + J (7 + J)))) s^4
-  );
-  N[result, 600]
-];
-
 x100snd = Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
@@ -857,19 +828,19 @@ x110snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-fList = {g0, x10, x20, x30, x40, x41, x50, x51, x60, x61, x70, x71, x73, x80, x81, x83, x90, x91, x93, x94, x100, x101, x103, x104, x110};
-largeJList = {0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, largeJ};
-ResList = {g0fst, x10fst, x20fst, x30fst, x40fst, x41fst, x50fst, x51fst, x60fst, x61fst, x70fst, x71fst, x73fst, x80fst, x81fst, x83fst, x90fst, x91fst, x93fst, x94fst, x100fst, x101fst, x103fst, x104fst, x110fst};
+fList = {g0, x10, x20, x30, x40, x41, x50, x51, x60, x61, x70, x71, x73, x80, x81, x83, x90, x91, x93, x100, x101, x103, x104, x110};
+largeJList = {0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, largeJ};
+ResList = {g0fst, x10fst, x20fst, x30fst, x40fst, x41fst, x50fst, x51fst, x60fst, x61fst, x70fst, x71fst, x73fst, x80fst, x81fst, x83fst, x90fst, x91fst, x93fst, x100fst, x101fst, x103fst, x104fst, x110fst};
 
 (* norm = {G0, N2, N4, X52, X62, X72}; *)
-norm = {g0snd, x10snd, x20snd, x30snd, x40snd, x41snd, x50snd, x51snd, x60snd, x61snd, x70snd, x71snd, x73snd, x80snd, x81snd, x83snd, x90snd, x91snd, x93snd, x94snd, x100snd, x101snd, x103snd, x104snd, x110snd};
+norm = {g0snd, x10snd, x20snd, x30snd, x40snd, x41snd, x50snd, x51snd, x60snd, x61snd, x70snd, x71snd, x73snd, x80snd, x81snd, x83snd, x90snd, x91snd, x93snd, x100snd, x101snd, x103snd, x104snd, x110snd};
 
 Jmax  = 70;
 Jlist = Range[0, Jmax, 2];   (* J = 0, 2, 4, …, 40 — exact discrete constraints *)
 
 (* obj  = {-1, 0, 0, 0, 0, 0};   objective: maximise -y1 = minimise y1 *)
 
-obj = {-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+obj = {-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 xLeft  = SetPrecision[0, 600];   (* physical domain left endpoint  — check includes [xLeft,  x_min] *)
 xRight = SetPrecision[1, 600];   (* physical domain right endpoint — check includes [x_max, xRight] *)
