@@ -341,11 +341,11 @@ x60snd = Module[{s, mA, J, result},
 ];
 
 (* fList = {g0, n2, n4, x52, x62, x72};   (* one entry per component of y; must match Length[norm] *)
-jList = {0&, 0&, 0&, 0&, 0&, largeJ};
+largeJList = {0&, 0&, 0&, 0&, 0&, largeJ};
 ResList = {g0shft, n2shft, n4shft, x52shft, x62shft, x72shft}; *)
 
 fList = {g0, x10, x20, x30, x40, x41, x50, x51, x60};
-jList = {0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, largeJ};
+largeJList = {0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, largeJ};
 ResList = {g0fst, x10fst, x20fst, x30fst, x40fst, x41fst, x50fst, x51fst, x60fst};
 
 (* norm = {G0, N2, N4, X52, X62, X72}; *)
@@ -431,8 +431,8 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:1000] := Module[
       "samplePoints"   -> {samplePoints[[i]]},
       "sampleScalings" -> {sampleScalings[[i]]},
       "polynomials" -> {{ Table[
-        {SetPrecision[jList[[k]][samplePoints[[i]]], prec]},
-        {k, Length[jList]}
+        {SetPrecision[largeJList[[k]][samplePoints[[i]]], prec]},
+        {k, Length[largeJList]}
       ] }}
     |>],
     {i, Length[samplePoints]}

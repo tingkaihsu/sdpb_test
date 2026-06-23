@@ -346,7 +346,7 @@ jList = {0&, 0&, 0&, 0&, 0&, largeJ};
 ResList = {g0shft, n2shft, n4shft, x52shft, x62shft, x72shft}; *)
 
 fList = {g0, x10, x20, x30, x40, x41, x50, x51, x60};
-jList = {0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, largeJ};
+largeJList = {0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, largeJ};
 
 (* norm = {G0, N2, N4, X52, X62, X72}; *)
 norm = {g0snd, x10snd, x20snd, x30snd, x40snd, x41snd, x50snd, x51snd, x60snd};
