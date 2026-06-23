@@ -622,7 +622,7 @@ x110fst[x_?NumericQ] := Module[{s, mA, J, result},
 
 (* second state resonance *)
 (* as norm vector *)
-g0snd = Module[{s, mA, J, result},
+g0snd := Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -630,7 +630,7 @@ g0snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x10snd = Module[{s, mA, J, result},
+x10snd := Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -638,7 +638,7 @@ x10snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x20snd = Module[{s, mA, J, result},
+x20snd := Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -646,7 +646,7 @@ x20snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x30snd = Module[{s, mA, J, result},
+x30snd := Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -654,7 +654,7 @@ x30snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x40snd = Module[{s, mA, J, result},
+x40snd := Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -662,7 +662,7 @@ x40snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x41snd = Module[{s, mA, J, result},
+x41snd := Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -670,7 +670,7 @@ x41snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x50snd = Module[{s, mA, J, result},
+x50snd := Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -678,7 +678,7 @@ x50snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x51snd = Module[{s, mA, J, result},
+x51snd := Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -686,7 +686,7 @@ x51snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x60snd = Module[{s, mA, J, result},
+x60snd := Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -694,7 +694,7 @@ x60snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x61snd = Module[{s, mA, J, result},
+x61snd := Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -702,7 +702,7 @@ x61snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x70snd = Module[{s, mA, J, result},
+x70snd := Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -710,7 +710,7 @@ x70snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x71snd = Module[{s, mA, J, result},
+x71snd := Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -718,7 +718,7 @@ x71snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x73snd = Module[{s, mA, J, result},
+x73snd := Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -726,7 +726,7 @@ x73snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x80snd = Module[{s, mA, J, result},
+x80snd := Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -734,7 +734,7 @@ x80snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x81snd = Module[{s, mA, J, result},
+x81snd := Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -742,7 +742,7 @@ x81snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x83snd = Module[{s, mA, J, result},
+x83snd := Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -750,7 +750,7 @@ x83snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x90snd = Module[{s, mA, J, result},
+x90snd := Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -758,7 +758,7 @@ x90snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x91snd = Module[{s, mA, J, result},
+x91snd := Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -766,7 +766,7 @@ x91snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x93snd = Module[{s, mA, J, result},
+x93snd := Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -774,7 +774,7 @@ x93snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x100snd = Module[{s, mA, J, result},
+x100snd := Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -782,7 +782,7 @@ x100snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x101snd = Module[{s, mA, J, result},
+x101snd := Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -790,7 +790,7 @@ x101snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x103snd = Module[{s, mA, J, result},
+x103snd := Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -798,7 +798,7 @@ x103snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x104snd = Module[{s, mA, J, result},
+x104snd := Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -806,7 +806,7 @@ x104snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x110snd = Module[{s, mA, J, result},
+x110snd := Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
