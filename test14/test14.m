@@ -33,10 +33,10 @@ TSDP[datfile_] := Module[
         norm =  1 * Flatten[N[{-2/mu1, -Table[Nlist[n,mu1,4],{n,0,nulllist[[1]]}]},300]],
 		obj  = -1 * N[Flatten[{1,list0}],300]    
     },
-
+    Print[pols];
     Print[norm];
     Print[obj];
-    WritePmpJson[datfile, SDP[obj, norm, pols] ]
+    WritePmpJson[datfile, SDP[obj, norm, pols], prec, getAnalyticSampleData]
 ];
 
-TSDP["n_pmp.json"]
+TSDP["n_pmp.json", 300];
