@@ -1,3 +1,5 @@
+(* ::Package:: *)
+
 (* New head for purely numerical data *)
 ClearAll[NumericalPositiveMatrixWithPrefactor];
 
@@ -7,39 +9,39 @@ toJsonNestedNumberArray[expr_, prec_] := expr /. n_?NumericQ :> toJsonNumber[n, 
 (*
   Design: the "constant-function" approach.
 
-  For each sample point xᵢ we create ONE PositiveMatrixWithPrefactor block whose
+  For each sample point x\:1d62 we create ONE PositiveMatrixWithPrefactor block whose
   polynomial matrix entries are CONSTANT (degree-0) polynomials:
-      W⁰ⱼ(x) = f1(xᵢ),   W¹ⱼ(x) = f2(xᵢ)
+      W\:2070\:2c7c(x) = f1(x\:1d62),   W\.b9\:2c7c(x) = f2(x\:1d62)
 
-  This gives n independent 1×1 PSD constraints solved simultaneously:
-      a·f1(xᵢ) + b·f2(xᵢ) ≥ 0   for each i = 1..n
+  This gives n independent 1\[Times]1 PSD constraints solved simultaneously:
+      a\[CenterDot]f1(x\:1d62) + b\[CenterDot]f2(x\:1d62) \[GreaterEqual] 0   for each i = 1..n
 
   SDPB manual (Section 3.1, p.4) JSON nesting for "polynomials":
-    Level 1: [ ]   — column list          (m_j columns; here m_j=1)
-    Level 2:  [ ]  — row within column    (m_j rows;    here m_j=1)
-    Level 3:   [ ] — polynomial vector    [Q^0, Q^1]  (N+1=2 entries for N=1)
+    Level 1: [ ]   \[LongDash] column list          (m_j columns; here m_j=1)
+    Level 2:  [ ]  \[LongDash] row within column    (m_j rows;    here m_j=1)
+    Level 3:   [ ] \[LongDash] polynomial vector    [Q^0, Q^1]  (N+1=2 entries for N=1)
     Level 4:    [ "c0", ..., "cd" ]       coefficient list of each polynomial
 
-  For degree-0 (constant) polynomials dⱼ=0, so each coefficient list has 1 element:
-    Level 4: [ "f1(xᵢ)" ]   and   [ "f2(xᵢ)" ]
+  For degree-0 (constant) polynomials d\:2c7c=0, so each coefficient list has 1 element:
+    Level 4: [ "f1(x\:1d62)" ]   and   [ "f2(x\:1d62)" ]
 
   CORRECT JSON output for block i:
-    "polynomials": [              ← level 1 (len=1)
-        [                         ← level 2 (len=1)
-            [                     ← level 3 (len=2): polynomial vector
-                ["f1(xᵢ)"],       ← level 4 (len=1): Q^0 coefficient list
-                ["f2(xᵢ)"]        ← level 4 (len=1): Q^1 coefficient list
+    "polynomials": [              \[LeftArrow] level 1 (len=1)
+        [                         \[LeftArrow] level 2 (len=1)
+            [                     \[LeftArrow] level 3 (len=2): polynomial vector
+                ["f1(x\:1d62)"],       \[LeftArrow] level 4 (len=1): Q^0 coefficient list
+                ["f2(x\:1d62)"]        \[LeftArrow] level 4 (len=1): Q^1 coefficient list
             ]
         ]
     ]
 
   In Mathematica this requires exactly THREE wrapping brace pairs before the
   coefficient lists:
-      {{{  {f1(xᵢ)}, {f2(xᵢ)}  }}}
-       ↑1   ↑2        ↑↑ depth-3 elements = degree-0 coefficient lists
+      {{{  {f1(x\:1d62)}, {f2(x\:1d62)}  }}}
+       \[UpArrow]1   \[UpArrow]2        \[UpArrow]\[UpArrow] depth-3 elements = degree-0 coefficient lists
 
   FOUR wrapping pairs (the previous bug):
-      {{{{  {f1(xᵢ)}, {f2(xᵢ)}  }}}}
+      {{{{  {f1(x\:1d62)}, {f2(x\:1d62)}  }}}}
   produced depth 5, pushing coefficient lists one level too deep. The parser,
   while in the Json_Float_Parser state (expecting float strings at depth 4),
   received another '[' (array start), triggering:
@@ -67,7 +69,7 @@ Module[
     "reducedPrefactor" -> toJsonDampedRational[reducedPrefactor, prec],
     "samplePoints"     -> toJsonNumberArray[samplePoints,   prec],
     "sampleScalings"   -> toJsonNumberArray[sampleScalings, prec],
-    (* functionValues has structure {{{ {f1(xᵢ)}, {f2(xᵢ)} }}} — 3 structural
+    (* functionValues has structure {{{ {f1(x\:1d62)}, {f2(x\:1d62)} }}} \[LongDash] 3 structural
        wrapper levels, with depth-3 entries being the degree-0 coefficient lists.
        toJsonNestedNumberArray stringifies all numeric leaves in-place. *)
     "polynomials"      -> If[MissingQ[functionValues], Missing[],
@@ -96,7 +98,7 @@ WritePmpJsonNumerical[
 << "../SDPB.m";
 
 (* ================================================================
-   PROBLEM-SPECIFIC SECTION  ← edit here for your problem
+   PROBLEM-SPECIFIC SECTION  \[LeftArrow] edit here for your problem
    ----------------------------------------------------------------
    Functions fk[x, J] depend on BOTH x (continuous, discretised)
    AND J (discrete spin, constrained EXACTLY for J in Jlist).
@@ -107,13 +109,13 @@ WritePmpJsonNumerical[
 
    Jmax and Jlist define the discrete spin sum (even spins only).
 
-   extraTriplet is the J → ∞ limiting constraint vector:
-     As J → ∞, divide fk[x,J] by the leading power of J (here J^4):
-       f1[x,J] / J^4 → 0        (f1 is J-independent)
-       f2[x,J] / J^4 → 0        (f2 ~ J^2, subdominant)
-       f3[x,J] / J^4 → 2        (f3 ~ 2·J^4, leading term)
+   extraTriplet is the J \[RightArrow] \[Infinity] limiting constraint vector:
+     As J \[RightArrow] \[Infinity], divide fk[x,J] by the leading power of J (here J^4):
+       f1[x,J] / J^4 \[RightArrow] 0        (f1 is J-independent)
+       f2[x,J] / J^4 \[RightArrow] 0        (f2 ~ J^2, subdominant)
+       f3[x,J] / J^4 \[RightArrow] 2        (f3 ~ 2\[CenterDot]J^4, leading term)
      So extraTriplet = {0, 0, 2}.
-     This enforces  0·y1 + 0·y2 + 2·y3 ≥ 0  in the J→∞ limit.
+     This enforces  0\[CenterDot]y1 + 0\[CenterDot]y2 + 2\[CenterDot]y3 \[GreaterEqual] 0  in the J\[RightArrow]\[Infinity] limit.
    ================================================================ *)
 m1 = N[1/2, 600];
 J1 = 0;
@@ -254,7 +256,7 @@ x91[x_?NumericQ, J_?IntegerQ] := Module[{s, mA, result},
   N[result, 600]
 ];
 
-x93[x_?NumericQ, J_?IntegerQ] := Module[{s, mA, result},
+(* x93[x_?NumericQ, J_?IntegerQ] := Module[{s, mA, result},
   s = N[mgap/(1-x), 600];
   mA = N[mAval, 600];
   result = 1/(5443200 s^7 (-4 mA^2+s)^10)(-2+J) J (7+J) (9+J) (-123863040 (-1+J) (8+J) mA^14+216760320 (-1+J) (8+J) mA^12 s-162570240 (-1+J) (8+J) mA^10 s^2-32 (-1+J) (8+J) (-2196000+J (7+J) (5760+J (7+J) (-134+J (7+J)))) mA^8 s^3+32 (-1+J) (8+J) (-608400+J (7+J) (5760+J (7+J) (-134+J (7+J)))) mA^6 s^4-12 (-1+J) (8+J) (-290880+J (7+J) (5760+J (7+J) (-134+J (7+J)))) mA^4 s^5+2 (-1+J) (8+J) (-185040+J (7+J) (5760+J (7+J) (-134+J (7+J)))) mA^2 s^6-27 (-216000+J (7+J) (10752+J (7+J) (-182+J (7+J)))) s^7);
@@ -266,7 +268,7 @@ x100[x_?NumericQ, J_?IntegerQ] := Module[{s, mA, result},
   mA = N[mAval, 600];
   result = 1/(1883051089920000 s^11 (-4 mA^2+s)^11)(-7898088718655815680000 mA^22+21719743976303493120000 mA^20 s-27149679970379366400000 mA^18 s^2+20362259977784524800000 mA^16 s^3-10181129988892262400000 mA^14 s^4+3563395496112291840000 mA^12 s^5-890848874028072960000 mA^10 s^6+159080156076441600000 mA^8 s^7-19885019509555200000 mA^6 s^8+1657084959129600000 mA^4 s^9+2 (-41427123978240000+(-9+J) (-8+J) (-7+J) (-6+J) (-5+J) (-4+J) (-3+J) (-2+J) (-1+J) J (7+J) (8+J) (9+J) (10+J) (11+J) (12+J) (13+J) (14+J) (15+J) (16+J)) mA^2 s^10+(1883051089920000-(-8+J) (-6+J) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (13+J) (15+J) (-797572800+J (7+J) (106776000+J (7+J) (-3946556+J (7+J) (60108+J (7+J) (-405+J (7+J))))))) s^11);
   N[result, 600]
-];
+]; *)
 
 (* x101[x_?NumericQ, J_?IntegerQ] := Module[{s, mA, result},
   s = N[mgap/(1-x), 600];
@@ -296,17 +298,17 @@ x110[x_?NumericQ, J_?IntegerQ] := Module[{s, mA, result},
   N[result, 600]
 ]; *)
 
-(* from x100 *)
+(* from x90 *)
 largeJ[x_?NumericQ] := Module[{s, mA},
   s = N[mgap/(1-x), 600];
   mA = N[mAval, 600];
-  result = (-2 mA^2+s)/(1883051089920000 (4 mA^2-s)^11 s);
+  result = -((-2 mA^2+s)/(14485008384000 s (-4 mA^2+s)^10));
   N[result, 600]
 ];
 
 (* first state resonance *)
 
-(* heavy‑sum *)
+(* heavy\:2011sum *)
 g0fst[x_?NumericQ] := Module[{s, mA, J, result},
   s = N[m1, 600];
   mA = N[mAval, 600];
@@ -451,7 +453,7 @@ x91fst[x_?NumericQ] := Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x93fst[x_?NumericQ] := Module[{s, mA, J, result},
+(* x93fst[x_?NumericQ] := Module[{s, mA, J, result},
   s = N[m1, 600];
   mA = N[mAval, 600];
   J = J1;
@@ -465,7 +467,7 @@ x100fst[x_?NumericQ] := Module[{s, mA, J, result},
   J = J1;
   result = 1/(1883051089920000 s^11 (-4 mA^2+s)^11)(-7898088718655815680000 mA^22+21719743976303493120000 mA^20 s-27149679970379366400000 mA^18 s^2+20362259977784524800000 mA^16 s^3-10181129988892262400000 mA^14 s^4+3563395496112291840000 mA^12 s^5-890848874028072960000 mA^10 s^6+159080156076441600000 mA^8 s^7-19885019509555200000 mA^6 s^8+1657084959129600000 mA^4 s^9+2 (-41427123978240000+(-9+J) (-8+J) (-7+J) (-6+J) (-5+J) (-4+J) (-3+J) (-2+J) (-1+J) J (7+J) (8+J) (9+J) (10+J) (11+J) (12+J) (13+J) (14+J) (15+J) (16+J)) mA^2 s^10+(1883051089920000-(-8+J) (-6+J) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (13+J) (15+J) (-797572800+J (7+J) (106776000+J (7+J) (-3946556+J (7+J) (60108+J (7+J) (-405+J (7+J))))))) s^11);
   N[result, 600]
-];
+]; *)
 
 (* x101fst[x_?NumericQ] := Module[{s, mA, J, result},
   s = N[m1, 600];
@@ -645,7 +647,7 @@ x91snd = Module[{s, mA, J, result},
   N[result, 600]
 ];
 
-x93snd = Module[{s, mA, J, result},
+(* x93snd = Module[{s, mA, J, result},
   s = N[1, 600];
   mA = N[mAval, 600];
   J = J2;
@@ -659,7 +661,7 @@ x100snd = Module[{s, mA, J, result},
   J = J2;
   result = 1/(1883051089920000 s^11 (-4 mA^2 + s)^11) (-7898088718655815680000 mA^22 + 21719743976303493120000 mA^20 s - 27149679970379366400000 mA^18 s^2 + 20362259977784524800000 mA^16 s^3 - 10181129988892262400000 mA^14 s^4 + 3563395496112291840000 mA^12 s^5 - 890848874028072960000 mA^10 s^6 + 159080156076441600000 mA^8 s^7 - 19885019509555200000 mA^6 s^8 + 1657084959129600000 mA^4 s^9 + 2 (-41427123978240000 + (-9 + J) (-8 + J) (-7 + J) (-6 + J) (-5 + J) (-4 + J) (-3 + J) (-2 + J) (-1 + J) J (7 + J) (8 + J) (9 + J) (10 + J) (11 + J) (12 + J) (13 + J) (14 + J) (15 + J) (16 + J)) mA^2 s^10 + (1883051089920000 - (-8 + J) (-6 + J) (-4 + J) (-2 + J) J (7 + J) (9 + J) (11 + J) (13 + J) (15 + J) (-797572800 + J (7 + J) (106776000 + J (7 + J) (-3946556 + J (7 + J) (60108 + J (7 + J) (-405 + J (7 + J))))))) s^11);
   N[result, 600]
-];
+]; *)
 
 (* x101snd = Module[{s, mA, J, result},
   s = N[1, 600];
@@ -694,19 +696,19 @@ x110snd = Module[{s, mA, J, result},
 ]; *)
 
 (* need simplification *)
-fList = {g0, x10, x20, x30, x40, x41, x50, x51, x60, x61, x70, x71, x73, x80, x81, x83, x90, x91, x93, x100};
-largeJList = {0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, largeJ};
-ResList = {g0fst, x10fst, x20fst, x30fst, x40fst, x41fst, x50fst, x51fst, x60fst, x61fst, x70fst, x71fst, x73fst, x80fst, x81fst, x83fst, x90fst, x91fst, x93fst, x100fst};
+fList = {g0, x10, x20, x30, x40, x41, x50, x51, x60, x61, x70, x71, x73, x80, x81, x83, x90, x91};
+largeJList = {0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, largeJ, 0&};
+ResList = {g0fst, x10fst, x20fst, x30fst, x40fst, x41fst, x50fst, x51fst, x60fst, x61fst, x70fst, x71fst, x73fst, x80fst, x81fst, x83fst, x90fst, x91fst};
 
 (* norm = {G0, N2, N4, X52, X62, X72}; *)
-norm = {g0snd, x10snd, x20snd, x30snd, x40snd, x41snd, x50snd, x51snd, x60snd, x61snd, x70snd, x71snd, x73snd, x80snd, x81snd, x83snd, x90snd, x91snd, x93snd, x100snd};
+norm = {g0snd, x10snd, x20snd, x30snd, x40snd, x41snd, x50snd, x51snd, x60snd, x61snd, x70snd, x71snd, x73snd, x80snd, x81snd, x83snd, x90snd, x91snd};
 
 Jmax  = 70;
-Jlist = Range[0, Jmax, 2];   (* J = 0, 2, 4, …, 40 — exact discrete constraints *)
+Jlist = Range[0, Jmax, 2];   (* J = 0, 2, 4, \[Ellipsis], 40 \[LongDash] exact discrete constraints *)
 
 (* obj  = {-1, 0, 0, 0, 0, 0};   objective: maximise -y1 = minimise y1 *)
 
-obj = {-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+obj = {-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 (* ================================================================
    END OF PROBLEM-SPECIFIC SECTION
@@ -720,13 +722,13 @@ obj = {-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
    lines and "#"-comment lines are ignored).
 
    For each (xi, Jj) pair a REGULAR block is created enforcing:
-     f1(xi,Jj)·y1 + f2(xi,Jj)·y2 + f3(xi,Jj)·y3 ≥ 0
+     f1(xi,Jj)\[CenterDot]y1 + f2(xi,Jj)\[CenterDot]y2 + f3(xi,Jj)\[CenterDot]y3 \[GreaterEqual] 0
 
    For each xi an EXTRA block is created from extraTriplet,
-   enforcing the J→∞ limit constraint:
-     extraTriplet[[1]]·y1 + extraTriplet[[2]]·y2 + extraTriplet[[3]]·y3 ≥ 0
+   enforcing the J\[RightArrow]\[Infinity] limit constraint:
+     extraTriplet[[1]]\[CenterDot]y1 + extraTriplet[[2]]\[CenterDot]y2 + extraTriplet[[3]]\[CenterDot]y3 \[GreaterEqual] 0
 
-   Total blocks = Length[samplePoints] × (Length[Jlist] + 1).
+   Total blocks = Length[samplePoints] \[Times] (Length[Jlist] + 1).
 
    sampleScalings are Exp[-xi], the value of the prefactor
    DampedRational[1,{},1/E,x] at each sample point xi.
@@ -754,9 +756,9 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:1000] := Module[
 
   (* --- Regular blocks: one per (xi, Jj) pair.
      Polynomials nesting:  {{ Table[{fk(xi,Jj)}, {k,3}] }}
-       {{ ... }}  ← JSON levels 1 and 2  (column list / row, each size 1)
-       Table[...] ← JSON level 3: polynomial vector, one entry per fList[[k]]
-       {fk(xi,Jj)} ← JSON level 4: degree-0 coefficient list (1 element) --- *)
+       {{ ... }}  \[LeftArrow] JSON levels 1 and 2  (column list / row, each size 1)
+       Table[...] \[LeftArrow] JSON level 3: polynomial vector, one entry per fList[[k]]
+       {fk(xi,Jj)} \[LeftArrow] JSON level 4: degree-0 coefficient list (1 element) --- *)
 
   pols = Table[
     NumericalPositiveMatrixWithPrefactor[<|
@@ -771,7 +773,7 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:1000] := Module[
     {i, Length[samplePoints]}, {j, Length[Jlist]}
   ];
 
-  (* --- Extra blocks: one per xi, encoding the J→∞ limit constraint.
+  (* --- Extra blocks: one per xi, encoding the J\[RightArrow]\[Infinity] limit constraint.
      extraTriplet = {0, 0, 2} is x-independent (J^4 leading coefficient),
      so every extra block carries the same polynomial values.
      Each block is still associated with a distinct xi for SDPB bookkeeping. --- *)
@@ -801,7 +803,7 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:1000] := Module[
     {i, Length[samplePoints]}
   ];
 
-  (* Flatten polsRegular (2D Table → flat list) and append polsExtra (already flat) *)
+  (* Flatten polsRegular (2D Table \[RightArrow] flat list) and append polsExtra (already flat) *)
   WritePmpJsonNumerical[
     jsonFile,
     SDP[obj, norm, Join[Flatten[pols], polsLargeJ, pols1Res]],
@@ -822,10 +824,10 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:1000] := Module[
      output.json   optional  output path (default: numeric_pmp.json)
      prec          optional  decimal digit precision (default: 200)
 
-   NOTE: $ScriptCommandLine = {scriptname, arg1, arg2, …} is populated
+   NOTE: $ScriptCommandLine = {scriptname, arg1, arg2, \[Ellipsis]} is populated
    identically by both wolframscript -file and math -script. Rest[] drops
    the script name leaving only user arguments. When loaded with << as a
-   library, $ScriptCommandLine has length ≤ 1 and the block is skipped.
+   library, $ScriptCommandLine has length \[LessEqual] 1 and the block is skipped.
    ---------------------------------------------------------------- *)
 Module[{myArgs, spFile, jsonFile, prec},
 
