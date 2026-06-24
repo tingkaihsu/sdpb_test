@@ -6,7 +6,7 @@
 
 (*TODO get rid of global prec, pass as an argument*)
 (*Now it is used only for obsolete XML output*)
-prec = 600;
+prec = 200;
 
 (* DampedRational[c, {p1, p2, ...}, b, x] stands for c b^x / ((x-p1)(x-p2)...) *)
 (* It satisfies the following identities *)

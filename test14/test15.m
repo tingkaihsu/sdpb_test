@@ -1,10 +1,10 @@
 (* ::Package:: *)
 
 Import["../SDPB.m"]
-m1 = 1/2;
+m1 = N[1/2, 1000];
 J1 = 0;
-mA = 1/1000;
-mgap = 166/100;
+mA = N[1/1000, 1000];
+mgap = N[166/100, 1000];
 
 nulllist = {15, -1, -1, -1};
 list0 = Table[0, {i, 1, Total[nulllist]+Length[nulllist]}];
@@ -14,7 +14,7 @@ Nlist[n_,x_,J_]:={(32 mA^4+2 (-1+J) (8+J) mA^2 x-(-2+J (7+J)) x^2)/(2 x^2 (-4 mA
 polyify[expr_, var_] := Expand @ Cancel @ Together[expr];
 
 Poly[J_, z_, y_] := Module[{pref, polys, first},
-  pref = z^20 (-4 mA^2 + z)^20 (z - 2 mA^2);
+  pref = z^10 (-4 mA^2 + z)^10 (z - 2 mA^2);
 
   first = polyify[pref*2/(z - 2 mA^2), z];
 
@@ -45,16 +45,16 @@ PMP2SDP[datfile_, prec_:600] := Module[
     },
     pols = 
         Flatten[{
-        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 0, 1000, 2}],600]],
-        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 1500, 5000, 100}],600]],
-        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 6000, 20000, 500}],600]],
-        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 20000, 50000, 2000}],600]],
-        Flatten[N[ParallelTable[Poly[i, m1, x],{i, J1, J1, 2}],600]],
-        Flatten[N[ParallelTable[Polyinf[i, mgap+x, x],{i, 0, 0, 2}],600]]
+        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 0, 1000, 2}],prec]],
+        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 1500, 5000, 100}],prec]],
+        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 6000, 20000, 500}],prec]],
+        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 20000, 50000, 2000}],prec]],
+        Flatten[N[ParallelTable[Poly[i, m1, x],{i, J1, J1, 2}],prec]],
+        Flatten[N[ParallelTable[Polyinf[i, mgap+x, x],{i, 0, 0, 2}],prec]]
     },1];
 
-    norm =  1 * Flatten[N[{2/(1-2 mA^2), Table[Nlist[n,1,2],{n,0,nulllist[[1]]}]},600]];
-    obj  = -1 * N[Flatten[{1,list0}],600];
+    norm =  1 * Flatten[N[{2/(1-2 mA^2), Table[Nlist[n,1,2],{n,0,nulllist[[1]]}]},prec]];
+    obj  = -1 * N[Flatten[{1,list0}],prec];
     
     Print["size of nomr = ", Length[norm]];
     Print["size of obj = ", Length[obj]];
@@ -62,4 +62,4 @@ PMP2SDP[datfile_, prec_:600] := Module[
     WritePmpJson[datfile, SDP[obj, norm, pols], prec, getAnalyticSampleData]
 ];
 
-PMP2SDP["n_pmp.json", 600];
+PMP2SDP["n_pmp.json", 1000];

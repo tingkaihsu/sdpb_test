@@ -33,7 +33,7 @@ PMP2SDP[datfile_, prec_:300] := Module[
         Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 0, 0, 2}],300]]
     },1];
 
-    norm =  1 * Flatten[N[{-2/1, -Table[Nlist[n,1,2],{n,0,nulllist[[1]]}]},300]];
+    norm =  1 * Flatten[N[{2/1, Table[Nlist[n,1,2],{n,0,nulllist[[1]]}]},300]];
     obj  = -1 * N[Flatten[{1,list0}],300];
     
     Print["size of nomr = ", Length[norm]];
