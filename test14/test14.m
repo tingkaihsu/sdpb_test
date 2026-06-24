@@ -18,7 +18,7 @@ Poly[J_, x_, y_]:=PositiveMatrixWithPrefactor[
 list1 = Table[0, {i, 1, nulllist[[1]]}];
 
 Polyinf[J_, x_, y_]:=PositiveMatrixWithPrefactor[
-        DampedRational[1,{},1/E,y],{{Join[list1,{-((-2 mA^2+x)/(14485008384000 x (-4 mA^2+x)^10))}]}}];
+        DampedRational[1,{},1/E,y],{{Flatten[Join[list1,{-((-2 mA^2+x)/(14485008384000 x (-4 mA^2+x)^10))}]]}}];
 
 LaunchKernels[];
 
@@ -33,7 +33,7 @@ PMP2SDP[datfile_, prec_:300] := Module[
             Flatten[N[ParallelTable[Poly[j, mgap+x, x],{j, 6000, 20000, 500}],300]],
             Flatten[N[ParallelTable[Poly[j, mgap+x, x],{j, 20000, 50000, 2000}],300]],
             Flatten[N[ParallelTable[Poly[j, m1, x],{j, J1, J1, 2}],300]],
-            Flatten[N[ParallelTable[Poly[j, mgap+x, x],{j, 0, 0, 2}],300]]
+            Flatten[N[ParallelTable[Polyinf[j, mgap+x, x],{j, 0, 0, 2}],300]]
         },1];
     norm =  1 * Flatten[N[{2/(-2 mA^2+1), Table[Nlist[n,2,1],{n,0,nulllist[[1]]}]},300]];
     obj  = -1 * N[Flatten[{1,list0}],300];
