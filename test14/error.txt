@@ -1,26 +1,386 @@
+Processed 584 SDP blocks in 15.719 seconds, output: /data/out
+2026-Jun-24 09:50:32 Start SDPB
+SDPB version: 3.0.0-117-g446b2b9d
+MPI processes: 24, nodes: 1
+SDP directory   : "/data/out"
+out directory   : "/data/out_out"
 
-FindRoot::precw: The precision of the argument function (-22 + 0.500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 bVar$3226) is less than WorkingPrecision (600.).
+Parameters:
+maxIterations                = 50000
+maxRuntime                   = 9223372036854775807
+checkpointInterval           = 3600
+maxSharedMemory              = 0 B
+findPrimalFeasible           = false
+findDualFeasible             = false
+detectPrimalFeasibleJump     = false
+detectDualFeasibleJump       = false
+precision(actual)            = 2048(2048)
+dualityGapThreshold          = 1e-30
+primalErrorThreshold         = 1e-30
+dualErrorThreshold           = 1e-30
+initialMatrixScalePrimal     = 1e+20
+initialMatrixScaleDual       = 1e+20
+feasibleCenteringParameter   = 0.1
+infeasibleCenteringParameter = 0.3
+stepLengthReduction          = 0.7
+maxComplementarity           = 1e+1000
+initialCheckpointDir         = "/data/out.ck"
+checkpointDir                = "/data/out.ck"
+noFinalCheckpoint            = true
+writeSolution                = x,y,z,X,Y
+procGranularity              = 1
+verbosity                    = 1
 
-                                                                                                                                                                                                                                                                                                                                          10                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        10
-                       (1.65999600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 + x)   (1.65999800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 + x) (1.66000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 + x)
-CoefficientList::poly: --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- is not a polynomial.
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      2
-                                                                                                                                                                                     2.7556000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 + 3.3200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 x + x
+2026-Jun-24 09:50:32 Start timing run
+Initialize SDP solver
+        primal dimension: 12235
+        dual dimension: 16
+        SDP blocks: 584
+2026-Jun-24 09:50:41 Start solver iterations
+Warning: node=0:
+        MemTotal: 503.5 GB
+        Required memory estimate (excluding shared memory windows): 276.5 GB
+        To prevent OOM, SDPB will set --maxSharedMemory to 50% of the remaining memory, i.e. 113.5 GB
+        In case of OOM, consider increasing number of nodes and/or decreasing --maxSharedMemory limit.
 
-FindRoot::precw: The precision of the argument function (-21 + 0.500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 bVar$3324) is less than WorkingPrecision (600.).
+          time    mu     P-obj       D-obj      gap         P-err       p-err       D-err      P-step   D-step   beta
+---------------------------------------------------------------------------------------------------------------------
+1            3 1.0e+40  +0.00       +0.00       0.00       +1.00e+20   +1.00       +8.84e+24   0.383    0.574    0.300
+2            7 5.4e+39  +1.39e+41   -0.286      1.00       +6.17e+19   +0.617      +3.77e+24   0.476    0.557    0.300
+3           12 3.1e+39  +2.63e+41   -0.405      1.00       +3.24e+19   +0.324      +1.67e+24   0.433    0.511    0.300
+4           16 2.0e+39  +3.12e+41   -0.452      1.00       +1.83e+19   +0.183      +8.17e+23   0.407    0.542    0.300
+5           20 1.2e+39  +2.88e+41   -0.475      1.00       +1.09e+19   +0.109      +3.74e+23   0.510    0.552    0.300
+6           24 7.4e+38  +2.25e+41   -0.485      1.00       +5.33e+18   +0.0533     +1.68e+23   0.506    0.579    0.300
+7           29 4.3e+38  +1.62e+41   -0.487      1.00       +2.64e+18   +0.0264     +7.05e+22   0.480    0.599    0.300
+8           33 2.6e+38  +1.10e+41   -0.486      1.00       +1.37e+18   +0.0137     +2.83e+22   0.510    0.616    0.300
+9           37 1.5e+38  +6.76e+40   -0.483      1.00       +6.71e+17   +0.00671    +1.09e+22   0.554    0.634    0.300
+10          42 8.1e+37  +3.76e+40   -0.479      1.00       +2.99e+17   +0.00299    +3.97e+21   0.594    0.638    0.300
+11          46 4.3e+37  +1.91e+40   -0.473      1.00       +1.21e+17   +0.00121    +1.44e+21   0.591    0.641    0.300
+12          51 2.2e+37  +9.68e+39   -0.464      1.00       +4.96e+16   +0.000496   +5.16e+20   0.572    0.643    0.300
+13          55 1.2e+37  +5.03e+39   -0.452      1.00       +2.13e+16   +0.000213   +1.84e+20   0.566    0.647    0.300
+14          60 6.6e+36  +2.65e+39   -0.436      1.00       +9.22e+15   +9.22e-05   +6.50e+19   0.605    0.652    0.300
+15          64 3.4e+36  +1.34e+39   -0.415      1.00       +3.64e+15   +3.64e-05   +2.26e+19   0.619    0.662    0.300
+16          69 1.7e+36  +6.97e+38   -0.384      1.00       +1.39e+15   +1.39e-05   +7.63e+18   0.628    0.676    0.300
+17          73 8.7e+35  +3.95e+38   -0.341      1.00       +5.16e+14   +5.16e-06   +2.47e+18   0.641    0.676    0.300
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=9. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=9. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=17. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=17. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=10. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=10. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=16. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=1. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=1. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=2. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=16. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=2. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=14. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=6. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=14. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=6. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=4. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=4. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=7. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=7. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=18. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=5. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=5. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=18. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=15. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=15. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=21. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=21. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=0. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=0. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=3. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=3. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=11. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=11. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=13. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=13. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=22. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=22. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=23. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=23. The program should exit after that, otherwise MPI will not work correctly.
+Process 9 caught error message:
+in initialize_schur_complement_solver() at ../src/sdp_solve/SDP_Solver/run/step/initialize_schur_complement_solver/initialize_schur_complement_solver.cxx:102:
+  Error when computing Cholesky(Q): A was not numerically HPD: 5 16 -1.38492e-570
+Stacktrace:
+ 0# 0x000055D70AA36F6D in /usr/local/bin/sdpb
+ 1# 0x000055D70AAEE5F2 in /usr/local/bin/sdpb
+ 2# 0x000055D70AADDD55 in /usr/local/bin/sdpb
+ 3# 0x000055D70AA68BAC in /usr/local/bin/sdpb
+ 4# 0x000055D70AA4A949 in /usr/local/bin/sdpb
+ 5# 0x00007FD9DF0D06D1 in /lib/ld-musl-x86_64.so.1
 
-                                                                                                                                                                                                                                                                                                                                                                                                                    10                                                                                                                                                                                                                                                                                                                                                                                                     6
-                       4.50000000000000000000000000000000000000000000000000000000000000000000000 (1.65999600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 + x)   (1.65999800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 + x) (1.660000000000000000000000000000000000000000000000000000000000000000000000 + x)
-CoefficientList::poly: ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- is not a polynomial.
-                                                                                                                                                                                                                                                                                                                                           1.65999600000000000000000000000000000000000000000000000000000000000000000000 + 1.00000000000000000000000000000000000000000000000000000000000000000000000000 x
+--------------------------------------------------------------------------
+MPI_ABORT was invoked on rank 9 in communicator MPI_COMM_WORLD
+with errorcode 1.
 
-                                                                                                                                                                                                                                                                                                                                                                                                                    10                                                                                                                                                                                                                                                                                                                                                                                                     6
-                       4.50000000000000000000000000000000000000000000000000000000000000000000000 (1.65999600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 + x)   (1.65999800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 + x) (1.660000000000000000000000000000000000000000000000000000000000000000000000 + x)
-CoefficientList::poly: ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- is not a polynomial.
-                                                                                                                                                                                                                                                                                                                                           1.65999600000000000000000000000000000000000000000000000000000000000000000000 + 1.00000000000000000000000000000000000000000000000000000000000000000000000000 x
+NOTE: invoking MPI_ABORT causes Open MPI to kill all MPI processes.
+You may or may not see output from other processes, depending on
+exactly when Open MPI kills them.
+--------------------------------------------------------------------------
+Process 17 caught error message:
+in initialize_schur_complement_solver() at ../src/sdp_solve/SDP_Solver/run/step/initialize_schur_complement_solver/initialize_schur_complement_solver.cxx:102:
+  Error when computing Cholesky(Q): A was not numerically HPD: 5 16 -1.38492e-570
+Stacktrace:
+ 0# 0x000055CE80DA5F6D in /usr/local/bin/sdpb
+ 1# 0x000055CE80E5D5F2 in /usr/local/bin/sdpb
+ 2# 0x000055CE80E4CD55 in /usr/local/bin/sdpb
+ 3# 0x000055CE80DD7BAC in /usr/local/bin/sdpb
+ 4# 0x000055CE80DB9949 in /usr/local/bin/sdpb
+ 5# 0x00007FE7BB9606D1 in /lib/ld-musl-x86_64.so.1
 
-General::stop: Further output of CoefficientList::poly will be suppressed during this calculation.
+Process 2 caught error message:
+in initialize_schur_complement_solver() at ../src/sdp_solve/SDP_Solver/run/step/initialize_schur_complement_solver/initialize_schur_complement_solver.cxx:102:
+  Error when computing Cholesky(Q): A was not numerically HPD: 5 16 -1.38492e-570
+Stacktrace:
+ 0# 0x0000555C68908F6D in /usr/local/bin/sdpb
+ 1# 0x0000555C689C05F2 in /usr/local/bin/sdpb
+ 2# 0x0000555C689AFD55 in /usr/local/bin/sdpb
+ 3# 0x0000555C6893ABAC in /usr/local/bin/sdpb
+ 4# 0x0000555C6891C949 in /usr/local/bin/sdpb
+ 5# 0x00007F181A5DC6D1 in /lib/ld-musl-x86_64.so.1
 
-FindRoot::precw: The precision of the argument function (-21 + 0.500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 bVar$3410) is less than WorkingPrecision (600.).
+Process 18 caught error message:
+in initialize_schur_complement_solver() at ../src/sdp_solve/SDP_Solver/run/step/initialize_schur_complement_solver/initialize_schur_complement_solver.cxx:102:
+  Error when computing Cholesky(Q): A was not numerically HPD: 5 16 -1.38492e-570
+Stacktrace:
+ 0# 0x000055EC8A2ADF6D in /usr/local/bin/sdpb
+ 1# 0x000055EC8A3655F2 in /usr/local/bin/sdpb
+ 2# 0x000055EC8A354D55 in /usr/local/bin/sdpb
+ 3# 0x000055EC8A2DFBAC in /usr/local/bin/sdpb
+ 4# 0x000055EC8A2C1949 in /usr/local/bin/sdpb
+ 5# 0x00007F0E370B56D1 in /lib/ld-musl-x86_64.so.1
 
-General::stop: Further output of FindRoot::precw will be suppressed during this calculation.
+Process 10 caught error message:
+in initialize_schur_complement_solver() at ../src/sdp_solve/SDP_Solver/run/step/initialize_schur_complement_solver/initialize_schur_complement_solver.cxx:102:
+  Error when computing Cholesky(Q): A was not numerically HPD: 5 16 -1.38492e-570
+Stacktrace:
+ 0# 0x000055AE23604F6D in /usr/local/bin/sdpb
+ 1# 0x000055AE236BC5F2 in /usr/local/bin/sdpb
+ 2# 0x000055AE236ABD55 in /usr/local/bin/sdpb
+ 3# 0x000055AE23636BAC in /usr/local/bin/sdpb
+ 4# 0x000055AE23618949 in /usr/local/bin/sdpb
+ 5# 0x00007F475EDC26D1 in /lib/ld-musl-x86_64.so.1
+
+Process 23 caught error message:
+in initialize_schur_complement_solver() at ../src/sdp_solve/SDP_Solver/run/step/initialize_schur_complement_solver/initialize_schur_complement_solver.cxx:102:
+  Error when computing Cholesky(Q): A was not numerically HPD: 5 16 -1.38492e-570
+Stacktrace:
+ 0# 0x000055D3491C6F6D in /usr/local/bin/sdpb
+ 1# 0x000055D34927E5F2 in /usr/local/bin/sdpb
+ 2# 0x000055D34926DD55 in /usr/local/bin/sdpb
+ 3# 0x000055D3491F8BAC in /usr/local/bin/sdpb
+ 4# 0x000055D3491DA949 in /usr/local/bin/sdpb
+ 5# 0x00007FC44772E6D1 in /lib/ld-musl-x86_64.so.1
+
+Process 7 caught error message:
+in initialize_schur_complement_solver() at ../src/sdp_solve/SDP_Solver/run/step/initialize_schur_complement_solver/initialize_schur_complement_solver.cxx:102:
+  Error when computing Cholesky(Q): A was not numerically HPD: 5 16 -1.38492e-570
+Stacktrace:
+ 0# 0x000055668A262F6D in /usr/local/bin/sdpb
+ 1# 0x000055668A31A5F2 in /usr/local/bin/sdpb
+ 2# 0x000055668A309D55 in /usr/local/bin/sdpb
+ 3# 0x000055668A294BAC in /usr/local/bin/sdpb
+ 4# 0x000055668A276949 in /usr/local/bin/sdpb
+ 5# 0x00007FA3251B46D1 in /lib/ld-musl-x86_64.so.1
+
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=19. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=19. The program should exit after that, otherwise MPI will not work correctly.
+Process 19 caught error message:
+in initialize_schur_complement_solver() at ../src/sdp_solve/SDP_Solver/run/step/initialize_schur_complement_solver/initialize_schur_complement_solver.cxx:102:
+  Error when computing Cholesky(Q): A was not numerically HPD: 5 16 -1.38492e-570
+Stacktrace:
+ 0# 0x00005604C0DC6F6D in /usr/local/bin/sdpb
+ 1# 0x00005604C0E7E5F2 in /usr/local/bin/sdpb
+ 2# 0x00005604C0E6DD55 in /usr/local/bin/sdpb
+ 3# 0x00005604C0DF8BAC in /usr/local/bin/sdpb
+ 4# 0x00005604C0DDA949 in /usr/local/bin/sdpb
+ 5# 0x00007FE304DF16D1 in /lib/ld-musl-x86_64.so.1
+
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=20. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=20. The program should exit after that, otherwise MPI will not work correctly.
+Process 20 caught error message:
+in initialize_schur_complement_solver() at ../src/sdp_solve/SDP_Solver/run/step/initialize_schur_complement_solver/initialize_schur_complement_solver.cxx:102:
+  Error when computing Cholesky(Q): A was not numerically HPD: 5 16 -1.38492e-570
+Stacktrace:
+ 0# 0x00005584EDF4CF6D in /usr/local/bin/sdpb
+ 1# 0x00005584EE0045F2 in /usr/local/bin/sdpb
+ 2# 0x00005584EDFF3D55 in /usr/local/bin/sdpb
+ 3# 0x00005584EDF7EBAC in /usr/local/bin/sdpb
+ 4# 0x00005584EDF60949 in /usr/local/bin/sdpb
+ 5# 0x00007FDBAD2CE6D1 in /lib/ld-musl-x86_64.so.1
+
+Process 15 caught error message:
+in initialize_schur_complement_solver() at ../src/sdp_solve/SDP_Solver/run/step/initialize_schur_complement_solver/initialize_schur_complement_solver.cxx:102:
+  Error when computing Cholesky(Q): A was not numerically HPD: 5 16 -1.38492e-570
+Stacktrace:
+ 0# 0x0000563EB9BC2F6D in /usr/local/bin/sdpb
+ 1# 0x0000563EB9C7A5F2 in /usr/local/bin/sdpb
+ 2# 0x0000563EB9C69D55 in /usr/local/bin/sdpb
+ 3# 0x0000563EB9BF4BAC in /usr/local/bin/sdpb
+ 4# 0x0000563EB9BD6949 in /usr/local/bin/sdpb
+ 5# 0x00007F80A08ED6D1 in /lib/ld-musl-x86_64.so.1
+
+Process 13 caught error message:
+in initialize_schur_complement_solver() at ../src/sdp_solve/SDP_Solver/run/step/initialize_schur_complement_solver/initialize_schur_complement_solver.cxx:102:
+  Error when computing Cholesky(Q): A was not numerically HPD: 5 16 -1.38492e-570
+Stacktrace:
+ 0# 0x000055A385C48F6D in /usr/local/bin/sdpb
+ 1# 0x000055A385D005F2 in /usr/local/bin/sdpb
+ 2# 0x000055A385CEFD55 in /usr/local/bin/sdpb
+ 3# 0x000055A385C7ABAC in /usr/local/bin/sdpb
+ 4# 0x000055A385C5C949 in /usr/local/bin/sdpb
+ 5# 0x00007FF1479F86D1 in /lib/ld-musl-x86_64.so.1
+
+Process 22 caught error message:
+in initialize_schur_complement_solver() at ../src/sdp_solve/SDP_Solver/run/step/initialize_schur_complement_solver/initialize_schur_complement_solver.cxx:102:
+  Error when computing Cholesky(Q): A was not numerically HPD: 5 16 -1.38492e-570
+Stacktrace:
+ 0# 0x000055746371CF6D in /usr/local/bin/sdpb
+ 1# 0x00005574637D45F2 in /usr/local/bin/sdpb
+ 2# 0x00005574637C3D55 in /usr/local/bin/sdpb
+ 3# 0x000055746374EBAC in /usr/local/bin/sdpb
+ 4# 0x0000557463730949 in /usr/local/bin/sdpb
+ 5# 0x00007FC45E4766D1 in /lib/ld-musl-x86_64.so.1
+
+Process 21 caught error message:
+in initialize_schur_complement_solver() at ../src/sdp_solve/SDP_Solver/run/step/initialize_schur_complement_solver/initialize_schur_complement_solver.cxx:102:
+  Error when computing Cholesky(Q): A was not numerically HPD: 5 16 -1.38492e-570
+Stacktrace:
+ 0# 0x000055C1A5104F6D in /usr/local/bin/sdpb
+ 1# 0x000055C1A51BC5F2 in /usr/local/bin/sdpb
+ 2# 0x000055C1A51ABD55 in /usr/local/bin/sdpb
+ 3# 0x000055C1A5136BAC in /usr/local/bin/sdpb
+ 4# 0x000055C1A5118949 in /usr/local/bin/sdpb
+ 5# 0x00007F2FED7D46D1 in /lib/ld-musl-x86_64.so.1
+
+Process 16 caught error message:
+in initialize_schur_complement_solver() at ../src/sdp_solve/SDP_Solver/run/step/initialize_schur_complement_solver/initialize_schur_complement_solver.cxx:102:
+  Error when computing Cholesky(Q): A was not numerically HPD: 5 16 -1.38492e-570
+Stacktrace:
+ 0# 0x00005613583CBF6D in /usr/local/bin/sdpb
+ 1# 0x00005613584835F2 in /usr/local/bin/sdpb
+ 2# 0x0000561358472D55 in /usr/local/bin/sdpb
+ 3# 0x00005613583FDBAC in /usr/local/bin/sdpb
+ 4# 0x00005613583DF949 in /usr/local/bin/sdpb
+ 5# 0x00007F0AC82476D1 in /lib/ld-musl-x86_64.so.1
+
+Process 1 caught error message:
+in initialize_schur_complement_solver() at ../src/sdp_solve/SDP_Solver/run/step/initialize_schur_complement_solver/initialize_schur_complement_solver.cxx:102:
+  Error when computing Cholesky(Q): A was not numerically HPD: 5 16 -1.38492e-570
+Stacktrace:
+ 0# 0x000055A72A44DF6D in /usr/local/bin/sdpb
+ 1# 0x000055A72A5055F2 in /usr/local/bin/sdpb
+ 2# 0x000055A72A4F4D55 in /usr/local/bin/sdpb
+ 3# 0x000055A72A47FBAC in /usr/local/bin/sdpb
+ 4# 0x000055A72A461949 in /usr/local/bin/sdpb
+ 5# 0x00007F99F98D46D1 in /lib/ld-musl-x86_64.so.1
+
+Process 0 caught error message:
+in initialize_schur_complement_solver() at ../src/sdp_solve/SDP_Solver/run/step/initialize_schur_complement_solver/initialize_schur_complement_solver.cxx:102:
+  Error when computing Cholesky(Q): A was not numerically HPD: 5 16 -1.38492e-570
+Stacktrace:
+ 0# 0x000055A67FC74F6D in /usr/local/bin/sdpb
+ 1# 0x000055A67FD2C5F2 in /usr/local/bin/sdpb
+ 2# 0x000055A67FD1BD55 in /usr/local/bin/sdpb
+ 3# 0x000055A67FCA6BAC in /usr/local/bin/sdpb
+ 4# 0x000055A67FC88949 in /usr/local/bin/sdpb
+ 5# 0x00007FAEEA1106D1 in /lib/ld-musl-x86_64.so.1
+
+Process 6 caught error message:
+in initialize_schur_complement_solver() at ../src/sdp_solve/SDP_Solver/run/step/initialize_schur_complement_solver/initialize_schur_complement_solver.cxx:102:
+  Error when computing Cholesky(Q): A was not numerically HPD: 5 16 -1.38492e-570
+Stacktrace:
+ 0# 0x00005569B494CF6D in /usr/local/bin/sdpb
+ 1# 0x00005569B4A045F2 in /usr/local/bin/sdpb
+ 2# 0x00005569B49F3D55 in /usr/local/bin/sdpb
+ 3# 0x00005569B497EBAC in /usr/local/bin/sdpb
+ 4# 0x00005569B4960949 in /usr/local/bin/sdpb
+ 5# 0x00007FA2C4EA16D1 in /lib/ld-musl-x86_64.so.1
+
+Process 5 caught error message:
+in initialize_schur_complement_solver() at ../src/sdp_solve/SDP_Solver/run/step/initialize_schur_complement_solver/initialize_schur_complement_solver.cxx:102:
+  Error when computing Cholesky(Q): A was not numerically HPD: 5 16 -1.38492e-570
+Stacktrace:
+ 0# 0x000055C67B3F8F6D in /usr/local/bin/sdpb
+ 1# 0x000055C67B4B05F2 in /usr/local/bin/sdpb
+ 2# 0x000055C67B49FD55 in /usr/local/bin/sdpb
+ 3# 0x000055C67B42ABAC in /usr/local/bin/sdpb
+ 4# 0x000055C67B40C949 in /usr/local/bin/sdpb
+ 5# 0x00007F09FCC326D1 in /lib/ld-musl-x86_64.so.1
+
+Process 14 caught error message:
+in initialize_schur_complement_solver() at ../src/sdp_solve/SDP_Solver/run/step/initialize_schur_complement_solver/initialize_schur_complement_solver.cxx:102:
+  Error when computing Cholesky(Q): A was not numerically HPD: 5 16 -1.38492e-570
+Stacktrace:
+ 0# 0x000055F2C5831F6D in /usr/local/bin/sdpb
+ 1# 0x000055F2C58E95F2 in /usr/local/bin/sdpb
+ 2# 0x000055F2C58D8D55 in /usr/local/bin/sdpb
+ 3# 0x000055F2C5863BAC in /usr/local/bin/sdpb
+ 4# 0x000055F2C5845949 in /usr/local/bin/sdpb
+ 5# 0x00007F66618906D1 in /lib/ld-musl-x86_64.so.1
+
+Process 4 caught error message:
+in initialize_schur_complement_solver() at ../src/sdp_solve/SDP_Solver/run/step/initialize_schur_complement_solver/initialize_schur_complement_solver.cxx:102:
+  Error when computing Cholesky(Q): A was not numerically HPD: 5 16 -1.38492e-570
+Stacktrace:
+ 0# 0x000055F2BD94DF6D in /usr/local/bin/sdpb
+ 1# 0x000055F2BDA055F2 in /usr/local/bin/sdpb
+ 2# 0x000055F2BD9F4D55 in /usr/local/bin/sdpb
+ 3# 0x000055F2BD97FBAC in /usr/local/bin/sdpb
+ 4# 0x000055F2BD961949 in /usr/local/bin/sdpb
+ 5# 0x00007F4A500AE6D1 in /lib/ld-musl-x86_64.so.1
+
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=8. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=8. The program should exit after that, otherwise MPI will not work correctly.
+Process 8 caught error message:
+in initialize_schur_complement_solver() at ../src/sdp_solve/SDP_Solver/run/step/initialize_schur_complement_solver/initialize_schur_complement_solver.cxx:102:
+  Error when computing Cholesky(Q): A was not numerically HPD: 5 16 -1.38492e-570
+Stacktrace:
+ 0# 0x000055720974FF6D in /usr/local/bin/sdpb
+ 1# 0x00005572098075F2 in /usr/local/bin/sdpb
+ 2# 0x00005572097F6D55 in /usr/local/bin/sdpb
+ 3# 0x0000557209781BAC in /usr/local/bin/sdpb
+ 4# 0x0000557209763949 in /usr/local/bin/sdpb
+ 5# 0x00007F745F7856D1 in /lib/ld-musl-x86_64.so.1
+
+Process 3 caught error message:
+in initialize_schur_complement_solver() at ../src/sdp_solve/SDP_Solver/run/step/initialize_schur_complement_solver/initialize_schur_complement_solver.cxx:102:
+  Error when computing Cholesky(Q): A was not numerically HPD: 5 16 -1.38492e-570
+Stacktrace:
+ 0# 0x000055D217A16F6D in /usr/local/bin/sdpb
+ 1# 0x000055D217ACE5F2 in /usr/local/bin/sdpb
+ 2# 0x000055D217ABDD55 in /usr/local/bin/sdpb
+ 3# 0x000055D217A48BAC in /usr/local/bin/sdpb
+ 4# 0x000055D217A2A949 in /usr/local/bin/sdpb
+ 5# 0x00007F43938766D1 in /lib/ld-musl-x86_64.so.1
+
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=12. The program should exit after that, otherwise MPI will not work correctly.
+Warning: ~Shared_Window_Array() called during stack unwinding on rank=12. The program should exit after that, otherwise MPI will not work correctly.
+Process 12 caught error message:
+in initialize_schur_complement_solver() at ../src/sdp_solve/SDP_Solver/run/step/initialize_schur_complement_solver/initialize_schur_complement_solver.cxx:102:
+  Error when computing Cholesky(Q): A was not numerically HPD: 5 16 -1.38492e-570
+Stacktrace:
+ 0# 0x000055B87AA36F6D in /usr/local/bin/sdpb
+ 1# 0x000055B87AAEE5F2 in /usr/local/bin/sdpb
+ 2# 0x000055B87AADDD55 in /usr/local/bin/sdpb
+ 3# 0x000055B87AA68BAC in /usr/local/bin/sdpb
+ 4# 0x000055B87AA4A949 in /usr/local/bin/sdpb
+ 5# 0x00007FF6B86296D1 in /lib/ld-musl-x86_64.so.1
+
+Process 11 caught error message:
+in initialize_schur_complement_solver() at ../src/sdp_solve/SDP_Solver/run/step/initialize_schur_complement_solver/initialize_schur_complement_solver.cxx:102:
+  Error when computing Cholesky(Q): A was not numerically HPD: 5 16 -1.38492e-570
+Stacktrace:
+ 0# 0x00005630F3358F6D in /usr/local/bin/sdpb
+ 1# 0x00005630F34105F2 in /usr/local/bin/sdpb
+ 2# 0x00005630F33FFD55 in /usr/local/bin/sdpb
+ 3# 0x00005630F338ABAC in /usr/local/bin/sdpb
+ 4# 0x00005630F336C949 in /usr/local/bin/sdpb
+ 5# 0x00007F8804F376D1 in /lib/ld-musl-x86_64.so.1
+
+[fd90e1ec2cd7:00001] 23 more processes have sent help message help-mpi-api.txt / mpi-abort
+[fd90e1ec2cd7:00001] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages

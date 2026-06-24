@@ -1,0 +1,440 @@
+wolframscript -file test15.m
+
+LinkConnect::linkc: -- Message text not found -- (LinkObject[vptrt_shm, 3, 1])
+
+KernelObject::timekernels: Timeout for subkernels. Received only 31 of 32 connections.
+(kernel 1):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 3):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 4):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 9):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 10):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 11):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 14):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 16):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 18):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 19):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 22):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 31):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 2):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 5):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 6):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 7):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 8):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 12):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 13):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 15):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 17):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 20):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 21):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 23):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 24):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 25):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 26):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 27):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 28):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 29):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 30):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 1):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 3):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 4):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 9):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 10):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 11):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 14):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 16):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 18):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 19):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 22):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 31):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 2):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 5):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 6):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 7):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 8):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 12):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 13):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 15):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 17):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 20):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 21):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 23):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 24):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 25):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 26):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 27):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 28):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 29):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 30):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 1):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 3):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 4):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 9):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 10):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 11):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 14):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 16):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 18):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 19):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 22):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 31):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 2):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 5):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 6):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 7):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 8):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 12):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 13):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 15):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 17):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 20):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 21):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 23):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 24):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 25):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 26):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 27):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 28):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 29):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 30):
+               83
+General::ivar: -- + x is not a valid variable.
+               50
+(kernel 1):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 3):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 4):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 9):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 10):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 11):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 14):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 16):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 18):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 19):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 22):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 31):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 2):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 5):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 6):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 7):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 8):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 12):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 13):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 15):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 17):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 20):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 21):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 23):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 24):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 25):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 26):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 27):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 28):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 29):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 30):
+General::stop: Further output of General::ivar will be suppressed during this calculation.
+(kernel 3):
