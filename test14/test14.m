@@ -13,32 +13,37 @@ Nlist[n_,x_,J_]:={-((-2+7 J+J^2)/(2 x^2)),-((-20-91 J+36 J^2+14 J^3+J^4)/(20 x^3
 
 Poly[J_, x_, y_]:=PositiveMatrixWithPrefactor[
         DampedRational[1,{},1/E,y],{{Flatten[x^16*{2/x, Table[Simplify[Expand[Nlist[n,x,J]]],{n,0,nulllist[[1]]}]}]}}];
+
 Polyinf[y_]:=PositiveMatrixWithPrefactor[
         DampedRational[1,{},1/E,y],{{{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0}}}];
 
 LaunchKernels[];
 
-TSDP[datfile_] := Module[
-
+PMP2SDP[datfile_, prec_:300] := Module[
     {
-        pols = 
-       Flatten[{
-      Flatten[N[ParallelTable[Poly[i, 4+x, x],{i, 0, 1000, 2}],300]],
-      Flatten[N[ParallelTable[Poly[i, 4+x, x],{i, 1500, 5000, 100}],300]],
-      Flatten[N[ParallelTable[Poly[i, 4+x, x],{i, 6000, 20000, 500}],300]],
-      Flatten[N[ParallelTable[Poly[i, 4+x, x],{i, 20000, 50000, 2000}],300]],
-      Flatten[N[ParallelTable[Poly[i, mu1, x],{i, 0, 0, 2}],300]],
-      Flatten[N[ParallelTable[Poly[i, 2, x],{i, 0, 0, 2}],300]],
-      Flatten[N[ParallelTable[Poly[i, 1, x],{i, 0, 0, 0}],300]]
-       },1],    
-        norm =  1 * Flatten[N[{-2/mu1, -Table[Nlist[n,mu1,4],{n,0,nulllist[[1]]}]},300]],
-		obj  = -1 * N[Flatten[{1,list0}],300]    
+        pols, norm, obj
     },
-    Print[norm];
-    Print[obj];
-    WritePmpJson[datfile, SDP[obj, norm, pols]]]
+    pols = 
+        Flatten[{
+        Flatten[N[ParallelTable[Poly[i, 4+x, x],{i, 0, 1000, 2}],300]],
+        Flatten[N[ParallelTable[Poly[i, 4+x, x],{i, 1500, 5000, 100}],300]],
+        Flatten[N[ParallelTable[Poly[i, 4+x, x],{i, 6000, 20000, 500}],300]],
+        Flatten[N[ParallelTable[Poly[i, 4+x, x],{i, 20000, 50000, 2000}],300]],
+        Flatten[N[ParallelTable[Poly[i, m1, x],{i, 0, 0, 2}],300]],
+        Flatten[N[ParallelTable[Poly[i, 2, x],{i, 0, 0, 2}],300]],
+        Flatten[N[ParallelTable[Poly[i, 1, x],{i, 0, 0, 0}],300]]
+    },1];
 
-TSDP["out.json"]
+    norm =  1 * Flatten[N[{-2/m1, -Table[Nlist[n,m1,4],{n,0,nulllist[[1]]}]},300]];
+    obj  = -1 * N[Flatten[{1,list0}],300];
+    
+    Print["size of nomr = ", Length[norm]];
+    Print["size of obj = ", Length[obj]];
+
+    WritePmpJson[datfile, SDP[obj, norm, pols], prec, getAnalyticSampleData]
+];
+
+PMP2SDP["n_pmp.json", 300];
 
 
 
