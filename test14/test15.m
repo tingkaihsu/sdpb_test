@@ -39,22 +39,22 @@ Polyinf[J_, x_, y_] := PositiveMatrixWithPrefactor[
 
 LaunchKernels[];
 
-PMP2SDP[datfile_, prec_:300] := Module[
+PMP2SDP[datfile_, prec_:600] := Module[
     {
         pols, norm, obj
     },
     pols = 
         Flatten[{
-        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 0, 1000, 2}],300]],
-        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 1500, 5000, 100}],300]],
-        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 6000, 20000, 500}],300]],
-        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 20000, 50000, 2000}],300]],
-        Flatten[N[ParallelTable[Poly[i, m1, x],{i, J1, J1, 2}],300]],
-        Flatten[N[ParallelTable[Polyinf[i, mgap+x, x],{i, 0, 0, 2}],300]]
+        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 0, 1000, 2}],600]],
+        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 1500, 5000, 100}],600]],
+        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 6000, 20000, 500}],600]],
+        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 20000, 50000, 2000}],600]],
+        Flatten[N[ParallelTable[Poly[i, m1, x],{i, J1, J1, 2}],600]],
+        Flatten[N[ParallelTable[Polyinf[i, mgap+x, x],{i, 0, 0, 2}],600]]
     },1];
 
-    norm =  1 * Flatten[N[{2/(1-2 mA^2), Table[Nlist[n,1,2],{n,0,nulllist[[1]]}]},300]];
-    obj  = -1 * N[Flatten[{1,list0}],300];
+    norm =  1 * Flatten[N[{2/(1-2 mA^2), Table[Nlist[n,1,2],{n,0,nulllist[[1]]}]},600]];
+    obj  = -1 * N[Flatten[{1,list0}],600];
     
     Print["size of nomr = ", Length[norm]];
     Print["size of obj = ", Length[obj]];
@@ -62,4 +62,4 @@ PMP2SDP[datfile_, prec_:300] := Module[
     WritePmpJson[datfile, SDP[obj, norm, pols], prec, getAnalyticSampleData]
 ];
 
-PMP2SDP["n_pmp.json", 300];
+PMP2SDP["n_pmp.json", 600];
