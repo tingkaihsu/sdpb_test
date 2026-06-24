@@ -17,25 +17,23 @@ Polyinf[y_]:=PositiveMatrixWithPrefactor[
 
 LaunchKernels[];
 
-TSDP[datfile_] := Module[
-
+TSDP[datfile_, prec_:300] := Module[
     {
-        pols = 
-            Flatten[{
-                Flatten[N[ParallelTable[Poly[i, 4+x, x],{i, 0, 1000, 2}],300]],
-                Flatten[N[ParallelTable[Poly[i, 4+x, x],{i, 1500, 5000, 100}],300]],
-                Flatten[N[ParallelTable[Poly[i, 4+x, x],{i, 6000, 20000, 500}],300]],
-                Flatten[N[ParallelTable[Poly[i, 4+x, x],{i, 20000, 50000, 2000}],300]],
-                Flatten[N[ParallelTable[Poly[i, mu1, x],{i, 0, 0, 2}],300]],
-                Flatten[N[ParallelTable[Poly[i, 2, x],{i, 0, 0, 2}],300]],
-                Flatten[N[ParallelTable[Poly[i, 1, x],{i, 0, 0, 0}],300]]
-            },1],    
-        norm =  1 * Flatten[N[{-2/mu1, -Table[Nlist[n,mu1,4],{n,0,nulllist[[1]]}]},300]],
-		obj  = -1 * N[Flatten[{1,list0}],300]    
+        pols, norm, obj
     },
-    Print[pols];
-    Print[norm];
-    Print[obj];
+    pols = 
+        Flatten[{
+            Flatten[N[ParallelTable[Poly[i, 4+x, x],{i, 0, 1000, 2}],300]],
+            Flatten[N[ParallelTable[Poly[i, 4+x, x],{i, 1500, 5000, 100}],300]],
+            Flatten[N[ParallelTable[Poly[i, 4+x, x],{i, 6000, 20000, 500}],300]],
+            Flatten[N[ParallelTable[Poly[i, 4+x, x],{i, 20000, 50000, 2000}],300]],
+            Flatten[N[ParallelTable[Poly[i, mu1, x],{i, 0, 0, 2}],300]],
+            Flatten[N[ParallelTable[Poly[i, 2, x],{i, 0, 0, 2}],300]],
+            Flatten[N[ParallelTable[Poly[i, 1, x],{i, 0, 0, 0}],300]]
+        },1];
+    norm =  1 * Flatten[N[{-2/mu1, -Table[Nlist[n,mu1,4],{n,0,nulllist[[1]]}]},300]];
+    obj  = -1 * N[Flatten[{1,list0}],300];
+    
     WritePmpJson[datfile, SDP[obj, norm, pols], prec, getAnalyticSampleData]
 ];
 
