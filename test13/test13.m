@@ -117,7 +117,7 @@ WritePmpJsonNumerical[
      So extraTriplet = {0, 0, 2}.
      This enforces  0\[CenterDot]y1 + 0\[CenterDot]y2 + 2\[CenterDot]y3 \[GreaterEqual] 0  in the J\[RightArrow]\[Infinity] limit.
    ================================================================ *)
-m1 = N[1/2, 600];
+m1 = N[2/5, 600];
 J1 = 0;
 J2 = 2;
 mgap = N[166/100, 600];
@@ -696,19 +696,19 @@ x110snd = Module[{s, mA, J, result},
 ]; *)
 
 (* need simplification *)
-fList = {g0, x10, x20, x30, x40, x41, x50, x51, x60, x61, x70, x71, x73, x80, x81, x83, x90, x91};
-largeJList = {0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, largeJ, 0&};
-ResList = {g0fst, x10fst, x20fst, x30fst, x40fst, x41fst, x50fst, x51fst, x60fst, x61fst, x70fst, x71fst, x73fst, x80fst, x81fst, x83fst, x90fst, x91fst};
+fList = {g0, x10, x20, x30, x40, x41, x50, x51, x60, x61, x70, x71, x73, x80, x81, x83, x90};
+largeJList = {0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, 0&, largeJ};
+ResList = {g0fst, x10fst, x20fst, x30fst, x40fst, x41fst, x50fst, x51fst, x60fst, x61fst, x70fst, x71fst, x73fst, x80fst, x81fst, x83fst, x90fst};
 
 (* norm = {G0, N2, N4, X52, X62, X72}; *)
-norm = {g0snd, x10snd, x20snd, x30snd, x40snd, x41snd, x50snd, x51snd, x60snd, x61snd, x70snd, x71snd, x73snd, x80snd, x81snd, x83snd, x90snd, x91snd};
+norm = {g0snd, x10snd, x20snd, x30snd, x40snd, x41snd, x50snd, x51snd, x60snd, x61snd, x70snd, x71snd, x73snd, x80snd, x81snd, x83snd, x90snd};
 
 Jmax  = 70;
 Jlist = Range[0, Jmax, 2];   (* J = 0, 2, 4, \[Ellipsis], 40 \[LongDash] exact discrete constraints *)
 
 (* obj  = {-1, 0, 0, 0, 0, 0};   objective: maximise -y1 = minimise y1 *)
 
-obj = {-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+obj = {-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 (* ================================================================
    END OF PROBLEM-SPECIFIC SECTION
