@@ -102,110 +102,97 @@ WritePmpJsonNumerical[
    AND J (discrete spin, constrained EXACTLY for J in Jlist).
    Sampling is done over x; J constraints are imposed exactly.
 
-   fList collects the functions for the generalised Table loop.
-   Each fList[[k]][x, J] must return a numeric value.
+   functionalVector[x,J] collects {g2, g3} and the selected null constraints into one vector.
+   sp and mA are assigned once inside functionalVector for each (x,J) evaluation.
 
    Jmax and Jlist define the discrete spin sum (even spins only).
 
-   extraTriplet is the J → ∞ limiting constraint vector:
+   largeJVector[x] is the J → ∞ limiting constraint vector:
      As J → ∞, divide fk[x,J] by the leading power of J (here J^4):
-       f1[x,J] / J^4 → 0        (f1 is J-independent)
-       f2[x,J] / J^4 → 0        (f2 ~ J^2, subdominant)
-       f3[x,J] / J^4 → 2        (f3 ~ 2·J^4, leading term)
-     So extraTriplet = {0, 0, 2}.
-     This enforces  0·y1 + 0·y2 + 2·y3 ≥ 0  in the J→∞ limit.
+       all listed components vanish except the x82 leading term
+       largeJVector[x] stores that x82 leading coefficient in the x82 slot
+       largeJVector keeps this vector aligned with functionalVector
+     Only the x82 component is nonzero in the large-J vector.
+     This enforces the sampled large-J limiting inequality in the selected dual basis.
    ================================================================ *)
 
 (* 4mA^2 < M^2 *)
-mAval = N[1/5, 600];
+mAval = N[1/5, 1000];
 Print["mA = ", mAval];
 
-(* 2 delCoeff[0,2]-delCoeff[1,1] *)
-g2[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
-  sp = N[1/(1-x), 600];
-  mA = N[mAval, 600];
-  result = -((2 Sqrt[sp/(-4 mA^2+sp)])/(2 mA^2-sp)^3);
-  N[result, 600]
+(* Bootstrap target entries: {g2, g3}.  Null constraints are appended below. *)
+cList[sp_, mA_, J_] := {
+  -((2 Sqrt[sp/(-4 mA^2+sp)])/(2 mA^2-sp)^3),
+  (Sqrt[sp/(-4 mA^2+sp)] (-3-(2 J (1+J) (2 mA^2-sp))/(-4 mA^2+sp)))/(-2 mA^2+sp)^4
+};
+
+(* Add/remove null constraints here, then update nulllist by label. *)
+nulllist = {6, -1, -1, -1};
+list0 = Table[0, {i, 1, Total[nulllist]+Length[nulllist]}];
+
+Nlist[n_, sp_, mA_, J_] := {-((243 Sqrt[-(sp/(4 mA^2-sp))] (6 (4 mA^2-sp) Sqrt[(8 mA^4-3 mA^2 sp)/(-4 mA^2+sp)^2] LegendreP[J,1,1+(8 mA^2)/(3 (-4 mA^2+sp))]+(4 mA^2-3 sp) LegendreP[J,2,1+(8 mA^2)/(3 (-4 mA^2+sp))]))/(4 mA^2 (4 mA^2-3 sp)^4 (8 mA^2-3 sp))),((J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-((-4+J) (-2+J) (3+J) (5+J))-((-1+J) (2+J) (-4 mA^2+sp)^3 (36 mA^2+(-15+J+J^2) sp))/sp^4))/(36 (-4 mA^2+sp)^6)),(J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-((-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J))-((-1+J) (2+J) (-4 mA^2+sp)^3 (-2304 mA^4+1152 mA^2 sp+(-72+J (1+J) (-18+J+J^2)) sp^2))/sp^5))/(576 (-4 mA^2+sp)^7),(J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-(((-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J) (-47+J+J^2))/(-4 mA^2+sp)^8)+((-1+J) (2+J) (((-4+J) (-3+J) (-2+J) (3+J) (4+J) (5+J) sp^3)/(4 mA^2-sp)^5+3600/(-4 mA^2+sp)^2))/sp^6))/14400,((-2+J) J (1+J) (3+J) Sqrt[sp/(-4 mA^2+sp)] ((-6+J) (-4+J) (5+J) (7+J)-((-1+J) (2+J) (-4 mA^2+sp)^4 (64 mA^2+(-28+J+J^2) sp))/sp^5))/(576 (-4 mA^2+sp)^8),(J (1+J) Sqrt[sp/(-4 mA^2+sp)] (((-8+J) (-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J) (9+J) (-38+J+J^2))/(4 mA^2-sp)^9+((-1+J) (2+J) (-(((-5+J) (-4+J) (-3+J) (-2+J) (3+J) (4+J) (5+J) (6+J) sp^4)/(-4 mA^2+sp)^6)+129600/(-4 mA^2+sp)^2))/sp^7))/518400,(((-2+J) J (1+J) (3+J) Sqrt[sp/(-4 mA^2+sp)] ((-8+J) (-6+J) (-4+J) (5+J) (7+J) (9+J)+((-2+J+J^2) (-4 mA^2+sp)^4 (6400 mA^4-3200 mA^2 sp+(160-J (1+J) (-32+J+J^2)) sp^2))/sp^6))/(14400 (-4 mA^2+sp)^9))}[[n+1]];
+largeJlist[sp_, mA_] := {0, 0, 0, 0, 0, 0, 0, -((Sqrt[sp/(-4 mA^2+sp)] (-32 mA^6+24 mA^4 sp-6 mA^2 sp^2+sp^3))/(259200 sp^3 (-4 mA^2+sp)^9)), 0};
+
+functionalVector[x_?NumericQ, J_?IntegerQ, prec_:1000] := Module[{sp, mA},
+  sp = N[1/(1-x), prec];
+  mA = N[mAval, prec];
+  N[Join[cList[sp, mA, J], Table[Nlist[n,sp,mA,J],{n,0,nulllist[[1]]}] ], prec]
 ];
 
-(* -3 delCoeff[0,3]+delCoeff[1,2] *)
-(* (-3+2 J (1+J))/sp^4 in the massless limit *)
-g3[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
-  sp = N[1/(1-x), 600];
-  mA = N[mAval, 600];
-  result = (Sqrt[sp/(-4 mA^2+sp)] (-3-(2 J (1+J) (2 mA^2-sp))/(-4 mA^2+sp)))/(-2 mA^2+sp)^4;
-  N[result, 600]
+
+largeJVector[x_?NumericQ, prec_:1000] := Module[{sp, mA},
+  sp = N[1/(1-x), prec];
+  mA = N[mAval, prec];
+  N[largeJlist[sp, mA], prec]
 ];
 
-(* number of null constraints = 30 *)
-(* n4 *)
-x42[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
-  sp = N[1/(1-x), 600];
-  mA = N[mAval, 600];
-  result = -((243 Sqrt[-(sp/(4 mA^2-sp))] (6 (4 mA^2-sp) Sqrt[(8 mA^4-3 mA^2 sp)/(-4 mA^2+sp)^2] LegendreP[J,1,1+(8 mA^2)/(3 (-4 mA^2+sp))]+(4 mA^2-3 sp) LegendreP[J,2,1+(8 mA^2)/(3 (-4 mA^2+sp))]))/(4 mA^2 (4 mA^2-3 sp)^4 (8 mA^2-3 sp)));
-  N[result, 600]
+functionalDimension = 2 + Length[list0];
+
+constantPolynomialVector[values_List, prec_] := {{SetPrecision[{#}, prec] & /@ values}};
+
+samplePmp[polynomialValues_List, xi_, sampleScaling_, prec_] :=
+  NumericalPositiveMatrixWithPrefactor[<|
+    "prefactor"      -> DampedRational[1, {}, 1/E, x],
+    "samplePoints"   -> {xi},
+    "sampleScalings" -> {sampleScaling},
+    "polynomials"    -> constantPolynomialVector[polynomialValues, prec]
+  |>];
+
+regularFunctionalValues[xi_, J_, prec_] := functionalVector[xi, J, prec];
+
+largeJFunctionalValues[xi_, prec_] := largeJVector[xi, prec];
+
+regularPmp[xi_, sampleScaling_, J_, prec_] :=
+  samplePmp[regularFunctionalValues[xi, J, prec], xi, sampleScaling, prec];
+
+largeJPmp[xi_, sampleScaling_, prec_] :=
+  samplePmp[largeJFunctionalValues[xi, prec], xi, sampleScaling, prec];
+
+buildNumericalPMPs[samplePoints_List, sampleScalings_List, prec_] := Module[
+  {regularPMPs, largeJPMPs},
+
+  regularPMPs = Table[
+    regularPmp[samplePoints[[i]], sampleScalings[[i]], J, prec],
+    {i, Length[samplePoints]}, {J, Jlist}
+  ];
+
+  largeJPMPs = Table[
+    largeJPmp[samplePoints[[i]], sampleScalings[[i]], prec],
+    {i, Length[samplePoints]}
+  ];
+
+  Join[Flatten[regularPMPs], largeJPMPs]
 ];
 
-x52[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
-  sp = N[1/(1-x), 600];
-  mA = N[mAval, 600];
-  result = ((J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-((-4+J) (-2+J) (3+J) (5+J))-((-1+J) (2+J) (-4 mA^2+sp)^3 (36 mA^2+(-15+J+J^2) sp))/sp^4))/(36 (-4 mA^2+sp)^6));
-  N[result, 600]
-];
+Jmax  = 70;
+Jlist = Range[0, Jmax, 2];   (* J = 0, 2, 4, ..., 70 -- exact discrete constraints *)
 
-x62[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
-  sp = N[1/(1-x), 600];
-  mA = N[mAval, 600];
-  result = (J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-((-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J))-((-1+J) (2+J) (-4 mA^2+sp)^3 (-2304 mA^4+1152 mA^2 sp+(-72+J (1+J) (-18+J+J^2)) sp^2))/sp^5))/(576 (-4 mA^2+sp)^7);
-  N[result, 600]
-];
+(* test9 targets g3/g2: objective on g2, normalization on g3. *)
+norm = -1 * Flatten[{{0,1},list0}];
+obj  = -1 * Flatten[{{1,0},list0}];
 
-x72[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
-  sp = N[1/(1-x), 600];
-  mA = N[mAval, 600];
-  result = (J (1+J) Sqrt[sp/(-4 mA^2+sp)] (-(((-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J) (-47+J+J^2))/(-4 mA^2+sp)^8)+((-1+J) (2+J) (((-4+J) (-3+J) (-2+J) (3+J) (4+J) (5+J) sp^3)/(4 mA^2-sp)^5+3600/(-4 mA^2+sp)^2))/sp^6))/14400;
-  N[result, 600]
-];
-
-x73[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
-  sp = N[1/(1-x), 600];
-  mA = N[mAval, 600];
-  result = ((-2+J) J (1+J) (3+J) Sqrt[sp/(-4 mA^2+sp)] ((-6+J) (-4+J) (5+J) (7+J)-((-1+J) (2+J) (-4 mA^2+sp)^4 (64 mA^2+(-28+J+J^2) sp))/sp^5))/(576 (-4 mA^2+sp)^8);
-  N[result, 600]
-];
-
-x82[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
-  sp = N[1/(1-x), 600];
-  mA = N[mAval, 600];
-  result = (J (1+J) Sqrt[sp/(-4 mA^2+sp)] (((-8+J) (-6+J) (-4+J) (-2+J) (3+J) (5+J) (7+J) (9+J) (-38+J+J^2))/(4 mA^2-sp)^9+((-1+J) (2+J) (-(((-5+J) (-4+J) (-3+J) (-2+J) (3+J) (4+J) (5+J) (6+J) sp^4)/(-4 mA^2+sp)^6)+129600/(-4 mA^2+sp)^2))/sp^7))/518400;
-  N[result, 600]
-];
-
-x83[x_?NumericQ, J_?IntegerQ] := Module[{sp, mA, result},
-  sp = N[1/(1-x), 600];
-  mA = N[mAval, 600];
-  result = (((-2+J) J (1+J) (3+J) Sqrt[sp/(-4 mA^2+sp)] ((-8+J) (-6+J) (-4+J) (5+J) (7+J) (9+J)+((-2+J+J^2) (-4 mA^2+sp)^4 (6400 mA^4-3200 mA^2 sp+(160-J (1+J) (-32+J+J^2)) sp^2))/sp^6))/(14400 (-4 mA^2+sp)^9));
-  N[result, 600]
-];
-
-(* from x82 *)
-largeJ[x_?NumericQ] := Module[{sp, mA, result},
-  sp = N[1/(1-x), 600];
-  mA = N[mAval, 600];
-  result = -((Sqrt[sp/(-4 mA^2+sp)] (-32 mA^6+24 mA^4 sp-6 mA^2 sp^2+sp^3))/(259200 sp^3 (-4 mA^2+sp)^9));
-  N[result, 600]
-];
-
-fList = {g2, g3, x42, x52, x62, x72, x73, x82,    x83};
-largeJList = {0&, 0&, 0&,  0&,  0&,  0&,  0&,  largeJ, 0&};
-
-
-Jmax  = 60;
-Jlist = Range[0, Jmax, 2];   (* J = 0, 2, 4, …, 60 — exact discrete constraints *)
-
-(* 1 for optimal lower bound, -1 for optimal upper bound *)
-norm = {0, -1, 0, 0, 0, 0, 0, 0, 0};
-obj = {-1, 0, 0, 0, 0, 0, 0, 0, 0};
+Print["size of nomr = ", Length[norm]];
+Print["size of obj = ", Length[obj]];
 
 (* ================================================================
    END OF PROBLEM-SPECIFIC SECTION
@@ -221,17 +208,17 @@ obj = {-1, 0, 0, 0, 0, 0, 0, 0, 0};
    For each (xi, Jj) pair a REGULAR block is created enforcing:
      f1(xi,Jj)·y1 + f2(xi,Jj)·y2 + f3(xi,Jj)·y3 ≥ 0
 
-   For each xi an EXTRA block is created from extraTriplet,
+   For each xi an EXTRA block is created from largeJVector,
    enforcing the J→∞ limit constraint:
-     extraTriplet[[1]]·y1 + extraTriplet[[2]]·y2 + extraTriplet[[3]]·y3 ≥ 0
+     largeJVector[xi][[1]]·y1 + ... + largeJVector[xi][[K]]·yK ≥ 0
 
    Total blocks = Length[samplePoints] × (Length[Jlist] + 1).
 
    sampleScalings are Exp[-xi], the value of the prefactor
    DampedRational[1,{},1/E,x] at each sample point xi.
    ---------------------------------------------------------------- *)
-testNumericalSDP[spFile_String, jsonFile_String, prec_:1000] := Module[
-  {rawLines, spLines, samplePoints, sampleScalings, polsRegular, polsExtra},
+ToPMP[spFile_String, jsonFile_String, prec_:1000] := Module[
+  {rawLines, spLines, samplePoints, sampleScalings, pols},
 
   (* --- Read and parse sampling_points.txt --- *)
   rawLines = ReadList[spFile, String];
@@ -246,53 +233,13 @@ testNumericalSDP[spFile_String, jsonFile_String, prec_:1000] := Module[
   Print["Read ", Length[samplePoints], " x sample points from ", spFile];
   (* Print["  x-points    : ", samplePoints];
   Print["  J-values    : ", Jlist, "  (", Length[Jlist], " spins, exact)"];
-  Print["  extraTriplet: ", extraTriplet, "  (J\[Rule]\[Infinity] limit)"]; *)
+  Print["  functional dimension: ", functionalDimension, "  (J\[Rule]\[Infinity] limit included separately)"]; *)
 
   (* Scalings = prefactor DampedRational[1,{},1/E,x] evaluated at xi = e^{-xi} *)
   sampleScalings = SetPrecision[Exp[-#] & /@ samplePoints, prec];
+  pols = buildNumericalPMPs[samplePoints, sampleScalings, prec];
 
-  (* --- Regular blocks: one per (xi, Jj) pair.
-     Polynomials nesting:  {{ Table[{fk(xi,Jj)}, {k,3}] }}
-       {{ ... }}  ← JSON levels 1 and 2  (column list / row, each size 1)
-       Table[...] ← JSON level 3: polynomial vector, one entry per fList[[k]]
-       {fk(xi,Jj)} ← JSON level 4: degree-0 coefficient list (1 element) --- *)
-
-  pols = Table[
-    NumericalPositiveMatrixWithPrefactor[<|
-      "prefactor"      -> DampedRational[1, {}, 1/E, x],
-      "samplePoints"   -> {samplePoints[[i]]},
-      "sampleScalings" -> {sampleScalings[[i]]},
-      "polynomials" -> {{ Table[
-        {SetPrecision[fList[[k]][samplePoints[[i]], Jlist[[j]]], prec]},
-        {k, Length[fList]}
-      ] }}
-    |>],
-    {i, Length[samplePoints]}, {j, Length[Jlist]}
-  ];
-
-  (* --- Extra blocks: one per xi, encoding the J→∞ limit constraint.
-     extraTriplet = {0, 0, 2} is x-independent (J^4 leading coefficient),
-     so every extra block carries the same polynomial values.
-     Each block is still associated with a distinct xi for SDPB bookkeeping. --- *)
-  polsLargeJ = Table[
-    NumericalPositiveMatrixWithPrefactor[<|
-      "prefactor"      -> DampedRational[1, {}, 1/E, x],
-      "samplePoints"   -> {samplePoints[[i]]},
-      "sampleScalings" -> {sampleScalings[[i]]},
-      "polynomials" -> {{ Table[
-        {SetPrecision[largeJList[[k]][samplePoints[[i]]], prec]},
-        {k, Length[largeJList]}
-      ] }}
-    |>],
-    {i, Length[samplePoints]}
-  ];
-
-  (* Flatten polsRegular (2D Table → flat list) and append polsExtra (already flat) *)
-  WritePmpJsonNumerical[
-    jsonFile,
-    SDP[obj, norm, Join[Flatten[pols], polsLargeJ]],
-    prec
-  ];
+  WritePmpJsonNumerical[jsonFile, SDP[obj, norm, pols], prec];
   Print["Wrote PMP JSON to ", jsonFile]
 ];
 
@@ -320,14 +267,14 @@ Module[{myArgs, spFile, jsonFile, prec},
   If[Length[myArgs] >= 1,
     spFile   = myArgs[[1]];
     jsonFile = If[Length[myArgs] >= 2, myArgs[[2]], "numeric_pmp.json"];
-    prec     = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 600];
+    prec     = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 1000];
 
-    Print["=== g3_ExtremalEFT_2.m ==="];
+    Print["=== test9.m ==="];
     Print["  sample_points = ", spFile];
     Print["  output_json   = ", jsonFile];
     Print["  precision     = ", prec];
 
-    testNumericalSDP[spFile, jsonFile, prec];
+    ToPMP[spFile, jsonFile, prec];
     Quit[0],
 
     Null
