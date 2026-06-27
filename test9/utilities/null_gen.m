@@ -207,5 +207,3 @@ Limit[  -((Sqrt[sp/(-4 mA^2+sp)] (-32 mA^6+24 mA^4 sp-6 mA^2 sp^2+sp^3))/(288 sp
 
 
 
-
-

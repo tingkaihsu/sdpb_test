@@ -172,10 +172,12 @@ largeJPmp[xi_, sampleScaling_, prec_] :=
 buildNumericalPMPs[samplePoints_List, sampleScalings_List, prec_] := Module[
   {regularPMPs, largeJPMPs},
 
-  regularPMPs = Table[
-    regularPmp[samplePoints[[i]], sampleScalings[[i]], J, prec],
-    {i, Length[samplePoints]}, {J, Jlist}
-  ];
+  regularPMPs = Flatten[{
+    Flatten[ParallelTable[regularPmp[samplePoints[[i]], sampleScalings[[i]], J, prec],{i, Length[samplePoints]}, {J, 0, 1000, 2}]],
+    Flatten[ParallelTable[regularPmp[samplePoints[[i]], sampleScalings[[i]], J, prec],{i, Length[samplePoints]}, {J, 1500, 5000, 100}]],
+    Flatten[ParallelTable[regularPmp[samplePoints[[i]], sampleScalings[[i]], J, prec],{i, Length[samplePoints]}, {J, 6000, 20000, 500}]],
+    Flatten[ParallelTable[regularPmp[samplePoints[[i]], sampleScalings[[i]], J, prec],{i, Length[samplePoints]}, {J, 20000, 50000, 2000}]]
+  },1];
 
   largeJPMPs = Table[
     largeJPmp[samplePoints[[i]], sampleScalings[[i]], prec],
@@ -184,9 +186,6 @@ buildNumericalPMPs[samplePoints_List, sampleScalings_List, prec_] := Module[
 
   Join[Flatten[regularPMPs], largeJPMPs]
 ];
-
-Jmax  = 70;
-Jlist = Range[0, Jmax, 2];   (* J = 0, 2, 4, ..., 70 -- exact discrete constraints *)
 
 (* test9 targets g3/g2: objective on g2, normalization on g3. *)
 norm = -1 * Flatten[{{0,1},list0}];
@@ -232,11 +231,7 @@ ToPMP[spFile_String, jsonFile_String, prec_:1000] := Module[
 
   samplePoints = SetPrecision[ToExpression /@ spLines, prec];
   Print["Read ", Length[samplePoints], " x sample points from ", spFile];
-  (* Print["  x-points    : ", samplePoints];
-  Print["  J-values    : ", Jlist, "  (", Length[Jlist], " spins, exact)"];
-  Print["  functional dimension: ", functionalDimension, "  (J\[Rule]\[Infinity] limit included separately)"]; *)
-
-  (* Scalings = prefactor DampedRational[1,{},1/E,x] evaluated at xi = e^{-xi} *)
+  
   sampleScalings = SetPrecision[Exp[-#] & /@ samplePoints, prec];
   pols = buildNumericalPMPs[samplePoints, sampleScalings, prec];
 
