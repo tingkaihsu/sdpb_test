@@ -4,7 +4,7 @@
 
 1. log in command to NTU CPU
 ```bash
-
+    ssh string-6@140.112.102.11
 ```
 2. run `pmp2sdp`
 ```bash

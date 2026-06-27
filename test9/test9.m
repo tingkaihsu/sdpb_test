@@ -94,6 +94,7 @@ WritePmpJsonNumerical[
 
 
 << "../SDPB.m";
+LaunchKernels[];
 
 (* ================================================================
    PROBLEM-SPECIFIC SECTION  ← edit here for your problem
