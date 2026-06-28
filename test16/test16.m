@@ -31,7 +31,7 @@ Poly[J_, z_, y_] := Module[{pref, polys, first},
 
   PositiveMatrixWithPrefactor[
     DampedRational[1, {}, 1/E, y],
-    {{Join[{first}, polys]}}
+    {{Join[{first, second}, polys]}}
   ]
 ];
 
@@ -53,10 +53,6 @@ PMP2SDP[datfile_, prec_:600] := Module[
         (* Flatten[N[ParallelTable[Poly[i, m1, x],{i, J1, J1, 2}],prec]], *)
         Flatten[N[ParallelTable[Polyinf[i, mgap+x, x],{i, 0, 0, 2}],prec]]
     },1];
-
-     (* create a zero padding list matching the number of polynomials (pols)
-       we prepend two entries below, so make list0 length = Length[pols] - 2 *)
-    list0 = Table[0, {i, 1, Max[0, Length[pols] - 2]}];
     norm = -1 * N[Flatten[{{0, 1}, list0}], prec];
     obj = -1 * N[Flatten[{{1, 0}, list0}], prec];
     
@@ -67,6 +63,4 @@ PMP2SDP[datfile_, prec_:600] := Module[
 ];
 
 PMP2SDP["n_pmp.json", 1000];
-
-
 
