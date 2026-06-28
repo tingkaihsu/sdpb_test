@@ -1,7 +1,7 @@
 (* ::Package:: *)
 
 Import["../SDPB.m"]
-m1 = N[45/100, 1000];
+m1 = N[55/100, 1000];
 J1 = 0;
 mA = N[1/1000, 1000];
 mgap = N[166/100, 1000];
@@ -63,3 +63,8 @@ PMP2SDP[datfile_, prec_:600] := Module[
 ];
 
 PMP2SDP["n_pmp.json", 1000];
+Print["mA = ", mA];
+Print["m1^2 = ", m1];
+Print["J1 = ", J1];
+Print["mgap^2 = ", mgap];
+
