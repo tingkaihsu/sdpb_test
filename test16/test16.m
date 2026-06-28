@@ -1,180 +1,70 @@
 (* ::Package:: *)
 
-(* pmp generator for mixed scattering *)
+Import["../SDPB.m"]
+m1 = N[45/100, 1000];
+m2 = N[1, 1000];
+J1 = 0;
+mgap = N[166/100, 1000];
 
-ClearAll[NumericalPositiveMatrixWithPrefactor];
-
-toJsonNestedNumberArray[expr_, prec_] := expr /. n_?NumericQ :> toJsonNumber[n, prec];
-
-toJsonObject[NumericalPositiveMatrixWithPrefactor[pmp_?AssociationQ], prec_, getSampleDataFn_:Function[<||>]] :=
-Module[
-  {sampleData, samplePoints, sampleScalings, functionValues, basisValues,
-   prefactor, reducedPrefactor},
-
-  sampleData = getSampleDataFn[NumericalPositiveMatrixWithPrefactor[pmp], prec];
-
-  prefactor        = Lookup[pmp, "prefactor",        1];
-  reducedPrefactor = Lookup[pmp, "reducedPrefactor", prefactor];
-
-  samplePoints   = Lookup[sampleData, "samplePoints",  Lookup[pmp, "samplePoints",  Missing[]]];
-  sampleScalings = Lookup[sampleData, "sampleScalings", Lookup[pmp, "sampleScalings", Missing[]]];
-  functionValues = Lookup[pmp, "polynomials", Missing[]];
-  basisValues    = Lookup[sampleData, "basisValues", Lookup[pmp, "basisValues", Missing[]]];
-
-  DeleteMissing @ <|
-    "prefactor"        -> toJsonDampedRational[prefactor,        prec],
-    "reducedPrefactor" -> toJsonDampedRational[reducedPrefactor, prec],
-    "samplePoints"     -> toJsonNumberArray[samplePoints,   prec],
-    "sampleScalings"   -> toJsonNumberArray[sampleScalings, prec],
-    "polynomials"      -> If[MissingQ[functionValues], Missing[],
-      toJsonNestedNumberArray[functionValues, prec]
-    ],
-    "basisValues"      -> If[MissingQ[basisValues], Missing[], toJsonNestedNumberArray[basisValues, prec]]
-  |>
-];
-
-WritePmpJsonNumerical[
-  file_,
-  SDP[objective_, normalization_, positiveMatricesWithPrefactors_],
-  prec_,
-  getSampleDataFn_:Function[<||>]
-] := exportJson[
-  file,
-  <|
-    "objective"     -> toJsonNumberArray[objective,     prec],
-    "normalization" -> toJsonNumberArray[normalization, prec],
-    "PositiveMatrixWithPrefactorArray" ->
-      Table[toJsonObject[pmp, prec, getSampleDataFn], {pmp, positiveMatricesWithPrefactors}]
-  |>
-];
-
-<< "../SDPB.m";
-
-(* problem-specific *)
-(* let the mass be 4mA^2 < M^2 = 1 where M  = 1 to infinity *)
-
-mA = N[1/1000, 600];
-
-Print["mA = ", mA]
-
-(* g2 and g3 in AB -> AB scattering *)
-cList[s_,J_] := {
-    s/(mA^2-s)^4,
-    (s (3 mA^2+(-3+2 J (1+J)) s))/(2 (mA^2-s)^6)
-};
-
-nullList = {-1, -1, -1, -1};
-
+nulllist = {8, -1, -1, -1};
 list0 = Table[0, {i, 1, Total[nulllist]+Length[nulllist]}];
 
-Nlist[n_,s_,mA_,J_] := 
+Nlist[n_, x_, J_] := {(2-J (7+J))/z^2,1/z^3+((-12+J (7+J)) (30+J (7+J) (-23+J (7+J))) m1^2 m2^2 (7 m1^2-16 m2^2)-36 J (7+J) (-13+J (7+J)) (m1^4+8 m2^4) z-180 (-2+J (7+J)) (2 m1^2+7 m2^2) z^2)/(720 (m1^4+8 m2^4) z^4),-(((-12+J (7+J)) (30+J (7+J) (-23+J (7+J))))/(180 z^4)),(-((-2+J) J (7+J) (9+J) (604+J (7+J) (-52+J (7+J))) m1^2 m2^2 (m1^4+8 m2^4))-28 (-2880 m2^6+(-2+J) J (7+J) (9+J) (-17+J (7+J)) (m1^6+8 m2^6)) z+5040 (-2+J (7+J)) (m1-m2) (m1+m2) z^3+10080 m1^2 (8 m2^6+m1^4 (m2^2+z)))/(10080 m1^2 m2^2 (m1^4+8 m2^4) z^5),1/(80 z^5) (-4 J (7+J) (-23+J (7+J))+1/(m2^2 (m1^4+8 m2^4)) z (-((-12+J (7+J)) (30+J (7+J) (-23+J (7+J))) m1^4)+180 (-2+J (7+J)) z^2)),-(1/(403200 z^6))(-403200+3769920 J-3778144 J^2+504980 J^3+368780 J^4-41405 J^5-18207 J^6+70 J^7+370 J^8+35 J^9+J^10+(1120 (-12+J (7+J)) (30+J (7+J) (-23+J (7+J))) (m1^8+8 m2^8) z^2)/(m1^4 m2^4 (m1^4+8 m2^4))-(201600 (-2+J (7+J)) (m1^4-m2^4) z^4)/(m1^4 m2^4 (m1^4+8 m2^4))),1/(720 z^6) (-2 J (7+J) (540+J (7+J) (-53+J (7+J)))+1/(m2^4 (m1^4+8 m2^4)) 9 z^2 (-((-12+J (7+J)) (30+J (7+J) (-23+J (7+J))) m1^4)+180 (-2+J (7+J)) z^2)),1/(720 z^6) (2 J (7+J) (540+J (7+J) (-53+J (7+J)))+1/(m2^4 (m1^4+8 m2^4)) (9 (-12+J (7+J)) (30+J (7+J) (-23+J (7+J))) m1^4 z^2-1620 (-2+J (7+J)) z^4)),1/z^7-1/(21772800 z^7) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (-62+J (7+J)) (-48+J (7+J)) (-15+J (7+J))-((-12+J (7+J)) (30+J (7+J) (-23+J (7+J))) (m1^10+8 m2^10))/(360 m1^6 m2^6 (m1^4+8 m2^4) z^4)+((-2+J (7+J)) (m1^6-m2^6))/(2 m1^6 m2^6 (m1^4+8 m2^4) z^2)}[[n+1]];
 
-Jmax = 70;
-Jlist = Range[0, Jmax, 2];
+polyify[expr_, var_] := Expand @ Cancel @ Together[expr];
 
+Poly[J_, z_, y_] := Module[{pref, polys, first},
+  pref = z^7;
 
-testNumericalSDP[spFile_String, jsonFile_String, prec_:600] := Module[
-  {rawLines, spLines, samplePoints, sampleScalings, polsRegular, polsExtra},
+  first = polyify[pref*-(((-12+J (7+J)) (30+J (7+J) (-23+J (7+J))) m1^4 m2^4 (64 m1^2-19 m2^2)+180 (-2+J (7+J)) (8 m1^6+19 m2^6) z^2-5760 (m1^4+8 m2^4) z^3)/(2880 (m1^4+8 m2^4) z^4)), z];
+  second = polyify[pref*(m2^6 (-((-12+J (7+J)) (30+J (7+J) (-23+J (7+J))) m1^4)+180 (-2+J (7+J)) z^2))/(360 (m1^4+8 m2^4) z^4), z]
+  
 
-  rawLines = ReadList[spFile, String];
-  spLines  = Select[rawLines,
-               StringLength[StringTrim[#]] > 0
-               && !StringStartsQ[StringTrim[#], "#"] &];
-
-  If[Length[spLines] == 0,
-    Print["ERROR: no sample points found in ", spFile]; Quit[1]];
-
-  samplePoints = SetPrecision[ToExpression /@ spLines, prec];
-  Print["Read ", Length[samplePoints], " x sample points from ", spFile];
-  Print["  x-points    : ", samplePoints];
-  Print["  J-values    : ", Jlist, "  (", Length[Jlist], " spins, exact)"];
-  Print["  large-J limit: {0,0,0,LargeJ}  (J\[Rule]\[Infinity] limit)"];
-
-  sampleScalings = SetPrecision[Exp[-#] & /@ samplePoints, prec];
-
-  polsRegular = Table[
-    NumericalPositiveMatrixWithPrefactor[<|
-      "prefactor"      -> DampedRational[1, {}, 1/E, x],
-      "samplePoints"   -> {samplePoints[[i]]},
-      "sampleScalings" -> {sampleScalings[[i]]},
-      "polynomials" -> {
-	      { 
-          Table[{SetPrecision[f11List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f11List]}],
-          Table[{SetPrecision[f21List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f21List]}],
-          Table[{SetPrecision[f31List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f31List]}]
-	      },
-	      {
-	        Table[{SetPrecision[f12List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f12List]}],
-			    Table[{SetPrecision[f22List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f22List]}],
-			    Table[{SetPrecision[f32List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f32List]}]
-	      },
-	      {
-	        Table[{SetPrecision[f13List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f13List]}],
-			    Table[{SetPrecision[f23List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f23List]}],
-			    Table[{SetPrecision[f33List[[k]][samplePoints[[i]], Jlist[[j]]], prec]}, {k, Length[f33List]}]
-	      }
-      }
-    |>],
-    {i, Length[samplePoints]}, {j, Length[Jlist]}
+  polys = Table[
+    polyify[pref*Nlist[n, z, J], z]
+    , {n, 0, nulllist[[1]]}
   ];
 
-  polsExtra = Table[
-    NumericalPositiveMatrixWithPrefactor[<|
-      "prefactor"      -> DampedRational[1, {}, 1/E, x],
-      "samplePoints"   -> {samplePoints[[i]]},
-      "sampleScalings" -> {sampleScalings[[i]]},
-      "polynomials" -> {
-	      { 
-          Table[{SetPrecision[j11List[[k]][samplePoints[[i]]], prec]}, {k, Length[j11List]}],
-          Table[{SetPrecision[j21List[[k]][samplePoints[[i]]], prec]}, {k, Length[j21List]}],
-          Table[{SetPrecision[j31List[[k]][samplePoints[[i]]], prec]}, {k, Length[j31List]}]
-	      },
-	      {
-	        Table[{SetPrecision[j12List[[k]][samplePoints[[i]]], prec]}, {k, Length[j12List]}],
-			    Table[{SetPrecision[j22List[[k]][samplePoints[[i]]], prec]}, {k, Length[j22List]}],
-			    Table[{SetPrecision[j32List[[k]][samplePoints[[i]]], prec]}, {k, Length[j32List]}]
-	      },
-	      {
-	        Table[{SetPrecision[j13List[[k]][samplePoints[[i]]], prec]}, {k, Length[j13List]}],
-			    Table[{SetPrecision[j23List[[k]][samplePoints[[i]]], prec]}, {k, Length[j23List]}],
-			    Table[{SetPrecision[j33List[[k]][samplePoints[[i]]], prec]}, {k, Length[j33List]}]
-	      }
-      }
-    |>],
-    {i, Length[samplePoints]}
+  If[!AllTrue[Join[{first, second}, polys], PolynomialQ[#, z] &],
+    Print["Non-polynomial terms remain."];
+    Print[Pick[Range[1 + Length[polys]], Not /@ (PolynomialQ[#, z] & /@ Join[{first}, polys])]];
   ];
 
-  Print["  Regular blocks : ", Length[samplePoints] * Length[Jlist]];
-  Print["  Extra blocks   : ", Length[polsExtra]];
-  Print["  Total blocks   : ", Length[samplePoints] * Length[Jlist] + Length[polsExtra]];
-
-  WritePmpJsonNumerical[
-    jsonFile,
-    SDP[obj, norm, Join[Flatten[polsRegular], polsExtra]],
-    prec
-  ];
-  Print["Wrote PMP JSON to ", jsonFile]
-];
-
-Module[{myArgs, spFile, jsonFile, prec},
-
-  myArgs = If[Length[$ScriptCommandLine] >= 2, Rest[$ScriptCommandLine], {}];
-
-  If[Length[myArgs] >= 1,
-    spFile   = myArgs[[1]];
-    jsonFile = If[Length[myArgs] >= 2, myArgs[[2]], "numeric_pmp.json"];
-    (* 600 digits exceeds SDPB 2048-bit precision (\[TildeTilde] 616.5 decimal digits)
-       by a safe margin.  n4 uses higher precision adaptively when J is large. *)
-    prec     = If[Length[myArgs] >= 3, ToExpression[myArgs[[3]]], 600];
-
-    Print["=== test9.m ==="];
-    Print["  sample_points = ", spFile];
-    Print["  output_json   = ", jsonFile];
-    Print["  precision     = ", prec];
-
-    testNumericalSDP[spFile, jsonFile, prec];
-    Quit[0],
-
-    Null
+  PositiveMatrixWithPrefactor[
+    DampedRational[1, {}, 1/E, y],
+    {{Join[{first}, polys]}}
   ]
 ];
+
+Polyinf[J_, x_, y_] := PositiveMatrixWithPrefactor[
+        DampedRational[1,{},1/E,y],{{{0,0,0,0,0,0,0,0,-(1/21772800)}}}];
+
+LaunchKernels[];
+
+PMP2SDP[datfile_, prec_:600] := Module[
+    {
+        pols, norm, obj
+    },
+    pols = 
+        Flatten[{
+        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 0, 1000, 2}],prec]],
+        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 1500, 5000, 100}],prec]],
+        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 6000, 20000, 500}],prec]],
+        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 20000, 50000, 2000}],prec]],
+        Flatten[N[ParallelTable[Poly[i, m1, x],{i, J1, J1, 2}],prec]],
+        Flatten[N[ParallelTable[Polyinf[i, mgap+x, x],{i, 0, 0, 2}],prec]]
+    },1];
+
+    norm = -1 * N[Flatten[{{0,1},list0}],prec];
+	obj  = -1 *N[Flatten[{{1,0},list0}],prec];
+    
+    Print["size of nomr = ", Length[norm]];
+    Print["size of obj = ", Length[obj]];
+
+    WritePmpJson[datfile, SDP[obj, norm, pols], prec, getAnalyticSampleData]
+];
+
+PMP2SDP["n_pmp.json", 1000];
+
+
+
