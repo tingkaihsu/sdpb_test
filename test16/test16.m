@@ -39,7 +39,7 @@ Poly[J_, z_, y_] := Module[{pref, polys, first},
 ];
 
 Polyinf[J_, x_, y_] := PositiveMatrixWithPrefactor[
-        DampedRational[1,{},1/E,y],{{{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-(1/52198176212582400000)}}}];
+        DampedRational[1,{},1/E,y],{{{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-(1/52198176212582400000)}}}];
 
 LaunchKernels[];
 
