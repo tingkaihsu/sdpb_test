@@ -15,6 +15,8 @@ Nlist[n_, z_, J_] := {(2-J (7+J))/(2 z^2),(20-J (7+J) (-13+J (7+J)))/(20 z^3),-(
 
 
 
+
+
 polyify[expr_, var_] := Expand @ Cancel @ Together[expr];
 
 Poly[J_, z_, y_] := Module[{pref, polys, first},
@@ -79,7 +81,7 @@ PMP2SDP[datfile_, prec_:600] := Module[
         Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 1500, 5000, 100}],prec]],
         Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 6000, 20000, 500}],prec]],
         Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 20000, 50000, 2000}],prec]],
-        (* Flatten[N[ParallelTable[Poly[i, m1, x],{i, J1, J1, 2}],prec]], *)
+        Flatten[N[ParallelTable[Poly[i, m1, x],{i, J1, J1, 2}],prec]],
         Flatten[N[ParallelTable[Polyinf[i, mgap+x, x],{i, 0, 0, 2}],prec]]
     },1];
     norm = -1 * N[Flatten[{{0, 1}, list0}], prec];
