@@ -121,7 +121,7 @@ Poly[J_, z_, y_] := Module[{pref, polys, first},
 NPolyInf[n_,J_,x_] := {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-(1/72112721508161887005573120000000)}[[n+1]];
 
 
-Polyinf[J_, x_, y_] := PositiveMatrixWithPrefactor[
+PolyInf[J_, x_, y_] := PositiveMatrixWithPrefactor[
         DampedRational[1,{},1/E,y],{{{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-(1/72112721508161887005573120000000)}}}];
 
 LaunchKernels[];
@@ -132,7 +132,7 @@ PMP2SDP[datfile_, prec_:600] := Module[
     },
     xSamples = SetPrecision[
       Join[
-        Range[5/1000, 1/10, 5/1000],
+        Range[5/2000, 1/10, 5/1000],
         Range[15/100, 1/2, 5/100],
         Range[6/10, 9/10, 1/10],
         {94/100, 98/100}
@@ -147,10 +147,10 @@ PMP2SDP[datfile_, prec_:600] := Module[
     };
 
     sampledPoly[j_, xv_] := Module[{zv, pref, mfst, msnd, values},
-      zv = mgap + xv;
+      zv = mgap + 1/(1-xv);
       pref = zv^18;
       mfst = {{0, 0, 0}, {0, polyify[pref*(2/zv), zv], 0}, {0, 0, 0}};
-      msnd = {{0, 0, 0}, {0, polyify[pref, zv], 0}, {0, 0, 0}};
+      msnd = {{0, 0, 0}, {0, polyify[pref*0, zv], 0}, {0, 0, 0}};
       values = Join[
         {mfst, msnd},
         Table[polyify[pref*MNlist[n, zv, j], zv], {n, 0, nulllist[[1]]}]
@@ -168,7 +168,7 @@ PMP2SDP[datfile_, prec_:600] := Module[
     ];
 
     sampledPolyinf[j_, xv_] := Module[{analyticForm},
-      analyticForm = Polyinf[j, mgap + xv, xv];
+      analyticForm = PolyInf[j, mgap + 1/(1-xv), xv];
       NumericalPositiveMatrixWithPrefactor[<|
         "prefactor" -> DampedRational[1, {}, 1/E, xv],
         "samplePoints" -> {xv},
@@ -178,13 +178,36 @@ PMP2SDP[datfile_, prec_:600] := Module[
             {N[value, prec]},
             {value, Join[
               {0, 0},
-              Table[NPolyInf[n, j, mgap + xv], {n, 0, nulllist[[1]]}]
+              Table[NPolyInf[n, j, mgap + 1/(1-xv)], {n, 0, nulllist[[1]]}]
             ]}
           ]
         }}
       |>]
     ];
-
+	
+	(* at the second state mass and spin *)
+	sampledPoly2nd[j_, xv_] := Module[{zv, jv, pref, mfst, msnd, values},
+      zv = 1;
+      jv = J2;
+      pref = zv^18;
+      mfst = {{0, 0, 0}, {0, polyify[pref*(2/zv), zv], 0}, {0, 0, 0}};
+      msnd = {{0, 0, 0}, {0, polyify[pref*1, zv], 0}, {0, 0, 0}};
+      values = Join[
+        {mfst, msnd},
+        Table[polyify[pref*MNlist[n, zv, jv], zv], {n, 0, nulllist[[1]]}]
+      ];
+      NumericalPositiveMatrixWithPrefactor[<|
+        "prefactor" -> DampedRational[1, {}, 1/E, xv],
+        "samplePoints" -> {xv},
+        "sampleScalings" -> {Exp[-xv]},
+        "polynomials" ->
+          Table[
+            Table[{N[values[[k, row, column]], prec]}, {k, Length[values]}],
+            {row, 3}, {column, 3}
+          ]
+      |>]
+    ];
+    
     pols = Join[
       Flatten[
         Table[
