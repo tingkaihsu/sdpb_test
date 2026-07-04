@@ -1,19 +1,5 @@
 (* ::Package:: *)
 
-(*
-  CHANGELOG
-  - Task 1-A: Changed nulllist[[1]] from 49 to 51, so Poly includes all
-    52 Nlist terms (n = 0..51); nulllist[[2..4]] remain -1.
-  - Task 1-B: Corrected the large-J call site from PolyInf to Polyinf;
-    the Polyinf definition is unchanged.
-  - Task 2: Replaced SDPB's free-polynomial x treatment at output time
-    with explicit inline numerical sampling nested over x and J.  The
-    hardcoded x tiers on 0 < x < 1 are 0.001..0.100 by 0.001,
-    0.11..0.50 by 0.01, 0.55..0.90 by 0.05, and 0.92..0.98 by 0.02.
-    The existing four tiered J ranges are retained inline.  No sample
-    file, ReadList, or command-line sample-point parsing is used.
-*)
-
 Import["../SDPB.m"]
 
 ClearAll[NumericalPositiveMatrixWithPrefactor];
@@ -65,6 +51,7 @@ WritePmpJsonNumerical[
         {pmp, positiveMatricesWithPrefactors}]
   |>
 ];
+
 m1 = N[1/2, 1000];
 J1 = 0;
 J2 = 2;
@@ -85,39 +72,6 @@ MNlist[n_,z_,J_] := {
 
 polyify[expr_, var_] := Expand @ Cancel @ Together[expr];
 
-Poly[J_, z_, y_] := Module[{pref, polys, first},
-  pref = z^18;
-
-  fst = polyify[pref*( 2/z ), z];
-  snd = polyify[pref*( 1 ), z];
-
-  Mfst = {
-    {0,0,0},
-    {0,fst,0},
-    {0,0,0}
-  };
-  Msnd = {
-    {0,0,0},
-    {0,snd,0},
-    {0,0,0}
-  };
-  
-  polys = Table[
-    polyify[pref*MNlist[n, z, J], z]
-    , {n, 0, nulllist[[1]]}
-  ];
-
-  If[!AllTrue[Join[{Mfst, Msnd}, polys], PolynomialQ[#, z] &],
-    Print["Non-polynomial terms remain."];
-    Print[Pick[Range[1 + Length[polys]], Not /@ (PolynomialQ[#, z] & /@ Join[{Mfst,Msnd}, polys])]];
-  ];
-
-  PositiveMatrixWithPrefactor[
-    DampedRational[1, {}, 1/E, y],
-    {{Join[{Mfst, Msnd}, polys]}}
-  ]
-];
-
 NPolyInf[n_,J_,x_] := {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-(1/72112721508161887005573120000000)}[[n+1]];
 
 
@@ -128,7 +82,7 @@ LaunchKernels[];
 
 PMP2SDP[datfile_, prec_:600] := Module[
     {
-        xSamples, jTiers, sampledPoly, sampledPolyinf, pols, norm, obj
+        xSamples, jTiers, sampledPoly, sampledPolyinf, sampledPoly1st, sampledPoly2nd, pols, norm, obj
     },
     xSamples = SetPrecision[
       Join[
@@ -185,16 +139,37 @@ PMP2SDP[datfile_, prec_:600] := Module[
       |>]
     ];
 	
+	(* at the first state mass and spin *)
+	sampledPoly1st[j_, xv_] := Module[{zv, pref, mfst, msnd, values},
+      zv = m1;
+      pref = zv^18;
+      mfst = {{0, 0, 0}, {0, polyify[pref*(2/zv), zv], 0}, {0, 0, 0}};
+      msnd = {{0, 0, 0}, {0, polyify[pref*0, zv], 0}, {0, 0, 0}};
+      values = Join[
+        {mfst, msnd},
+        Table[polyify[pref*MNlist[n, zv, j], zv], {n, 0, nulllist[[1]]}]
+      ];
+      NumericalPositiveMatrixWithPrefactor[<|
+        "prefactor" -> DampedRational[1, {}, 1/E, xv],
+        "samplePoints" -> {xv},
+        "sampleScalings" -> {Exp[-xv]},
+        "polynomials" ->
+          Table[
+            Table[{N[values[[k, row, column]], prec]}, {k, Length[values]}],
+            {row, 3}, {column, 3}
+          ]
+      |>]
+    ];
+    
 	(* at the second state mass and spin *)
-	sampledPoly2nd[j_, xv_] := Module[{zv, jv, pref, mfst, msnd, values},
+	sampledPoly2nd[j_, xv_] := Module[{zv, pref, mfst, msnd, values},
       zv = 1;
-      jv = J2;
       pref = zv^18;
       mfst = {{0, 0, 0}, {0, polyify[pref*(2/zv), zv], 0}, {0, 0, 0}};
       msnd = {{0, 0, 0}, {0, polyify[pref*1, zv], 0}, {0, 0, 0}};
       values = Join[
         {mfst, msnd},
-        Table[polyify[pref*MNlist[n, zv, jv], zv], {n, 0, nulllist[[1]]}]
+        Table[polyify[pref*MNlist[n, zv, j], zv], {n, 0, nulllist[[1]]}]
       ];
       NumericalPositiveMatrixWithPrefactor[<|
         "prefactor" -> DampedRational[1, {}, 1/E, xv],
@@ -216,13 +191,22 @@ PMP2SDP[datfile_, prec_:600] := Module[
         ],
         2
       ],
-      Table[sampledPolyinf[0, xv], {xv, xSamples}]
+      Table[sampledPolyinf[0, xv], {xv, xSamples}],
+      Table[sampledPoly1st[J1, xv], {xv, xSamples}],
+      Table[sampledPoly2nd[J2, xv], {xv, xSamples}]
     ];
+    
     norm = -1 * N[Flatten[{{0, 1}, list0}], prec];
     obj = -1 * N[Flatten[{{1, 0}, list0}], prec];
     
     Print["size of norm = ", Length[norm]];
     Print["size of obj = ", Length[obj]];
+    Print["# of null constraints = ", nulllist[[1]]+1];
+    Print["m1^2 = ", m1];
+    Print["J1 = ", J1];
+    Print["J2 = ", J2];
+    Print["mass gap^2 = ", mgap];
+    
 
     WritePmpJsonNumerical[datfile, SDP[obj, norm, pols], prec]
 ];
