@@ -129,7 +129,7 @@ PMP2SDP[datfile_, prec_:600] := Module[
     {
         xSamples, jTiers, sampledPoly, sampledPolyinf, pols, norm, obj
     },
-    xSamples = SetPrecision[
+    (* xSamples = SetPrecision[
       Join[
         Range[1/1000, 1/10, 1/1000],
         Range[11/100, 1/2, 1/100],
@@ -143,7 +143,9 @@ PMP2SDP[datfile_, prec_:600] := Module[
       Range[1500, 5000, 100],
       Range[6000, 20000, 500],
       Range[20000, 50000, 2000]
-    };
+    }; *)
+    xSamples = SetPrecision[{1/100, 1/2, 9/10}, prec];
+    jTiers = {{0, 2, 4}};
 
     sampledPoly[j_, xv_] := Module[{zv, pref, mfst, msnd, values},
       zv = mgap + xv;
@@ -197,7 +199,7 @@ PMP2SDP[datfile_, prec_:600] := Module[
     norm = -1 * N[Flatten[{{0, 1}, list0}], prec];
     obj = -1 * N[Flatten[{{1, 0}, list0}], prec];
     
-    Print["size of nomr = ", Length[norm]];
+    Print["size of norm = ", Length[norm]];
     Print["size of obj = ", Length[obj]];
 
     WritePmpJsonNumerical[datfile, SDP[obj, norm, pols], prec]
