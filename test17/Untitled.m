@@ -1,6 +1,10 @@
 (* ::Package:: *)
 
-Import["../SDPB.m"]
+(* ::Package:: *)
+(**)
+
+
+Import["../SDPB.m"];
 m1 = N[1/2, 1000];
 J1 = 0;
 J2 = 2;
@@ -13,85 +17,142 @@ Nlist[n_, z_, J_] := {(2-J (7+J))/(2 z^2),(20-J (7+J) (-13+J (7+J)))/(20 z^3),-(
 
 
 
+MNlist[n_,z_,J_] := {
+	{0,0,0},
+	{0,Nlist[n,z,J],0},
+	{0,0,0}
+};
 
 
+polyify[expr_] := Expand @ Cancel @ Together[expr];
 
-
-
-polyify[expr_, var_] := Expand @ Cancel @ Together[expr];
-
-Poly[J_, z_, y_] := Module[{pref, polys, fst, snd},
-  pref = z^18;
-
-  fst = polyify[pref*( 2/z ), z];
-  snd = polyify[pref*( 0 ), z];
-
-  polys = Table[
-    polyify[pref*Nlist[n, z, J], z]
-    , {n, 0, nulllist[[1]]}
-  ];
-
-  If[!AllTrue[Join[{fst, snd}, polys], PolynomialQ[#, z] &],
-    Print["Non-polynomial terms remain."];
-    Print[Pick[Range[1 + Length[polys]], Not /@ (PolynomialQ[#, z] & /@ Join[{fst,snd}, polys])]];
-  ];
-
-  PositiveMatrixWithPrefactor[
-    DampedRational[1, {}, 1/E, y],
-    {{Join[{fst, snd}, polys]}}
-  ]
-];
-
-
-Poly1[J_, z_, y_] := Module[{pref, polys, fst, snd},
-  pref = z^18;
-
-  fst = polyify[pref*( 2/z ), z];
-  snd = polyify[pref*( 1 ), z];
-
-  polys = Table[
-    polyify[pref*Nlist[n, z, J], z]
-    , {n, 0, nulllist[[1]]}
-  ];
-
-  If[!AllTrue[Join[{fst, snd}, polys], PolynomialQ[#, z] &],
-    Print["Non-polynomial terms remain."];
-    Print[Pick[Range[1 + Length[polys]], Not /@ (PolynomialQ[#, z] & /@ Join[{fst,snd}, polys])]];
-  ];
-
-  PositiveMatrixWithPrefactor[
-    DampedRational[1, {}, 1/E, y],
-    {{Join[{fst, snd}, polys]}}
-  ]
-];
-
-
-Polyinf[J_, x_, y_] := PositiveMatrixWithPrefactor[
-        DampedRational[1,{},1/E,y],{{{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-(1/72112721508161887005573120000000)}}}];
+NPolyInf[n_,J_,x_] := {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-(1/72112721508161887005573120000000)}[[n+1]];
 
 LaunchKernels[];
 
+
 PMP2SDP[datfile_, prec_:600] := Module[
     {
-        pols, norm, obj
+        jTiers, Poly, PolyInf,
+        Poly2nd, pols, norm, obj,
+        functionalCount, functionalCovered, missingFunctionals
     },
-    pols = 
-    Flatten[{
-        Flatten[N[ParallelTable[Poly1[i, 1, x],{i, J2, J2, 2}],prec]],
-        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 0, 1000, 2}],prec]],
-        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 1500, 5000, 100}],prec]],
-        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 6000, 20000, 500}],prec]],
-        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 20000, 50000, 2000}],prec]],
-        Flatten[N[ParallelTable[Poly[i, m1, x],{i, J1, J1, 2}],prec]],
-        Flatten[N[ParallelTable[Polyinf[i, mgap+x, x],{i, 0, 0, 2}],prec]]
-    },1];
+    jTiers = {
+      Range[0, 1000, 2],
+      Range[1500, 5000, 100],
+      Range[6000, 20000, 500],
+      Range[20000, 50000, 2000]
+    };
+    Print["J samples: ", Total[Length /@ jTiers]];
+    Print["Building numerical PMP blocks..."];
+
+    (* Same "Poly" family as test16 (snd = 0), but embedded as a 3x3 matrix
+       with all the content sitting at position (2,2), zero elsewhere.
+       Used both for the mgap+x tiers and for the m1 block. *)
+    Poly[j_, x_, y_] := Module[{pref, fst, snd, polys},
+      pref = x^18;
+      fst = {{0, 0, 0}, {0, polyify[pref*(2/x)], 0}, {0, 0, 0}};
+      snd = {{0, 0, 0}, {0, polyify[pref*0], 0}, {0, 0, 0}};
+
+      polys = Join[
+        {fst, snd},
+        Table[polyify[pref*MNlist[n, x, j]], {n, 0, nulllist[[1]]}]
+      ];
+      PositiveMatrixWithPrefactor[
+        DampedRational[1, {}, 1/E, y],
+        Table[
+            Table[polys[[k, row, column]], {k, Length[polys]}],
+            {row, 3}, {column, 3}
+          ]
+       ]
+    ];
+
+    (* Analogue of test16's "Polyinf": a fixed, x/J-independent asymptotic
+       tail vector, embedded at (2,2), zero elsewhere. *)
+    PolyInf[j_, x_, y_] := Module[{polys},
+      polys = Join[
+        {0, 0},
+        Table[NPolyInf[n, j, x],
+          {n, 0, nulllist[[1]]}]
+      ];
+      PositiveMatrixWithPrefactor[
+		DampedRational[1, {}, 1/E, y],
+        Table[
+            Table[
+              If[row == 2 && column == 2,
+                polys,
+                Table[0, {Length[polys]}]
+              ],
+              {column, 3}
+            ],
+            {row, 3}
+        ]
+      ]
+    ];
+    
+    Poly2nd[j_, z_, y_] := Module[{pref, fst, snd, polys},
+      pref = z^18;
+      
+      fst = {{0, 0, 0}, {0, polyify[pref*(2/z)], 0}, {0, 0, 0}};
+      snd = {{0, 0, 0}, {0, polyify[pref], 0}, {0, 0, 0}};
+      polys = Join[
+        {fst, snd},
+        Table[polyify[pref*MNlist[n, z, j]],
+          {n, 0, nulllist[[1]]}]
+      ];
+      PositiveMatrixWithPrefactor[
+		DampedRational[1, {}, 1/E, y],
+        Table[
+            Table[polys[[k, row, column]], {k, Length[polys]}],
+            {row, 3}, {column, 3}
+        ]
+      ]
+    ];
+    
+    pols = Flatten[{
+      Flatten[N[ParallelTable[Poly2nd[i, 1, x], {i, J2, J2, 2}], prec]],
+      Flatten[N[ParallelTable[Poly[i, mgap + x, x], {i, Flatten[jTiers]}], prec]],
+      Flatten[N[ParallelTable[Poly[i, m1, x], {i, J1, J1, 2}], prec]],
+      Flatten[N[ParallelTable[PolyInf[i, mgap + x, x], {i, 0, 0, 2}], prec]]
+    }, 1];
+
+    Print["Built ", Length[pols], " numerical PMP blocks."];
+
     norm = -1 * N[Flatten[{{0, 1}, list0}], prec];
     obj = -1 * N[Flatten[{{1, 0}, list0}], prec];
-    
-    Print["size of nomr = ", Length[norm]];
-    Print["size of obj = ", Length[obj]];
 
-    WritePmpJson[datfile, SDP[obj, norm, pols], prec, getAnalyticSampleData]
+    functionalCount = Length[norm];
+    functionalCovered = Table[
+      AnyTrue[
+        pols,
+        Function[pmp,
+          AnyTrue[
+            Flatten[pmp[[2]][[All, All, k]]],
+            Function[value, !PossibleZeroQ[value]]
+          ]
+        ]
+      ],
+      {k, functionalCount}
+    ];
+    missingFunctionals = Flatten @ Position[functionalCovered, False];
+
+    If[missingFunctionals =!= {},
+      Print[
+        "ERROR: sampled PMP has identically zero functional indices: ",
+        missingFunctionals,
+        ". Expand the x/J sampling grid before running SDPB."
+      ];
+      Quit[1]
+    ];
+
+    Print["Validated all ", functionalCount,
+      " functional directions: none are identically zero."];
+    Print["size of norm = ", Length[norm]];
+    Print["size of obj = ", Length[obj]];
+    Print["Writing ", datfile, "..."];
+    WritePmpJson[datfile, SDP[obj, norm, pols], prec, getAnalyticSampleData];
+    Print["Wrote ", datfile, "."]
 ];
 
 PMP2SDP["n_pmp.json", 1000];
+
