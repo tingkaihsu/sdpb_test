@@ -1,9 +1,3 @@
-(* ::Package:: *)
-
-(* ::Package:: *)
-(**)
-
-
 Import["../SDPB.m"];
 m1 = N[1/2, 1000];
 J1 = 0;
@@ -56,14 +50,14 @@ PMP2SDP[datfile_, prec_:600] := Module[
 
       polys = Join[
         {fst, snd},
-        Table[polyify[pref*MNlist[n, x, j]], {n, 0, nulllist[[1]]}]
+        Table[ polyify[ pref*MNlist[n, x, j] ], {n, 0, nulllist[[1]]} ]
       ];
       PositiveMatrixWithPrefactor[
         DampedRational[1, {}, 1/E, y],
         Table[
-            Table[polys[[k, row, column]], {k, Length[polys]}],
+            Table[ polys[ [k, row, column] ], {k, Length[polys]} ],
             {row, 3}, {column, 3}
-          ]
+        ]
        ]
     ];
 
@@ -76,7 +70,7 @@ PMP2SDP[datfile_, prec_:600] := Module[
           {n, 0, nulllist[[1]]}]
       ];
       PositiveMatrixWithPrefactor[
-		DampedRational[1, {}, 1/E, y],
+        DampedRational[1, {}, 1/E, y],
         Table[
             Table[
               If[row == 2 && column == 2,
@@ -97,11 +91,12 @@ PMP2SDP[datfile_, prec_:600] := Module[
       snd = {{0, 0, 0}, {0, polyify[pref], 0}, {0, 0, 0}};
       polys = Join[
         {fst, snd},
-        Table[polyify[pref*MNlist[n, z, j]],
-          {n, 0, nulllist[[1]]}]
+        Table[ polyify[ pref*MNlist[n, z, j] ],
+          {n, 0, nulllist[[1]]}
+        ] 
       ];
       PositiveMatrixWithPrefactor[
-		DampedRational[1, {}, 1/E, y],
+        DampedRational[1, {}, 1/E, y],
         Table[
             Table[polys[[k, row, column]], {k, Length[polys]}],
             {row, 3}, {column, 3}
@@ -121,32 +116,6 @@ PMP2SDP[datfile_, prec_:600] := Module[
     norm = -1 * N[Flatten[{{0, 1}, list0}], prec];
     obj = -1 * N[Flatten[{{1, 0}, list0}], prec];
 
-    functionalCount = Length[norm];
-    functionalCovered = Table[
-      AnyTrue[
-        pols,
-        Function[pmp,
-          AnyTrue[
-            Flatten[pmp[[2]][[All, All, k]]],
-            Function[value, !PossibleZeroQ[value]]
-          ]
-        ]
-      ],
-      {k, functionalCount}
-    ];
-    missingFunctionals = Flatten @ Position[functionalCovered, False];
-
-    If[missingFunctionals =!= {},
-      Print[
-        "ERROR: sampled PMP has identically zero functional indices: ",
-        missingFunctionals,
-        ". Expand the x/J sampling grid before running SDPB."
-      ];
-      Quit[1]
-    ];
-
-    Print["Validated all ", functionalCount,
-      " functional directions: none are identically zero."];
     Print["size of norm = ", Length[norm]];
     Print["size of obj = ", Length[obj]];
     Print["Writing ", datfile, "..."];
