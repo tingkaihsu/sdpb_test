@@ -1,5 +1,3 @@
-(* ::Package:: *)
-
 Import["../SDPB.m"]
 
 ClearAll[NumericalPositiveMatrixWithPrefactor];
@@ -51,7 +49,6 @@ WritePmpJsonNumerical[
         {pmp, positiveMatricesWithPrefactors}]
   |>
 ];
-
 m1 = N[1/2, 1000];
 J1 = 0;
 J2 = 2;
@@ -70,23 +67,22 @@ MNlist[n_,z_,J_] := {
 };
 
 
-polyify[expr_, var_] := Expand @ Cancel @ Together[expr];
+polyify[expr_] := Expand @ Cancel @ Together[expr];
 
 NPolyInf[n_,J_,x_] := {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-(1/72112721508161887005573120000000)}[[n+1]];
 
-
-PolyInf[J_, x_, y_] := PositiveMatrixWithPrefactor[
-        DampedRational[1,{},1/E,y],{{{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-(1/72112721508161887005573120000000)}}}];
 
 LaunchKernels[];
 
 PMP2SDP[datfile_, prec_:600] := Module[
     {
-        xSamples, jTiers, sampledPoly, sampledPolyinf, sampledPoly1st, sampledPoly2nd, pols, norm, obj
+        xSamples, jTiers, sampledPoly, sampledPolyinf,
+        sampledPoly1st, sampledPoly2nd, sampleAnchor, pols, norm, obj,
+        functionalCount, functionalCovered, missingFunctionals
     },
     xSamples = SetPrecision[
       Join[
-        Range[5/2000, 1/10, 5/1000],
+        Range[0, 1/10, 5/1000],
         Range[15/100, 1/2, 5/100],
         Range[6/10, 9/10, 1/10],
         {94/100, 98/100}
@@ -100,14 +96,18 @@ PMP2SDP[datfile_, prec_:600] := Module[
       Range[20000, 50000, 2000]
     };
 
+    Print["x samples: ", Length[xSamples]];
+    Print["J samples: ", Total[Length /@ jTiers]];
+    Print["Building numerical PMP blocks..."];
+
     sampledPoly[j_, xv_] := Module[{zv, pref, mfst, msnd, values},
-      zv = mgap + 1/(1-xv);
+      zv = mgap + xv/(1 - xv);
       pref = zv^18;
-      mfst = {{0, 0, 0}, {0, polyify[pref*(2/zv), zv], 0}, {0, 0, 0}};
-      msnd = {{0, 0, 0}, {0, polyify[pref*0, zv], 0}, {0, 0, 0}};
+      mfst = {{0, 0, 0}, {0, polyify[pref*(2/zv)], 0}, {0, 0, 0}};
+      msnd = {{0, 0, 0}, {0, polyify[pref*0], 0}, {0, 0, 0}};
       values = Join[
         {mfst, msnd},
-        Table[polyify[pref*MNlist[n, zv, j], zv], {n, 0, nulllist[[1]]}]
+        Table[polyify[pref*MNlist[n, zv, j]], {n, 0, nulllist[[1]]}]
       ];
       NumericalPositiveMatrixWithPrefactor[<|
         "prefactor" -> DampedRational[1, {}, 1/E, xv],
@@ -121,33 +121,39 @@ PMP2SDP[datfile_, prec_:600] := Module[
       |>]
     ];
 
-    sampledPolyinf[j_, xv_] := Module[{analyticForm},
-      analyticForm = PolyInf[j, mgap + 1/(1-xv), xv];
+    sampledPolyinf[j_, xv_] := Module[{values},
+      values = Join[
+        {0, 0},
+        Table[NPolyInf[n, j, mgap + xv/(1 - xv)],
+          {n, 0, nulllist[[1]]}]
+      ];
       NumericalPositiveMatrixWithPrefactor[<|
         "prefactor" -> DampedRational[1, {}, 1/E, xv],
         "samplePoints" -> {xv},
         "sampleScalings" -> {Exp[-xv]},
-        "polynomials" -> {{
+        "polynomials" ->
           Table[
-            {N[value, prec]},
-            {value, Join[
-              {0, 0},
-              Table[NPolyInf[n, j, mgap + 1/(1-xv)], {n, 0, nulllist[[1]]}]
-            ]}
+            Table[
+              If[row == 2 && column == 2,
+                Table[{N[value, prec]}, {value, values}],
+                Table[{0}, {Length[values]}]
+              ],
+              {column, 3}
+            ],
+            {row, 3}
           ]
-        }}
       |>]
     ];
-	
-	(* at the first state mass and spin *)
-	sampledPoly1st[j_, xv_] := Module[{zv, pref, mfst, msnd, values},
+
+    sampledPoly1st[j_, xv_] := Module[{zv, pref, mfst, msnd, values},
       zv = m1;
       pref = zv^18;
-      mfst = {{0, 0, 0}, {0, polyify[pref*(2/zv), zv], 0}, {0, 0, 0}};
-      msnd = {{0, 0, 0}, {0, polyify[pref*0, zv], 0}, {0, 0, 0}};
+      mfst = {{0, 0, 0}, {0, polyify[pref*(2/zv)], 0}, {0, 0, 0}};
+      msnd = {{0, 0, 0}, {0, polyify[pref*0], 0}, {0, 0, 0}};
       values = Join[
         {mfst, msnd},
-        Table[polyify[pref*MNlist[n, zv, j], zv], {n, 0, nulllist[[1]]}]
+        Table[polyify[pref*MNlist[n, zv, j]],
+          {n, 0, nulllist[[1]]}]
       ];
       NumericalPositiveMatrixWithPrefactor[<|
         "prefactor" -> DampedRational[1, {}, 1/E, xv],
@@ -155,21 +161,22 @@ PMP2SDP[datfile_, prec_:600] := Module[
         "sampleScalings" -> {Exp[-xv]},
         "polynomials" ->
           Table[
-            Table[{N[values[[k, row, column]], prec]}, {k, Length[values]}],
+            Table[{N[values[[k, row, column]], prec]},
+              {k, Length[values]}],
             {row, 3}, {column, 3}
           ]
       |>]
     ];
-    
-	(* at the second state mass and spin *)
-	sampledPoly2nd[j_, xv_] := Module[{zv, pref, mfst, msnd, values},
+
+    sampledPoly2nd[j_, xv_] := Module[{zv, pref, mfst, msnd, values},
       zv = 1;
       pref = zv^18;
-      mfst = {{0, 0, 0}, {0, polyify[pref*(2/zv), zv], 0}, {0, 0, 0}};
-      msnd = {{0, 0, 0}, {0, polyify[pref*1, zv], 0}, {0, 0, 0}};
+      mfst = {{0, 0, 0}, {0, polyify[pref*(2/zv)], 0}, {0, 0, 0}};
+      msnd = {{0, 0, 0}, {0, polyify[pref], 0}, {0, 0, 0}};
       values = Join[
         {mfst, msnd},
-        Table[polyify[pref*MNlist[n, zv, j], zv], {n, 0, nulllist[[1]]}]
+        Table[polyify[pref*MNlist[n, zv, j]],
+          {n, 0, nulllist[[1]]}]
       ];
       NumericalPositiveMatrixWithPrefactor[<|
         "prefactor" -> DampedRational[1, {}, 1/E, xv],
@@ -177,13 +184,16 @@ PMP2SDP[datfile_, prec_:600] := Module[
         "sampleScalings" -> {Exp[-xv]},
         "polynomials" ->
           Table[
-            Table[{N[values[[k, row, column]], prec]}, {k, Length[values]}],
+            Table[{N[values[[k, row, column]], prec]},
+              {k, Length[values]}],
             {row, 3}, {column, 3}
           ]
       |>]
     ];
-    
+
+    sampleAnchor = First[xSamples];
     pols = Join[
+      {sampledPoly2nd[J2, sampleAnchor]},
       Flatten[
         Table[
           ParallelTable[sampledPoly[j, xv], {j, tier}],
@@ -191,24 +201,48 @@ PMP2SDP[datfile_, prec_:600] := Module[
         ],
         2
       ],
-      Table[sampledPolyinf[0, xv], {xv, xSamples}],
-      Table[sampledPoly1st[J1, xv], {xv, xSamples}],
-      Table[sampledPoly2nd[J2, xv], {xv, xSamples}]
+      {
+        sampledPoly1st[J1, sampleAnchor],
+        sampledPolyinf[0, sampleAnchor]
+      }
     ];
-    
+
+    Print["Built ", Length[pols], " numerical PMP blocks."];
+
     norm = -1 * N[Flatten[{{0, 1}, list0}], prec];
     obj = -1 * N[Flatten[{{1, 0}, list0}], prec];
-    
+
+    functionalCount = Length[norm];
+    functionalCovered = Table[
+      AnyTrue[
+        pols,
+        Function[pmp,
+          AnyTrue[
+            Flatten[pmp[[1]]["polynomials"][[All, All, k, All]]],
+            Function[value, TrueQ[value != 0]]
+          ]
+        ]
+      ],
+      {k, functionalCount}
+    ];
+    missingFunctionals = Flatten @ Position[functionalCovered, False];
+
+    If[missingFunctionals =!= {},
+      Print[
+        "ERROR: sampled PMP has identically zero functional indices: ",
+        missingFunctionals,
+        ". Expand the x/J sampling grid before running SDPB."
+      ];
+      Quit[1]
+    ];
+
+    Print["Validated all ", functionalCount,
+      " functional directions: none are identically zero."];
     Print["size of norm = ", Length[norm]];
     Print["size of obj = ", Length[obj]];
-    Print["# of null constraints = ", nulllist[[1]]+1];
-    Print["m1^2 = ", m1];
-    Print["J1 = ", J1];
-    Print["J2 = ", J2];
-    Print["mass gap^2 = ", mgap];
-    
-
-    WritePmpJsonNumerical[datfile, SDP[obj, norm, pols], prec]
+    Print["Writing ", datfile, "..."];
+    WritePmpJsonNumerical[datfile, SDP[obj, norm, pols], prec];
+    Print["Wrote ", datfile, "."]
 ];
 
 PMP2SDP["n_pmp.json", 1000];
