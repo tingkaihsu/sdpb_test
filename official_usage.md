@@ -34,7 +34,7 @@ Use `pmp2sdp` to create SDPB input from files with a PMP. The usage is
 `[PRECISION]` is the number of bits of precision used in the
 conversion.  `[INPUT]` is a single Mathematica, JSON, XML or NSV
 (Null Separated Value) file. `[OUTPUT]` is an output directory.
-You can also use `--maxNumPoles` to downsample the PMP (see Section 4.3 in https://arxiv.org/abs/2509.14307), and `--outputFormat` and `--zip` to specify output file format. Call `pmp2sdp --help` to see options description. 
+You can also use `--maxNumPoles` to downsample the PMP (see Section 4.3 in <https://arxiv.org/abs/2509.14307>), and `--outputFormat` and `--zip` to specify output file format. Call `pmp2sdp --help` to see options description.
 
 The single file Mathematica and JSON formats are described in Section
 3.2 of the [manual](SDPB_Manual/SDPB-Manual.pdf). In addition, for JSON there
@@ -72,7 +72,7 @@ SDP (having three blocks), with the NSV example loading the PMP from two Mathema
 [pmp\_split1.m](../test/data/pmp2sdp/m/pmp_split1.m) and
 [pmp\_split2.m](../test/data/pmp2sdp/m/pmp_split2.m).
 
-## Running SDPB.
+## Running SDPB
 
 The options to SDPB are described in detail in the help text, obtained
 by running `build/sdpb --help`. The most important options are `-s [--sdpDir]` and
@@ -102,7 +102,6 @@ command in installations instructions for your HPC (see [docs/site_installs](sit
 on [Expanse](site_installs/Expanse.md) this command reads
 
     module load cpu/0.15.4 gcc/10.2.0 openmpi/4.0.4 gmp/6.1.2 mpfr/4.0.2 cmake/3.18.2 openblas/dynamic/0.3.7
-
 
 Note that most computation for different blocks can be done in parallel, and optimal performance is generally achieved
 when the number of MPI jobs is comparable to the number of blocks.
@@ -212,7 +211,6 @@ This will output the spectra into `test/out/spectrum/1d/spectrum.json` and shoul
   }
 ]
 ```
-    
 
 It is a json file with arrays of zeros. There is a [JSON schema](json_schema/spectrum_schema.json)
 describing the format.
@@ -222,12 +220,14 @@ help text, obtained by running `spectrum --help`.
 
 The spectrum extraction algorithm is described in
 [arxiv:1612.08471](https://arxiv.org/abs/1612.08471) (see Appendix A)
-and originally implemented in Python, see https://gitlab.com/bootstrapcollaboration/spectrum-extraction.
+and originally implemented in Python, see <https://gitlab.com/bootstrapcollaboration/spectrum-extraction>.
 
 The vector `"lambda"` in `spectrum.json` is defined as
+
 ```math
 \vec{\lambda}_{j,x} = \vec{v}_{j,x} / \sqrt{\chi_j^\prime(x)}
 ```
+
 where $\vec{v}_{j,x}$ is given by Eq. (A.7) in [arxiv:1612.08471](https://arxiv.org/abs/1612.08471)
 and $\chi_j^\prime(x)$ is a `reducedPrefactor` from pmp.json (see [SDPB Manual](SDPB_Manual/SDPB-Manual.pdf) for PMP format description).
 Note that this definition disagrees with Eq. (A.8) in [arxiv:1612.08471](https://arxiv.org/abs/1612.08471), which is incorrect.
@@ -245,7 +245,7 @@ different machines. Thus, sometimes single-node computation can outperform multi
 You may use these considerations as a starting point, and run benchmarks in your environment to find the best
 configuration for your problem.
 
-### SDPB fails with out-of-memory, std::bad_alloc etc.
+### SDPB fails with out-of-memory, std::bad_alloc etc
 
 SDPB's defaults are set for optimal performance. This may result in using more memory than is available.
 
@@ -287,7 +287,7 @@ For example, this may happen in HPC environment when the code is compiled on a l
 
 Workaround: rebuild FLINT, prodiving `--host` option for `configure` script, e.g. `./configure --host=amd64 <...>`.
 
-See more details in https://github.com/davidsd/sdpb/issues/235.
+See more details in <https://github.com/davidsd/sdpb/issues/235>.
 
 ### 'Running out of inodes' error
 
@@ -302,10 +302,13 @@ OpenBLAS blas_thread_init: pthread_create failed for thread 15 of 32: Resource t
 
 Each BLAS call in SDPB should be single-threaded.
 To ensure that, disable threading by setting environment variable
+
 ```
 export OPENBLAS_NUM_THREADS=1
 ```
+
 and/or
+
 ```
 export OMP_NUM_THREADS=1
 ```
