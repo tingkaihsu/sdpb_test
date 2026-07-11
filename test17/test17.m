@@ -74,158 +74,429 @@ NPolyInf[n_,J_,x_] := {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
 LaunchKernels[];
 
+ClearAll[
+  FlattenSpinTiers, UToZ, ZToU, RegularScalarVector, ScalarVectorToMatrix,
+  AnalyticPoly, AnalyticPolyInf, AnalyticPoly2nd, NumericalScalarBlock,
+  ChebyshevLobattoNodes, ToInterval, ChebyshevCoefficients,
+  ChebyshevApproxValue, ValidationNodes, NormalizeVector,
+  EstimateComponentScales, AnalyzeIntervalForSpin, HarvestIntervalPoints,
+  AnalyzeNonPolynomialFamily, BuildCompressedSamplingGrid,
+  BlocksFromSamplingGrid, FunctionalEntryNonzeroQ
+];
+
+FlattenSpinTiers[jTiers_] := Join @@ jTiers;
+
+UToZ[u_] := mgap + Exp[u] - 1;
+ZToU[z_] := Log[1 + z - mgap];
+
+RegularScalarVector[j_, z_] := Module[{pref = z^18},
+  Join[
+    {polyify[pref*(2/z)], polyify[pref*0]},
+    Table[polyify[pref*Nlist[n, z, j]], {n, 0, nulllist[[1]]}]
+  ]
+];
+
+ScalarVectorToMatrix[values_] :=
+  Table[
+    Table[
+      If[row == 2 && column == 2, values, Table[0, {Length[values]}]],
+      {column, 3}
+    ],
+    {row, 3}
+  ];
+
+AnalyticPoly[j_, z_, y_] := PositiveMatrixWithPrefactor[
+  DampedRational[1, {}, 1/E, y],
+  ScalarVectorToMatrix[RegularScalarVector[j, z]]
+];
+
+AnalyticPolyInf[j_, z_, y_] := PositiveMatrixWithPrefactor[
+  DampedRational[1, {}, 1/E, y],
+  ScalarVectorToMatrix[
+    Join[
+      {0, 0},
+      Table[NPolyInf[n, j, z], {n, 0, nulllist[[1]]}]
+    ]
+  ]
+];
+
+AnalyticPoly2nd[j_, z_, y_] := Module[{pref = z^18},
+  PositiveMatrixWithPrefactor[
+    DampedRational[1, {}, 1/E, y],
+    ScalarVectorToMatrix[
+      Join[
+        {polyify[pref*(2/z)], polyify[pref]},
+        Table[polyify[pref*Nlist[n, z, j]], {n, 0, nulllist[[1]]}]
+      ]
+    ]
+  ]
+];
+
+NumericalScalarBlock[j_, u0_, vectorFn_, prec_] := Module[{values},
+  values = N[vectorFn[j, UToZ[u0]], prec];
+  NumericalPositiveMatrixWithPrefactor[<|
+    "prefactor" -> DampedRational[1, {}, 1/E, u0],
+    "samplePoints" -> {u0},
+    "sampleScalings" -> {Exp[-u0]},
+    "polynomials" ->
+      Table[
+        Table[
+          If[row == 2 && column == 2,
+            Table[{N[value, prec]}, {value, values}],
+            Table[{0}, {Length[values]}]
+          ],
+          {column, 3}
+        ],
+        {row, 3}
+      ]
+  |>]
+];
+
+ChebyshevLobattoNodes[p_Integer?Positive] :=
+  Reverse[Table[Cos[k Pi/p], {k, 0, p}]];
+
+ToInterval[xi_, {a_, b_}] := (a + b)/2 + (b - a) xi/2;
+
+ChebyshevCoefficients[values_List] := Module[
+  {p = Length[values] - 1, coeffs, endpointWeight},
+  endpointWeight[j_] := If[j == 0 || j == p, 1/2, 1];
+  coeffs = Table[
+    (2/p) Total[
+      Table[
+        endpointWeight[j] values[[j + 1]] Cos[k j Pi/p],
+        {j, 0, p}
+      ]
+    ],
+    {k, 0, p}
+  ];
+  ReplacePart[coeffs, {1 -> coeffs[[1]]/2, Length[coeffs] -> Last[coeffs]/2}]
+];
+
+ChebyshevApproxValue[coeffs_List, xi_] :=
+  Total[
+    Table[coeffs[[k + 1]] ChebyshevT[k, xi], {k, 0, Length[coeffs] - 1}]
+  ];
+
+ValidationNodes[p_Integer?Positive] :=
+  Table[Cos[(k + 1/2) Pi/(p + 1)], {k, 0, p}];
+
+NormalizeVector[values_, scales_] := N[values/scales];
+
+EstimateComponentScales[spins_, vectorFn_, {uMin_, uMax_}, probeCount_, prec_] :=
+ Module[{probeUs, rows, columns},
+  probeUs = Subdivide[uMin, uMax, probeCount];
+  rows = Flatten[
+    Table[
+      Abs[N[vectorFn[j, UToZ[uu]], Min[prec, 80]]],
+      {j, spins}, {uu, probeUs}
+    ],
+    1
+  ];
+  columns = Transpose[rows];
+  Max[1, Max[#]] & /@ columns
+];
+
+AnalyzeIntervalForSpin[j_, interval_, vectorFn_, scales_, config_] := Module[
+  {
+    orders = Lookup[config, "orders", {8, 16, 24, 32}],
+    tailCount = Lookup[config, "tailCount", 4],
+    spectralTol = Lookup[config, "spectralTolerance", 10^-14],
+    validationTol = Lookup[config, "validationTolerance", 10^-12],
+    prec = Lookup[config, "precision", 200],
+    accepted = False, result, p, nodes, us, values, coeffs,
+    tailNorm, totalNorm, spectralError, xis, vUs, actual, interp,
+    validationErrors, validationError
+  },
+  Do[
+    nodes = ChebyshevLobattoNodes[p];
+    us = ToInterval[#, interval] & /@ nodes;
+    values = NormalizeVector[N[vectorFn[j, UToZ[#]], Min[prec, 80]], scales] & /@ us;
+    coeffs = ChebyshevCoefficients[values];
+    tailNorm = Max[
+      Total[
+        Abs[Take[coeffs, -Min[tailCount, Length[coeffs]]]]
+      ]
+    ];
+    totalNorm = Max[1, Max[Total[Abs[coeffs]]]];
+    spectralError = N[tailNorm/totalNorm];
+
+    xis = ValidationNodes[p];
+    vUs = ToInterval[#, interval] & /@ xis;
+    validationErrors = Table[
+      actual = NormalizeVector[N[vectorFn[j, UToZ[vUs[[i]]]], Min[prec, 80]], scales];
+      interp = ChebyshevApproxValue[coeffs, xis[[i]]];
+      Norm[actual - interp, Infinity]/Max[1, Norm[actual, Infinity]],
+      {i, Length[xis]}
+    ];
+    validationError = Max[validationErrors];
+    result = <|
+      "spin" -> j,
+      "interval" -> interval,
+      "order" -> p,
+      "nodes" -> us,
+      "coefficients" -> coeffs,
+      "validationNodes" -> vUs,
+      "validationErrors" -> validationErrors,
+      "spectralError" -> spectralError,
+      "validationError" -> validationError,
+      "accepted" -> TrueQ[
+        spectralError <= spectralTol && validationError <= validationTol
+      ]
+    |>;
+    If[result["accepted"], accepted = True; Break[]],
+    {p, orders}
+  ];
+  result
+];
+
+HarvestIntervalPoints[intervalData_, config_] := Module[
+  {
+    interval = intervalData["interval"],
+    guardFraction = Lookup[config, "guardFraction", 0.03],
+    keepAllNodes = Lookup[config, "keepChebyshevNodes", True],
+    nodes, errors, maxErrorU, h, points
+  },
+  h = interval[[2]] - interval[[1]];
+  nodes = If[keepAllNodes, intervalData["nodes"], {}];
+  errors = intervalData["validationErrors"];
+  maxErrorU = If[Length[errors] > 0,
+    intervalData["validationNodes"][[First@Ordering[errors, -1]]],
+    Mean[interval]
+  ];
+  points = Join[
+    interval,
+    nodes,
+    {maxErrorU - guardFraction h, maxErrorU, maxErrorU + guardFraction h}
+  ];
+  Select[points, interval[[1]] <= # <= interval[[2]] &]
+];
+
+AnalyzeNonPolynomialFamily[config_] := Module[
+  {
+    families = Lookup[config, "families", {}],
+    spins = Lookup[config, "spins", {}],
+    uRange = Lookup[config, "uRange", {0, Log[200]}],
+    initialIntervals = Lookup[config, "initialIntervals", 8],
+    maxIntervals = Lookup[config, "maxIntervalsPerSpin", 64],
+    prec = Lookup[config, "precision", 200],
+    probeCount = Lookup[config, "scaleProbeCount", 32],
+    tol = Lookup[config, "intervalTolerance", 10^-12],
+    family, vectorFn, scales, intervalsBySpin, dataBySpin,
+    samplesBySpin, unresolvedBySpin, intervals, queue, current, analyzed,
+    halves, retainedData, grid
+  },
+  If[families === {} || spins === {},
+    Return[<|
+      "scales" -> {},
+      "reducedBasis" -> <|"rank" -> 0, "singularValues" -> {}|>,
+      "spinClusters" -> <||>,
+      "localApproximants" -> <||>,
+      "criticalPoints" -> <||>,
+      "tailData" -> <|"uRange" -> uRange, "analyticTailCertified" -> False|>,
+      "denseProbeDiagnostics" -> <|"message" -> "No genuinely non-polynomial families were configured."|>,
+      "samplesBySpin" -> <||>
+    |>]
+  ];
+
+  family = First[families];
+  vectorFn = family["function"];
+  scales = EstimateComponentScales[spins, vectorFn, uRange, probeCount, prec];
+
+  intervalsBySpin = Association[];
+  dataBySpin = Association[];
+  samplesBySpin = Association[];
+  unresolvedBySpin = Association[];
+
+  Do[
+    queue = Partition[Subdivide[uRange[[1]], uRange[[2]], initialIntervals], 2, 1];
+    retainedData = {};
+    While[Length[queue] > 0 && Length[retainedData] + Length[queue] <= maxIntervals,
+      current = First[queue];
+      queue = Rest[queue];
+      analyzed = AnalyzeIntervalForSpin[j, current, vectorFn, scales, config];
+      If[analyzed["accepted"] || (current[[2]] - current[[1]] <= tol),
+        retainedData = Append[retainedData, analyzed],
+        halves = {{current[[1]], Mean[current]}, {Mean[current], current[[2]]}};
+        queue = Join[halves, queue]
+      ];
+    ];
+    If[Length[queue] > 0,
+      AssociateTo[unresolvedBySpin, j -> queue];
+      retainedData = Join[
+        retainedData,
+        AnalyzeIntervalForSpin[j, #, vectorFn, scales, config] & /@ queue
+      ];
+    ];
+    grid = DeleteDuplicates[
+      Sort[Flatten[HarvestIntervalPoints[#, config] & /@ retainedData]],
+      Abs[#1 - #2] < Lookup[config, "duplicateTolerance", 10^-20] &
+    ];
+    AssociateTo[intervalsBySpin, j -> retainedData[[All, "interval"]]];
+    AssociateTo[dataBySpin, j -> retainedData];
+    AssociateTo[samplesBySpin, j -> SetPrecision[grid, prec]],
+    {j, spins}
+  ];
+
+  <|
+    "scales" -> scales,
+    "reducedBasis" -> <|
+      "rank" -> Length[scales],
+      "note" -> "Componentwise normalization is active; SVD truncation is intentionally disabled unless a genuine non-polynomial family is supplied and audited."
+    |>,
+    "spinClusters" -> AssociationThread[spins, List /@ spins],
+    "localApproximants" -> dataBySpin,
+    "criticalPoints" -> samplesBySpin,
+    "tailData" -> <|
+      "uRange" -> uRange,
+      "zRange" -> UToZ /@ uRange,
+      "analyticTailCertified" -> False,
+      "note" -> "The finite tail is extended by the chosen uRange; no rigorous asymptotic remainder certificate is claimed here."
+    |>,
+    "denseProbeDiagnostics" -> <|
+      "unresolvedIntervalsBySpin" -> unresolvedBySpin,
+      "maxValidationError" -> Max[
+        Flatten[
+          Values[dataBySpin][[All, All, "validationError"]]
+        ]
+      ],
+      "maxSpectralError" -> Max[
+        Flatten[
+          Values[dataBySpin][[All, All, "spectralError"]]
+        ]
+      ]
+    |>,
+    "samplesBySpin" -> samplesBySpin
+  |>
+];
+
+BuildCompressedSamplingGrid[analysis_, config_] := Module[
+  {
+    samplesBySpin = analysis["samplesBySpin"],
+    spins = Lookup[config, "spins", Keys[analysis["samplesBySpin"]]],
+    oldCommonGridCount = Lookup[config, "oldCommonGridCount", 242],
+    maxGrowth = Lookup[config, "maxBlockGrowthOverOldCartesian", 1],
+    blockCount, oldCartesianCount
+  },
+  blockCount = Total[Length /@ Values[samplesBySpin]];
+  oldCartesianCount = Length[spins] oldCommonGridCount;
+  If[oldCartesianCount > 0 && blockCount > maxGrowth oldCartesianCount,
+    Print[
+      "ERROR: adaptive sampling produced ", blockCount,
+      " blocks, exceeding the allowed growth over the old Cartesian count ",
+      oldCartesianCount, ". Tighten compression or loosen diagnostics first."
+    ];
+    Quit[1]
+  ];
+  <|
+    "samplesBySpin" -> samplesBySpin,
+    "blockCount" -> blockCount,
+    "oldCartesianCount" -> oldCartesianCount,
+    "validationError" -> Lookup[analysis["denseProbeDiagnostics"], "maxValidationError", 0],
+    "tailError" -> Missing["NotCertified"],
+    "compressionDiagnostics" -> <|
+      "method" -> "per-spin Chebyshev grid with duplicate removal",
+      "coneCompression" -> "not applied; scalar cone compression should be enabled only after an NNLS/LP residual audit"
+    |>
+  |>
+];
+
+BlocksFromSamplingGrid[gridData_, vectorFn_, prec_] := Module[
+  {rules = Normal[gridData["samplesBySpin"]]},
+  If[rules === {}, Return[{}]];
+  Flatten[
+    Table[
+      NumericalScalarBlock[rule[[1]], uu, vectorFn, prec],
+      {rule, rules},
+      {uu, rule[[2]]}
+    ],
+    1
+  ]
+];
+
+FunctionalEntryNonzeroQ[pmp_, k_] := Module[{entries},
+  entries = Which[
+    Head[pmp] === NumericalPositiveMatrixWithPrefactor,
+      Flatten[pmp[[1]]["polynomials"][[All, All, k, All]]],
+    Head[pmp] === PositiveMatrixWithPrefactor && AssociationQ[pmp[[1]]],
+      Flatten[pmp[[1]]["polynomials"][[All, All, k]]],
+    Head[pmp] === PositiveMatrixWithPrefactor,
+      Flatten[pmp[[2]][[All, All, k]]],
+    True,
+      {}
+  ];
+  AnyTrue[entries, ! TrueQ[Simplify[# == 0]] &]
+];
+
 PMP2SDP[datfile_, prec_:600] := Module[
     {
-        xSamples, jTiers, sampledPoly, sampledPolyinf,
-        sampledPoly1st, sampledPoly2nd, sampleAnchor, pols, norm, obj,
+        jTiers, allSpins, phaseAConfig, analysis, gridData,
+        analyticRegularBlocks, sampledRemainderBlocks, pols, norm, obj,
         functionalCount, functionalCovered, missingFunctionals
     },
-    (* xSamples = SetPrecision[
-      Join[
-        Range[0, 1/10, 5/1000],
-        Range[15/100, 1/2, 5/100],
-        Range[6/10, 9/10, 1/10],
-        {94/100, 98/100, 9999/10000}
-      ],
-      prec
-    ]; *)
-    xSamples = SetPrecision[{0, 1/200, 1/100, 3/200, 31/2000, 2/125, 33/2000, 17/1000, 7/400, 9/500, 37/2000, 19/1000, 39/2000, 1/50, 1/40, 3/100, 61/2000, 31/1000, 63/2000, 4/125, 13/400, 33/1000, 67/2000, 17/500, 69/2000, 7/200, 1/25, 9/200, 1/20, 11/200, 3/50, 121/2000, 61/1000, 123/2000, 31/500, 1/16, 63/1000, 127/2000, 8/125, 129/2000, 13/200, 7/100, 3/40, 2/25, 17/200, 171/2000, 43/500, 173/2000, 87/1000, 7/80, 11/125, 177/2000, 89/1000, 179/2000, 9/100, 19/200, 1/10, 21/200, 11/100, 23/200, 3/25, 1/8, 13/100, 27/200, 7/50, 29/200, 3/20, 31/200, 4/25, 33/200, 17/100, 7/40, 9/50, 37/200, 19/100, 39/200, 1/5, 1/4, 51/200, 13/50, 53/200, 27/100, 11/40, 7/25, 57/200, 29/100, 59/200, 3/10, 61/200, 31/100, 621/2000, 311/1000, 623/2000, 39/125, 5/16, 313/1000, 627/2000, 157/500, 629/2000, 63/200, 8/25, 13/40, 33/100, 67/200, 17/50, 69/200, 7/20, 2/5, 81/200, 41/100, 83/200, 21/50, 17/40, 43/100, 87/200, 11/25, 89/200, 9/20, 91/200, 23/50, 93/200, 47/100, 19/40, 12/25, 97/200, 49/100, 99/200, 1/2, 3/5, 61/100, 31/50, 621/1000, 311/500, 623/1000, 78/125, 5/8, 313/500, 627/1000, 157/250, 629/1000, 63/100, 631/1000, 79/125, 633/1000, 317/500, 127/200, 159/250, 637/1000, 319/500, 639/1000, 16/25, 641/1000, 321/500, 643/1000, 161/250, 129/200, 323/500, 647/1000, 81/125, 649/1000, 13/20, 33/50, 67/100, 17/25, 69/100, 7/10, 71/100, 18/25, 73/100, 37/50, 3/4, 19/25, 77/100, 39/50, 79/100, 4/5, 81/100, 41/50, 83/100, 21/25, 17/20, 43/50, 87/100, 22/25, 89/100, 891/1000, 223/250, 893/1000, 447/500, 179/200, 112/125, 897/1000, 449/500, 899/1000, 9/10, 113/125, 2261/2500, 1131/1250, 2263/2500, 566/625, 453/500, 1133/1250, 2267/2500, 567/625, 2269/2500, 227/250, 114/125, 2281/2500, 1141/1250, 2283/2500, 571/625, 457/500, 1143/1250, 2287/2500, 572/625, 2289/2500, 229/250, 23/25, 231/250, 116/125, 233/250, 117/125, 47/50, 118/125, 237/250, 119/125, 239/250, 24/25, 241/250, 121/125, 243/250, 2431/2500, 608/625, 2433/2500, 1217/1250, 487/500, 609/625, 2437/2500, 1219/1250, 2439/2500, 122/125, 49/50}, prec];
-    
-
     jTiers = {
       Range[0, 1000, 2],
       Range[1500, 5000, 100],
       Range[6000, 20000, 500],
       Range[20000, 50000, 2000]
     };
+    allSpins = FlattenSpinTiers[jTiers];
 
-    Print["x samples: ", Length[xSamples]];
+    phaseAConfig = <|
+      "precision" -> prec,
+      "spins" -> allSpins,
+      (* Add genuine non-polynomial remainders here, never the polynomial-in-z regular family. *)
+      "families" -> {},
+      "uRange" -> {0, Log[200]},
+      "orders" -> {8, 16, 24, 32},
+      "tailCount" -> 4,
+      "spectralTolerance" -> 10^-14,
+      "validationTolerance" -> 10^-12,
+      "initialIntervals" -> 8,
+      "maxIntervalsPerSpin" -> 64,
+      "guardFraction" -> 0.03,
+      "oldCommonGridCount" -> 242,
+      "maxBlockGrowthOverOldCartesian" -> 1
+    |>;
+
     Print["J samples: ", Total[Length /@ jTiers]];
-    Print["Building numerical PMP blocks..."];
+    Print[
+      "Regular family is polynomial in z after multiplying by z^18; ",
+      "using analytic PMP blocks instead of the old compactified sampling grid."
+    ];
+    Print["Phase-A sampler is configured for genuinely non-polynomial remainders."];
 
-    sampledPoly[j_, xv_] := Module[{zv, pref, mfst, msnd, values},
-      zv = mgap + xv/(1 - xv);
-      pref = zv^18;
-      mfst = {{0, 0, 0}, {0, polyify[pref*(2/zv)], 0}, {0, 0, 0}};
-      msnd = {{0, 0, 0}, {0, polyify[pref*0], 0}, {0, 0, 0}};
-      values = Join[
-        {mfst, msnd},
-        Table[polyify[pref*MNlist[n, zv, j]], {n, 0, nulllist[[1]]}]
-      ];
-      NumericalPositiveMatrixWithPrefactor[<|
-        "prefactor" -> DampedRational[1, {}, 1/E, xv],
-        "samplePoints" -> {xv},
-        "sampleScalings" -> {Exp[-xv]},
-        "polynomials" ->
-          Table[
-            Table[{N[values[[k, row, column]], prec]}, {k, Length[values]}],
-            {row, 3}, {column, 3}
-          ]
-      |>]
+    analysis = AnalyzeNonPolynomialFamily[phaseAConfig];
+    gridData = BuildCompressedSamplingGrid[analysis, phaseAConfig];
+    sampledRemainderBlocks = BlocksFromSamplingGrid[
+      gridData,
+      RegularScalarVector,
+      prec
     ];
 
-    sampledPolyinf[j_, xv_] := Module[{values},
-      values = Join[
-        {0, 0},
-        Table[NPolyInf[n, j, mgap + xv/(1 - xv)],
-          {n, 0, nulllist[[1]]}]
-      ];
-      NumericalPositiveMatrixWithPrefactor[<|
-        "prefactor" -> DampedRational[1, {}, 1/E, xv],
-        "samplePoints" -> {xv},
-        "sampleScalings" -> {Exp[-xv]},
-        "polynomials" ->
-          Table[
-            Table[
-              If[row == 2 && column == 2,
-                Table[{N[value, prec]}, {value, values}],
-                Table[{0}, {Length[values]}]
-              ],
-              {column, 3}
-            ],
-            {row, 3}
-          ]
-      |>]
+    analyticRegularBlocks = N[
+      ParallelTable[AnalyticPoly[j, mgap + x, x], {j, allSpins}],
+      prec
     ];
 
-    sampledPoly1st[j_, xv_] := Module[{zv, pref, mfst, msnd, values},
-      zv = m1;
-      pref = zv^18;
-      mfst = {{0, 0, 0}, {0, polyify[pref*(2/zv)], 0}, {0, 0, 0}};
-      msnd = {{0, 0, 0}, {0, polyify[pref*0], 0}, {0, 0, 0}};
-      values = Join[
-        {mfst, msnd},
-        Table[polyify[pref*MNlist[n, zv, j]],
-          {n, 0, nulllist[[1]]}]
-      ];
-      NumericalPositiveMatrixWithPrefactor[<|
-        "prefactor" -> DampedRational[1, {}, 1/E, xv],
-        "samplePoints" -> {xv},
-        "sampleScalings" -> {Exp[-xv]},
-        "polynomials" ->
-          Table[
-            Table[{N[values[[k, row, column]], prec]},
-              {k, Length[values]}],
-            {row, 3}, {column, 3}
-          ]
-      |>]
-    ];
-
-    sampledPoly2nd[j_, xv_] := Module[{zv, pref, mfst, msnd, values},
-      zv = 1;
-      pref = zv^18;
-      mfst = {{0, 0, 0}, {0, polyify[pref*(2/zv)], 0}, {0, 0, 0}};
-      msnd = {{0, 0, 0}, {0, polyify[pref], 0}, {0, 0, 0}};
-      values = Join[
-        {mfst, msnd},
-        Table[polyify[pref*MNlist[n, zv, j]],
-          {n, 0, nulllist[[1]]}]
-      ];
-      NumericalPositiveMatrixWithPrefactor[<|
-        "prefactor" -> DampedRational[1, {}, 1/E, xv],
-        "samplePoints" -> {xv},
-        "sampleScalings" -> {Exp[-xv]},
-        "polynomials" ->
-          Table[
-            Table[{N[values[[k, row, column]], prec]},
-              {k, Length[values]}],
-            {row, 3}, {column, 3}
-          ]
-      |>]
-    ];
-
-    sampleAnchor = First[xSamples];
     pols = Join[
-      {sampledPoly2nd[J2, sampleAnchor]},
-      Flatten[
-        Table[
-          ParallelTable[sampledPoly[j, xv], {j, tier}],
-          {xv, xSamples}, {tier, jTiers}
-        ],
-        2
-      ],
+      {N[AnalyticPoly2nd[J2, 1, x], prec]},
+      analyticRegularBlocks,
+      sampledRemainderBlocks,
       {
-        sampledPoly1st[J1, sampleAnchor],
-        sampledPolyinf[0, sampleAnchor]
+        N[AnalyticPoly[J1, m1, x], prec],
+        N[AnalyticPolyInf[0, mgap + x, x], prec]
       }
     ];
 
-    Print["Built ", Length[pols], " numerical PMP blocks."];
+    Print["Adaptive numerical remainder blocks: ", Length[sampledRemainderBlocks]];
+    Print["Built ", Length[pols], " PMP blocks total."];
 
     norm = -1 * N[Flatten[{{0, 1}, list0}], prec];
     obj = -1 * N[Flatten[{{1, 0}, list0}], prec];
 
     functionalCount = Length[norm];
     functionalCovered = Table[
-      AnyTrue[
-        pols,
-        Function[pmp,
-          AnyTrue[
-            Flatten[pmp[[1]]["polynomials"][[All, All, k, All]]],
-            Function[value, TrueQ[value != 0]]
-          ]
-        ]
-      ],
+      AnyTrue[pols, FunctionalEntryNonzeroQ[#, k] &],
       {k, functionalCount}
     ];
     missingFunctionals = Flatten @ Position[functionalCovered, False];
@@ -244,7 +515,8 @@ PMP2SDP[datfile_, prec_:600] := Module[
     Print["size of norm = ", Length[norm]];
     Print["size of obj = ", Length[obj]];
     Print["Writing ", datfile, "..."];
-    WritePmpJsonNumerical[datfile, SDP[obj, norm, pols], prec];
+    WritePmpJsonNumerical[datfile, SDP[obj, norm, pols], prec,
+      getAnalyticSampleData];
     Print["Wrote ", datfile, "."]
 ];
 
