@@ -1,3 +1,5 @@
+(* ::Package:: *)
+
 Import["../SDPB.m"]
 
 ClearAll[NumericalPositiveMatrixWithPrefactor];
@@ -49,6 +51,7 @@ WritePmpJsonNumerical[
         {pmp, positiveMatricesWithPrefactors}]
   |>
 ];
+
 m1 = N[2/5, 1000];
 J1 = 0;
 J2 = 2;
@@ -81,7 +84,10 @@ ClearAll[
   ChebyshevApproxValue, ValidationNodes, NormalizeVector,
   EstimateComponentScales, AnalyzeIntervalForSpin, HarvestIntervalPoints,
   AnalyzeNonPolynomialFamily, BuildCompressedSamplingGrid,
-  BlocksFromSamplingGrid, FunctionalEntryNonzeroQ
+  BlocksFromSamplingGrid, FunctionalEntryNonzeroQ,
+  MakeNonPolynomialFamily, DefaultSamplingOptions, ProblemConfig,
+  SamplingConfigForFamily, BuildSampledFamilyBlocks,
+  BuildSampledNonPolynomialBlocks, BuildAnalyticProblemBlocks
 ];
 
 FlattenSpinTiers[jTiers_] := Join @@ jTiers;
@@ -427,66 +433,147 @@ FunctionalEntryNonzeroQ[pmp_, k_] := Module[{entries},
   AnyTrue[entries, ! TrueQ[Simplify[# == 0]] &]
 ];
 
+(* Customization entry point for genuinely non-polynomial sampled families.
+   vectorFn must return the scalar coefficient vector for one spin and one z:
+     Function[{j, z}, {...}]
+   The current test17 problem has no such families because its regular family is
+   polynomial in z after multiplying by z^18. *)
+MakeNonPolynomialFamily[name_String, vectorFn_, options_:<||>] := Join[
+  <|
+    "name" -> name,
+    "function" -> vectorFn,
+    "spins" -> Automatic,
+    "samplingOptions" -> <||>
+  |>,
+  options
+];
+
+DefaultSamplingOptions[prec_, spins_] := <|
+  "precision" -> prec,
+  "spins" -> spins,
+  "families" -> {},
+  "uRange" -> {0, Log[200]},
+  "orders" -> {8, 16, 24, 32},
+  "tailCount" -> 4,
+  "spectralTolerance" -> 10^-14,
+  "validationTolerance" -> 10^-12,
+  "initialIntervals" -> 8,
+  "maxIntervalsPerSpin" -> 64,
+  "guardFraction" -> 0.03,
+  "oldCommonGridCount" -> 242,
+  "maxBlockGrowthOverOldCartesian" -> 1
+|>;
+
+ProblemConfig[prec_] := Module[{jTiers, allSpins},
+  jTiers = {
+    Range[0, 1000, 2],
+    Range[1500, 5000, 100],
+    Range[6000, 20000, 500],
+    Range[20000, 50000, 2000]
+  };
+  allSpins = FlattenSpinTiers[jTiers];
+  <|
+    "precision" -> prec,
+    "spinTiers" -> jTiers,
+    "allSpins" -> allSpins,
+    "samplingOptions" -> DefaultSamplingOptions[prec, allSpins],
+
+    (* Put custom genuinely non-polynomial sampled families here. Example:
+       "nonPolynomialFamilies" -> {
+         MakeNonPolynomialFamily[
+           "my remainder",
+           Function[{j, z}, myCoefficientVector[j, z]],
+           <|
+             "spins" -> Range[0, 100, 2],
+             "samplingOptions" -> <|"uRange" -> {0, Log[50]}|>
+           |>
+         ]
+       }
+       Do not put polynomial-in-z families here; emit those analytically. *)
+    "nonPolynomialFamilies" -> {},
+
+    "leadingAnalyticBlocks" -> {N[AnalyticPoly2nd[J2, 1, x], prec]},
+    "regularAnalyticBlock" -> Function[{j}, AnalyticPoly[j, mgap + x, x]],
+    "isolatedAnalyticBlocks" -> {
+      N[AnalyticPoly[J1, m1, x], prec],
+      N[AnalyticPolyInf[0, mgap + x, x], prec]
+    }
+  |>
+];
+
+SamplingConfigForFamily[problem_, family_] := Module[
+  {
+    base = problem["samplingOptions"],
+    overrides = Lookup[family, "samplingOptions", <||>],
+    familySpins = Lookup[family, "spins", Automatic]
+  },
+  Join[
+    base,
+    <|
+      "families" -> {family},
+      "spins" -> If[familySpins === Automatic, problem["allSpins"], familySpins]
+    |>,
+    overrides
+  ]
+];
+
+BuildSampledFamilyBlocks[problem_, family_] := Module[
+  {config, analysis, gridData, vectorFn, name},
+  name = Lookup[family, "name", "unnamed non-polynomial family"];
+  vectorFn = family["function"];
+  config = SamplingConfigForFamily[problem, family];
+  Print["Analyzing non-polynomial family: ", name];
+  analysis = AnalyzeNonPolynomialFamily[config];
+  gridData = BuildCompressedSamplingGrid[analysis, config];
+  Print[
+    "Retained sampled blocks for ", name, ": ", gridData["blockCount"],
+    " (old Cartesian reference: ", gridData["oldCartesianCount"], ")"
+  ];
+  BlocksFromSamplingGrid[gridData, vectorFn, problem["precision"]]
+];
+
+BuildSampledNonPolynomialBlocks[problem_] := Module[
+  {families = problem["nonPolynomialFamilies"]},
+  If[families === {}, Return[{}]];
+  Flatten[BuildSampledFamilyBlocks[problem, #] & /@ families, 1]
+];
+
+BuildAnalyticProblemBlocks[problem_, sampledBlocks_] := Module[
+  {prec = problem["precision"], regularBlocks},
+  regularBlocks = N[
+    ParallelTable[
+      problem["regularAnalyticBlock"][j],
+      {j, problem["allSpins"]}
+    ],
+    prec
+  ];
+  Join[
+    problem["leadingAnalyticBlocks"],
+    regularBlocks,
+    sampledBlocks,
+    problem["isolatedAnalyticBlocks"]
+  ]
+];
+
 PMP2SDP[datfile_, prec_:600] := Module[
     {
-        jTiers, allSpins, phaseAConfig, analysis, gridData,
-        analyticRegularBlocks, sampledRemainderBlocks, pols, norm, obj,
+        problem, sampledRemainderBlocks, pols, norm, obj,
         functionalCount, functionalCovered, missingFunctionals
     },
-    jTiers = {
-      Range[0, 1000, 2],
-      Range[1500, 5000, 100],
-      Range[6000, 20000, 500],
-      Range[20000, 50000, 2000]
-    };
-    allSpins = FlattenSpinTiers[jTiers];
+    problem = ProblemConfig[prec];
 
-    phaseAConfig = <|
-      "precision" -> prec,
-      "spins" -> allSpins,
-      (* Add genuine non-polynomial remainders here, never the polynomial-in-z regular family. *)
-      "families" -> {},
-      "uRange" -> {0, Log[200]},
-      "orders" -> {8, 16, 24, 32},
-      "tailCount" -> 4,
-      "spectralTolerance" -> 10^-14,
-      "validationTolerance" -> 10^-12,
-      "initialIntervals" -> 8,
-      "maxIntervalsPerSpin" -> 64,
-      "guardFraction" -> 0.03,
-      "oldCommonGridCount" -> 242,
-      "maxBlockGrowthOverOldCartesian" -> 1
-    |>;
-
-    Print["J samples: ", Total[Length /@ jTiers]];
+    Print["J samples: ", Total[Length /@ problem["spinTiers"]]];
     Print[
       "Regular family is polynomial in z after multiplying by z^18; ",
       "using analytic PMP blocks instead of the old compactified sampling grid."
     ];
-    Print["Phase-A sampler is configured for genuinely non-polynomial remainders."];
-
-    analysis = AnalyzeNonPolynomialFamily[phaseAConfig];
-    gridData = BuildCompressedSamplingGrid[analysis, phaseAConfig];
-    sampledRemainderBlocks = BlocksFromSamplingGrid[
-      gridData,
-      RegularScalarVector,
-      prec
+    Print[
+      "Configured non-polynomial sampled families: ",
+      Length[problem["nonPolynomialFamilies"]]
     ];
 
-    analyticRegularBlocks = N[
-      ParallelTable[AnalyticPoly[j, mgap + x, x], {j, allSpins}],
-      prec
-    ];
-
-    pols = Join[
-      {N[AnalyticPoly2nd[J2, 1, x], prec]},
-      analyticRegularBlocks,
-      sampledRemainderBlocks,
-      {
-        N[AnalyticPoly[J1, m1, x], prec],
-        N[AnalyticPolyInf[0, mgap + x, x], prec]
-      }
-    ];
+    sampledRemainderBlocks = BuildSampledNonPolynomialBlocks[problem];
+    pols = BuildAnalyticProblemBlocks[problem, sampledRemainderBlocks];
 
     Print["Adaptive numerical remainder blocks: ", Length[sampledRemainderBlocks]];
     Print["Built ", Length[pols], " PMP blocks total."];
