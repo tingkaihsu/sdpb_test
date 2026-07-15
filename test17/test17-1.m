@@ -5,12 +5,38 @@ Import["../SDPB.m"]
 ClearAll[NumericalPositiveMatrixWithPrefactor];
 
 ClearAll[
+  NlstAAAA,
+  NlstBBBB,
   MNlst,
   MNlist,
-  NPolyInf,
   NPolyInfList,
+  activeMNlst,
+  jDegree,
+  largeJ,
+  largeJResult,
+  largeJDegree,
+  largeJLimitSymbolic,
+  validateLargeJLimit,
+  polyify,
+  zFromSample,
+  zeroMatrix3,
+  objectiveCoordinateMatrix,
+  normalizedCoordinateMatrix,
+  numericalPmpBlock,
+  sampledFiniteBlock,
+  sampledLargeJBlock,
+  validatePmpBlocks
+];
+
+(* Clean up symbols used by earlier debug-oriented versions of this file. *)
+ClearAll[
+  NPolyInf,
   largeJData,
-  activeMNlst
+  largeJSymbolic,
+  pAAAA,
+  pBBBB,
+  pLargeJ,
+  validateLargeJ
 ];
 
 toJsonNestedNumberArray[expr_, prec_] :=
@@ -67,8 +93,10 @@ J1 = 0;
 J2 = 2;
 mgap = N[166/100, 1000];
 
+(* Coefficient order: objective, normalized coordinate, then n = 0, ..., 46. *)
 nulllist = {46, -1, -1, -1};
-list0 = Table[0, {i, 1, Total[nulllist]+Length[nulllist]}];
+activeFunctionalCount = nulllist[[1]] + 1;
+functionalZeros = ConstantArray[0, activeFunctionalCount];
 
 NlstBBBB[n_, z_, J_] := {(2-J (7+J))/(2 z^2),(20-J (7+J) (-13+J (7+J)))/(20 z^3),-(((-12+J (7+J)) (30+J (7+J) (-23+J (7+J))))/(360 z^4)),1/z^5-((-2+J) J (7+J) (9+J) (604+J (7+J) (-52+J (7+J))))/(10080 z^5),-((J (7+J) (-23+J (7+J)))/(20 z^5)),1/z^6-((-4+J) (-2+J) J (7+J) (9+J) (11+J) (-34+J (5+J)) (-20+J (9+J)))/(403200 z^6),-((J (7+J) (540+J (7+J) (-53+J (7+J))))/(360 z^6)),1/z^7-((-4+J) (-2+J) J (7+J) (9+J) (11+J) (-62+J (7+J)) (-48+J (7+J)) (-15+J (7+J)))/(21772800 z^7),-((J (7+J) (-31032+J (7+J) (3024+(-7+J) J (7+J) (14+J))))/(10080 z^7)),1/z^8-((-6+J) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (13+J) (-50+J (7+J)) (960+J (7+J) (-83+J (7+J))))/(1524096000 z^8),-((J (7+J) (1578240+J (7+J) (-209056+J (7+J) (8988+J (7+J) (-160+J (7+J))))))/(403200 z^8)),-(((-2+J) J (7+J) (9+J) (-53+J (7+J)))/(360 z^8)),1/z^9-1/(134120448000 z^9) (-6+J) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (13+J) (5001600+J (7+J) (-600160+J (7+J) (19516+J (7+J) (-240+J (7+J))))),-((J (7+J) (-131466240+J (7+J) (17720496+J (7+J) (-915804+J (7+J) (21808+J (7+J) (-241+J (7+J)))))))/(21772800 z^9)),-(((-2+J) J (7+J) (9+J) (2564+J (7+J) (-108+J (7+J))))/(5040 z^9)),1/z^10-1/(14485008384000 z^10) (-8+J) (-6+J) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (13+J) (15+J) (5277600+J (7+J) (-651672+J (7+J) (20980+J (7+J) (-250+J (7+J))))),-(1/(1524096000 z^10))J (7+J) (11405836800+J (7+J) (-1826254080+J (7+J) (107801568+J (7+J) (-3100260+J (7+J) (46228+J (7+J) (-343+J (7+J))))))),-(((-2+J) J (7+J) (9+J) (-216000+J (7+J) (10752+J (7+J) (-182+J (7+J)))))/(201600 z^10)),1/z^11-1/(1883051089920000 z^11) (-8+J) (-6+J) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (13+J) (15+J) (-797572800+J (7+J) (106776000+J (7+J) (-3946556+J (7+J) (60108+J (7+J) (-405+J (7+J)))))),-(1/(134120448000 z^11))J (7+J) (-1379752704000+J (7+J) (225934848000+J (7+J) (-14770082880+J (7+J) (486509168+J (7+J) (-8812960+J (7+J) (88928+J (7+J) (-468+J (7+J)))))))),-(((-2+J) J (7+J) (9+J) (21948480+J (7+J) (-1323000+J (7+J) (28702+J (7+J) (-277+J (7+J))))))/(10886400 z^11)),-(((-2+J) J (7+J) (9+J) (35064000+J (7+J) (-1763640+J (7+J) (31942+J (7+J) (-277+J (7+J))))))/(21772800 z^11)),1/z^12-1/(289989867847680000 z^12) (-10+J) (-8+J) (-6+J) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (13+J) (15+J) (17+J) (-833676480+J (7+J) (114378912+J (7+J) (-4230052+J (7+J) (63448+J (7+J) (-417+J (7+J)))))),-(1/(14485008384000 z^12))J (7+J) (180894269952000+J (7+J) (-33122195274240+J (7+J) (2349433112832+J (7+J) (-85849259040+J (7+J) (1788748560+J (7+J) (-22054832+J (7+J) (158952+J (7+J) (-618+J (7+J))))))))),-(1/(762048000 z^12))(-2+J) J (7+J) (9+J) (-2563473600+J (7+J) (175893840+J (7+J) (-4726576+J (7+J) (61658+J (7+J) (-395+J (7+J)))))),-(1/(1524096000 z^12))(-2+J) J (7+J) (9+J) (-5573865600+J (7+J) (318324240+J (7+J) (-6824476+J (7+J) (71108+J (7+J) (-395+J (7+J)))))),1/z^13-1/(52198176212582400000 z^13) (-10+J) (-8+J) (-6+J) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (13+J) (15+J) (17+J) (172008748800+J (7+J) (-25008497280+J (7+J) (1017235728+J (7+J) (-17785440+J (7+J) (152128+J (7+J) (-628+J (7+J))))))),-(1/(1883051089920000 z^13))J (7+J) (-30370283513856000+J (7+J) (5685348310272000+J (7+J) (-431278994177280+J (7+J) (17117281051776+J (7+J) (-396920087856+J (7+J) (5654064144+J (7+J) (-50058872+J (7+J) (268176+J (7+J) (-795+J (7+J)))))))))),-(1/(67060224000 z^13))(-2+J) J (7+J) (9+J) (357678604800+J (7+J) (-27684313920+J (7+J) (855078608+J (7+J) (-13637120+J (7+J) (118668+J (7+J) (-538+J (7+J))))))),-(1/(134120448000 z^13))(-2+J) J (7+J) (9+J) (942637132800+J (7+J) (-59261829120+J (7+J) (1465072608+J (7+J) (-18734520+J (7+J) (134068+J (7+J) (-538+J (7+J))))))),1/z^14-((-12+J) (-10+J) (-8+J) (-6+J) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (13+J) (15+J) (17+J) (19+J) (178803072000+J (7+J) (-26522288640+J (7+J) (1083860832+J (7+J) (-18822392+J (7+J) (158628+J (7+J) (-642+J (7+J))))))))/(10857220652217139200000 z^14),-(1/(289989867847680000 z^14))J (7+J) (5582653171070976000+J (7+J) (-1130338166370048000+J (7+J) (90722029433978880+J (7+J) (-3853417628059776+J (7+J) (97298039791872+J (7+J) (-1547871265360+J (7+J) (15899813776+J (7+J) (-105145568+J (7+J) (431816+J (7+J) (-1001+J (7+J))))))))))),-(1/(289989867847680000 z^14))J (7+J) (18904909351071744000+J (7+J) (-3159997781508403200+J (7+J) (212491113563151360+J (7+J) (-7648220048749056+J (7+J) (164888697966912+J (7+J) (-2260267109520+J (7+J) (20284193776+J (7+J) (-119680088+J (7+J) (451836+J (7+J) (-1001+J (7+J))))))))))),-(1/(7242504192000 z^14))(-2+J) J (7+J) (9+J) (-57858694502400+J (7+J) (4940899119360+J (7+J) (-172748862720+J (7+J) (3196589328+J (7+J) (-34081280+J (7+J) (211008+J (7+J) (-708+J (7+J)))))))),-(1/(14485008384000 z^14))(-2+J) J (7+J) (9+J) (-179566979328000+J (7+J) (12489984864000+J (7+J) (-350374821120+J (7+J) (5203121328+J (7+J) (-45129680+J (7+J) (234768+J (7+J) (-708+J (7+J)))))))),1/z^15-((-12+J) (-10+J) (-8+J) (-6+J) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (13+J) (15+J) (17+J) (19+J) (-48228426086400+J (7+J) (7471309098240+J (7+J) (-327436493664+J (7+J) (6325658024+J (7+J) (-62930772+J (7+J) (336322+J (7+J) (-917+J (7+J)))))))))/(2584018515227679129600000 z^15),-(1/(52198176212582400000 z^15))J (7+J) (-1247747313202790400000+J (7+J) (257807412952510464000+J (7+J) (-21713822416662681600+J (7+J) (976289459242567680+J (7+J) (-26434504759413888+J (7+J) (459223576873344+J (7+J) (-5286173524128+J (7+J) (40717222480+J (7+J) (-207319640+J (7+J) (668976+J (7+J) (-1238+J (7+J)))))))))))),-(1/(52198176212582400000 z^15))J (7+J) (-4427589781962547200000+J (7+J) (778134090027525120000+J (7+J) (-55587311278507929600+J (7+J) (2133844925721868800+J (7+J) (-49603448066289408+J (7+J) (744185486893824+J (7+J) (-7462993855968+J (7+J) (50767274800+J (7+J) (-232960640+J (7+J) (696696+J (7+J) (-1238+J (7+J)))))))))))),-(1/(941525544960000 z^15))(-2+J) J (7+J) (9+J) (10916797731840000+J (7+J) (-1018511499110400+J (7+J) (39142949166720+J (7+J) (-814016017152+J (7+J) (10077356168+J (7+J) (-76691252+J (7+J) (353250+J (7+J) (-907+J (7+J))))))))),-(1/(1883051089920000 z^15))(-2+J) J (7+J) (9+J) (38408970023424000+J (7+J) (-2914947731980800+J (7+J) (91204340699520+J (7+J) (-1546371339552+J (7+J) (15657273368+J (7+J) (-98663852+J (7+J) (388350+J (7+J) (-907+J (7+J))))))))),1/z^16-((-14+J) (-12+J) (-10+J) (-8+J) (-6+J) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (13+J) (15+J) (17+J) (19+J) (21+J) (-49949104896000+J (7+J) (7864546348800+J (7+J) (-346775577120+J (7+J) (6684386328+J (7+J) (-65927780+J (7+J) (347718+J (7+J) (-933+J (7+J)))))))))/(697684999111473364992000000 z^16),-((J (7+J) (305478770084167680000000+J (7+J) (-66880855243136286720000+J (7+J) (5873152091579080704000+J (7+J) (-277205314388051865600+J (7+J) (7958521963421475840+J (7+J) (-148608950149018368+J (7+J) (1873341464128704+J (7+J) (-16222546312128+J (7+J) (96556311280+J (7+J) (-387804560+J (7+J) (1003236+J (7+J) (-1508+J (7+J))))))))))))))/(10857220652217139200000 z^16)),-((J (7+J) (1188386342061144145920000+J (7+J) (-217971526056244789248000+J (7+J) (16315470556851061555200+J (7+J) (-662248807410304512000+J (7+J) (16420500781059271680+J (7+J) (-265833327608356608+J (7+J) (2921409120924864+J (7+J) (-22249607260608+J (7+J) (118056830320+J (7+J) (-431047760+J (7+J) (1040676+J (7+J) (-1508+J (7+J))))))))))))))/(10857220652217139200000 z^16)),-(1/(144994933923840000 z^16))(-2+J) J (7+J) (9+J) (-2358577574825472000+J (7+J) (237610799759116800+J (7+J) (-9941557443736320+J (7+J) (227429331438240+J (7+J) (-3164274187792+J (7+J) (28016444448+J (7+J) (-159178952+J (7+J) (563810+J (7+J) (-1137+J (7+J)))))))))),-(1/(289989867847680000 z^16))(-2+J) J (7+J) (9+J) (-9288820773872640000+J (7+J) (765214719981696000+J (7+J) (-26297097573945600+J (7+J) (496256191980480+J (7+J) (-5707230603792+J (7+J) (41913607728+J (7+J) (-200019752+J (7+J) (613860+J (7+J) (-1137+J (7+J)))))))))),1/z^17-((-14+J) (-12+J) (-10+J) (-8+J) (-6+J) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (13+J) (15+J) (17+J) (19+J) (21+J) (17046656188416000+J (7+J) (-2775655413504000+J (7+J) (129135434676480+J (7+J) (-2693784807936+J (7+J) (29839696528+J (7+J) (-187759616+J (7+J) (673224+J (7+J) (-1280+J (7+J))))))))))/(212096239729887902957568000000 z^17),-((J (7+J) (-87853552280843169300480000+J (7+J) (19584641136608558678016000+J (7+J) (-1783834766769185877196800+J (7+J) (87808102998808260096000+J (7+J) (-2650174153472579208192+J (7+J) (52576896713946183936+J (7+J) (-714113670487896000+J (7+J) (6790569461809664+J (7+J) (-45576671260848+J (7+J) (214685735264+J (7+J) (-693742452+J (7+J) (1463280+J (7+J) (-1813+J (7+J)))))))))))))))/(2584018515227679129600000 z^17)),-((J (7+J) (-356782416111642673152000000+J (7+J) (68177518035168076333056000+J (7+J) (-5344027626418386709708800+J (7+J) (227778687728448460369920+J (7+J) (-5972738835680399729664+J (7+J) (103209702498806706432+J (7+J) (-1225240506943814592+J (7+J) (10240675349197824+J (7+J) (-60956946250928+J (7+J) (258094604768+J (7+J) (-763939124+J (7+J) (1512784+J (7+J) (-1813+J (7+J)))))))))))))))/(2584018515227679129600000 z^17)),-(1/(26099088106291200000 z^17))(-2+J) J (7+J) (9+J) (582699698380800000000+J (7+J) (-62900634396722688000+J (7+J) (2822389999565068800+J (7+J) (-69946031480532480+J (7+J) (1070137386647136+J (7+J) (-10661654391696+J (7+J) (70646061304+J (7+J) (-309730172+J (7+J) (865536+J (7+J) (-1400+J (7+J))))))))))),-(1/(52198176212582400000 z^17))(-2+J) J (7+J) (9+J) (2521949401939968000000+J (7+J) (-223540198278644736000+J (7+J) (8341871152470912000+J (7+J) (-172808387428884480+J (7+J) (2211002533791936+J (7+J) (-18416939498496+J (7+J) (102380333104+J (7+J) (-381594272+J (7+J) (934836+J (7+J) (-1400+J (7+J))))))))))),-(1/(627683696640000 z^17))(-4+J) (-2+J) J (7+J) (9+J) (11+J) (-1098365329152000+J (7+J) (57080097100800+J (7+J) (-1240016055840+J (7+J) (14651007048+J (7+J) (-102462260+J (7+J) (427338+J (7+J) (-993+J (7+J)))))))),1/z^18-((-16+J) (-14+J) (-12+J) (-10+J) (-8+J) (-6+J) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (13+J) (15+J) (17+J) (19+J) (21+J) (23+J) (17607094156800000+J (7+J) (-2905063330752000+J (7+J) (136020135744000+J (7+J) (-2838087378720+J (7+J) (31287521168+J (7+J) (-195162000+J (7+J) (691768+J (7+J) (-1298+J (7+J))))))))))/(72112721508161887005573120000000 z^18)}[[n+1]];
 
@@ -86,8 +114,7 @@ MNlst[n_,z_,J_] := {
 
 polyify[expr_] := Expand @ Cancel @ Together[expr];
 
-ClearAll[jDegree];
-
+(* Use one common power of J for the complete matrix-valued functional list. *)
 jDegree[expr_, j_Symbol : J] := Module[
   {rat},
   If[
@@ -97,8 +124,6 @@ jDegree[expr_, j_Symbol : J] := Module[
     Exponent[Numerator[rat], j] - Exponent[Denominator[rat], j]
   ]
 ];
-
-ClearAll[largeJ];
 
 largeJ[list_List, j_Symbol : J] := Module[
   {scalarEntries, degrees, p, result},
@@ -120,158 +145,191 @@ largeJ[list_List, j_Symbol : J] := Module[
   |>
 ];
 
-ClearAll[activeMNlst];
-
 activeMNlst[z_, j_] := Table[
   MNlst[n, z, j],
   {n, 0, nulllist[[1]]}
 ];
 
-pAAAA = Max[
-  Table[
-    jDegree[NlstAAAA[n, zz, J], J],
-    {n, 0, nulllist[[1]]}
-  ]
-];
-
-pBBBB = Max[
-  Table[
-    jDegree[NlstBBBB[n, zz, J], J],
-    {n, 0, nulllist[[1]]}
-  ]
-];
-
-pLargeJ = Max[pAAAA, pBBBB];
-
-Print["Maximum AAAA degree: ", pAAAA];
-Print["Maximum BBBB degree: ", pBBBB];
-Print["Global MNlst degree: ", pLargeJ];
-
-largeJSymbolic = largeJ[
+largeJResult = largeJ[
   activeMNlst[zz, J],
   J
 ];
 
-If[
-  largeJSymbolic["degree"] =!= pLargeJ,
-  Print[
-    "ERROR: inconsistent global large-J degrees: ",
-    largeJSymbolic["degree"],
-    " versus ",
-    pLargeJ
+largeJDegree = largeJResult["degree"];
+largeJLimitSymbolic = largeJResult["limit"];
+Clear[largeJResult];
+
+NPolyInfList[zValue_] := largeJLimitSymbolic /. zz -> zValue;
+
+validateLargeJLimit[degree_, limit_] := Module[
+  {expectedDimensions = {activeFunctionalCount, 3, 3}},
+
+  If[! IntegerQ[degree],
+    Print["ERROR: invalid global large-J degree: ", degree];
+    Quit[1]
   ];
-  Quit[1];
-];
 
-ClearAll[largeJData, NPolyInfList, NPolyInf];
-
-largeJData[zValue_] := <|
-  "degree" -> pLargeJ,
-  "limit" -> (largeJSymbolic["limit"] /. zz -> zValue)
-|>;
-
-NPolyInfList[zValue_] := largeJData[zValue]["limit"];
-
-NPolyInf[
-  n_Integer?NonNegative,
-  zValue_
-] /; n <= nulllist[[1]] := NPolyInfList[zValue][[n + 1]];
-
-ClearAll[validateLargeJ];
-
-validateLargeJ[] := Module[
-  {
-    activeDimensions, infAtGap, infDimensions, zTest, pTest, infTest,
-    finiteTest, errTest, errors
-  },
-
-  activeDimensions = Dimensions[activeMNlst[mgap, J]];
-  infAtGap = NPolyInfList[mgap];
-  infDimensions = Dimensions[infAtGap];
-
-  Print["Active functional count: ", nulllist[[1]] + 1];
-  Print["Dimensions of activeMNlst: ", activeDimensions];
-  Print["Global large-J degree: ", largeJData[mgap]["degree"]];
-  Print["Dimensions of NPolyInfList: ", infDimensions];
-
-  If[
-    activeDimensions =!= {47, 3, 3},
+  If[Dimensions[limit] =!= expectedDimensions,
     Print[
-      "ERROR: activeMNlst has incorrect dimensions: ",
-      activeDimensions
+      "ERROR: large-J limit has dimensions ",
+      Dimensions[limit],
+      "; expected ",
+      expectedDimensions,
+      "."
     ];
-    Quit[1];
+    Quit[1]
   ];
 
-  If[
-    infDimensions =!= {47, 3, 3},
-    Print[
-      "ERROR: NPolyInfList has incorrect dimensions: ",
-      infDimensions
-    ];
-    Quit[1];
-  ];
-
-  If[
-    ! FreeQ[infAtGap, J],
-    Print["ERROR: the large-J result still contains J."];
-    Quit[1];
+  If[! FreeQ[limit, J],
+    Print["ERROR: the large-J limit still contains J."];
+    Quit[1]
   ];
 
   If[
     ! FreeQ[
-      infAtGap,
+      limit,
       Indeterminate | ComplexInfinity | DirectedInfinity | Infinity
     ],
-    Print["ERROR: non-finite entries found in NPolyInfList."];
-    Quit[1];
-  ];
-
-  zTest = SetPrecision[2, 100];
-  pTest = largeJData[zTest]["degree"];
-  infTest = N[NPolyInfList[zTest], 50];
-
-  errors = Table[
-    finiteTest = N[
-      activeMNlst[zTest, jTest]/jTest^pTest,
-      50
-    ];
-    errTest = Max[
-      Abs[
-        Flatten[finiteTest - infTest]
-      ]
-    ];
-    Print[
-      "J = ", jTest,
-      ", large-J convergence error = ",
-      errTest
-    ];
-    errTest,
-    {jTest, {10^2, 10^3, 10^4}}
-  ];
-
-  If[
-    ! And @@ Thread[Rest[errors] < Most[errors]],
-    Print[
-      "ERROR: large-J convergence errors do not decrease: ",
-      errors
-    ];
-    Quit[1];
+    Print["ERROR: non-finite entries found in the large-J limit."];
+    Quit[1]
   ];
 ];
 
-validateLargeJ[];
+validateLargeJLimit[largeJDegree, largeJLimitSymbolic];
+
+(* Numerical degree-zero PMP blocks used by the sampled SDP. *)
+zFromSample[xv_] := mgap + xv/(1 - xv);
+
+zeroMatrix3 = ConstantArray[0, {3, 3}];
+
+objectiveCoordinateMatrix[zv_] := Module[
+  {phaseVolume = zv^3},
+  {
+    {0, 0, 0},
+    {0, polyify[phaseVolume*(2/zv)], 0},
+    {0, 0, 0}
+  }
+];
+
+normalizedCoordinateMatrix[zv_] := Module[
+  {phaseVolume = zv^3, phaseSpaceFactor},
+  phaseSpaceFactor = (-4 mA^2 + zv)^(7/2)/Sqrt[zv];
+  {
+    {phaseSpaceFactor, 0, 0},
+    {0, polyify[phaseVolume], 0},
+    {0, 0, 0}
+  }
+];
+
+numericalPmpBlock[values_List, xv_, prec_] :=
+  NumericalPositiveMatrixWithPrefactor[<|
+    "prefactor" -> DampedRational[1, {}, 1/E, xv],
+    "samplePoints" -> {xv},
+    "sampleScalings" -> {Exp[-xv]},
+    "polynomials" -> Table[
+      Table[
+        {N[values[[k, row, column]], prec]},
+        {k, Length[values]}
+      ],
+      {row, 3},
+      {column, 3}
+    ]
+  |>];
+
+sampledFiniteBlock[zv_, j_, xv_, normalizedMatrix_, prec_] :=
+  numericalPmpBlock[
+    Join[
+      {objectiveCoordinateMatrix[zv], normalizedMatrix},
+      activeMNlst[zv, j]
+    ],
+    xv,
+    prec
+  ];
+
+sampledLargeJBlock[xv_, prec_] :=
+  numericalPmpBlock[
+    Join[
+      {zeroMatrix3, zeroMatrix3},
+      NPolyInfList[zFromSample[xv]]
+    ],
+    xv,
+    prec
+  ];
+
+(* These checks protect the JSON contract and remain part of normal generation. *)
+validatePmpBlocks[blocks_List, coefficientCount_Integer] := Module[
+  {
+    expectedDimensions = {3, 3, coefficientCount, 1},
+    invalidShapes, asymmetricBlocks, functionalCovered,
+    missingFunctionals
+  },
+
+  invalidShapes = Select[
+    Range[Length[blocks]],
+    Function[blockIndex,
+      Dimensions[blocks[[blockIndex, 1]]["polynomials"]] =!=
+        expectedDimensions
+    ]
+  ];
+
+  If[invalidShapes =!= {},
+    Print[
+      "ERROR: PMP blocks have incorrect polynomial dimensions: ",
+      invalidShapes
+    ];
+    Quit[1]
+  ];
+
+  asymmetricBlocks = Select[
+    Range[Length[blocks]],
+    Function[blockIndex,
+      With[
+        {polynomialTensor = blocks[[blockIndex, 1]]["polynomials"]},
+        polynomialTensor =!=
+          Transpose[polynomialTensor, {2, 1, 3, 4}]
+      ]
+    ]
+  ];
+
+  If[asymmetricBlocks =!= {},
+    Print[
+      "ERROR: PMP blocks contain asymmetric polynomial matrices: ",
+      asymmetricBlocks
+    ];
+    Quit[1]
+  ];
+
+  functionalCovered = Table[
+    AnyTrue[
+      blocks,
+      Function[block,
+        AnyTrue[
+          Flatten[block[[1]]["polynomials"][[All, All, k, All]]],
+          Function[value, TrueQ[value != 0]]
+        ]
+      ]
+    ],
+    {k, coefficientCount}
+  ];
+
+  missingFunctionals = Flatten @ Position[functionalCovered, False];
+  If[missingFunctionals =!= {},
+    Print[
+      "ERROR: PMP has identically zero coefficient indices: ",
+      missingFunctionals,
+      "."
+    ];
+    Quit[1]
+  ];
+];
 
 
 LaunchKernels[];
 
+(* Assemble the sampled constraints and write the only user-facing artifact. *)
 PMP2SDP[datfile_, prec_:600] := Module[
-    {
-        xSamples, jTiers, sampledPoly, sampledPolyinf,
-        sampledPoly1st, sampledPoly2nd, sampleAnchor, pols, norm, obj,
-        functionalCount, functionalCovered, missingFunctionals,
-        asymmetricBlocks
-    },
+    {xSamples, jTiers, sampleAnchor, pols, norm, obj, coefficientCount},
+
     xSamples = SetPrecision[
       Join[
         Range[0, 1/10, 5/1000],
@@ -289,177 +347,51 @@ PMP2SDP[datfile_, prec_:600] := Module[
       Range[20000, 50000, 2000]
     };
 
+    sampleAnchor = First[xSamples];
+    coefficientCount = activeFunctionalCount + 2;
+
     Print["x samples: ", Length[xSamples]];
     Print["J samples: ", Total[Length /@ jTiers]];
     Print["Building numerical PMP blocks..."];
 
-    sampledPoly[j_, xv_] := Module[{zv, phsvol, mfst, msnd, values},
-      zv = mgap + xv/(1 - xv);
-      phsvol = zv^3;
-      mfst = {{0, 0, 0}, {0, polyify[phsvol*(2/zv)], 0}, {0, 0, 0}};
-      msnd = {{0, 0, 0}, {0, polyify[phsvol*0], 0}, {0, 0, 0}};
-      values = Join[
-        {mfst, msnd},
-        Table[MNlst[n, zv, j], {n, 0, nulllist[[1]]}]
-      ];
-      NumericalPositiveMatrixWithPrefactor[<|
-        "prefactor" -> DampedRational[1, {}, 1/E, xv],
-        "samplePoints" -> {xv},
-        "sampleScalings" -> {Exp[-xv]},
-        "polynomials" ->
-          Table[
-            Table[{N[values[[k, row, column]], prec]}, {k, Length[values]}],
-            {row, 3}, {column, 3}
-          ]
-      |>]
-    ];
-
-    sampledPolyinf[xv_] := Module[{zv, zeroMatrix, values},
-      zv = mgap + xv/(1 - xv);
-      zeroMatrix = ConstantArray[0, {3, 3}];
-      values = Join[
-        {zeroMatrix, zeroMatrix},
-        NPolyInfList[zv]
-      ];
-      NumericalPositiveMatrixWithPrefactor[<|
-        "prefactor" -> DampedRational[1, {}, 1/E, xv],
-        "samplePoints" -> {xv},
-        "sampleScalings" -> {Exp[-xv]},
-        "polynomials" ->
-          Table[
-            Table[
-              {N[values[[k, row, column]], prec]},
-              {k, Length[values]}
-            ],
-            {row, 3},
-            {column, 3}
-          ]
-      |>]
-    ];
-
-    sampledPoly1st[j_, xv_] := Module[{zv, phsvol, mfst, msnd, values},
-      zv = m1;
-      phsvol = zv^3;
-      mfst = {{0, 0, 0}, {0, polyify[phsvol*(2/zv)], 0}, {0, 0, 0}};
-      msnd = {{0, 0, 0}, {0, polyify[phsvol*0], 0}, {0, 0, 0}};
-      values = Join[
-        {mfst, msnd},
-        Table[MNlst[n, zv, j],
-          {n, 0, nulllist[[1]]}]
-      ];
-      NumericalPositiveMatrixWithPrefactor[<|
-        "prefactor" -> DampedRational[1, {}, 1/E, xv],
-        "samplePoints" -> {xv},
-        "sampleScalings" -> {Exp[-xv]},
-        "polynomials" ->
-          Table[
-            Table[{N[values[[k, row, column]], prec]},
-              {k, Length[values]}],
-            {row, 3}, {column, 3}
-          ]
-      |>]
-    ];
-
-    sampledPoly2nd[j_, xv_] := Module[
-      {zv, phsvol, crossingTerm, mfst, msnd, values},
-      zv = 1;
-      phsvol = zv^3;
-      crossingTerm = (-4 mA^2 + zv)^(7/2)/Sqrt[zv];
-      mfst = {{0, 0, 0}, {0, polyify[phsvol*(2/zv)], 0}, {0, 0, 0}};
-      msnd = {
-        {0, crossingTerm, 0},
-        {crossingTerm, polyify[phsvol], 0},
-        {0, 0, 0}
-      };
-      values = Join[
-        {mfst, msnd},
-        Table[MNlst[n, zv, j],
-          {n, 0, nulllist[[1]]}]
-      ];
-      NumericalPositiveMatrixWithPrefactor[<|
-        "prefactor" -> DampedRational[1, {}, 1/E, xv],
-        "samplePoints" -> {xv},
-        "sampleScalings" -> {Exp[-xv]},
-        "polynomials" ->
-          Table[
-            Table[{N[values[[k, row, column]], prec]},
-              {k, Length[values]}],
-            {row, 3}, {column, 3}
-          ]
-      |>]
-    ];
-
-    sampleAnchor = First[xSamples];
-    
     pols = Join[
-      {sampledPoly2nd[J2, sampleAnchor]},
+      {
+        sampledFiniteBlock[
+          1,
+          J2,
+          sampleAnchor,
+          normalizedCoordinateMatrix[1],
+          prec
+        ]
+      },
       Flatten[
         Table[
-          ParallelTable[sampledPoly[j, xv], {j, tier}],
+          ParallelTable[
+            sampledFiniteBlock[
+              zFromSample[xv],
+              j,
+              xv,
+              zeroMatrix3,
+              prec
+            ],
+            {j, tier}
+          ],
           {xv, xSamples}, {tier, jTiers}
         ],
         2
       ],
       {
-        sampledPoly1st[J1, sampleAnchor],
-        sampledPolyinf[sampleAnchor]
+        sampledFiniteBlock[m1, J1, sampleAnchor, zeroMatrix3, prec],
+        sampledLargeJBlock[sampleAnchor, prec]
       }
     ];
 
     Print["Built ", Length[pols], " numerical PMP blocks."];
+    validatePmpBlocks[pols, coefficientCount];
 
-    asymmetricBlocks = Select[
-      Range[Length[pols]],
-      Function[blockIndex,
-        With[
-          {polynomialTensor = pols[[blockIndex, 1]]["polynomials"]},
-          polynomialTensor =!=
-            Transpose[polynomialTensor, {2, 1, 3, 4}]
-        ]
-      ]
-    ];
+    obj = N[Join[{-1, 0}, functionalZeros], prec];
+    norm = N[Join[{0, -1}, functionalZeros], prec];
 
-    If[asymmetricBlocks =!= {},
-      Print[
-        "ERROR: sampled PMP contains asymmetric polynomial matrices in blocks: ",
-        asymmetricBlocks
-      ];
-      Quit[1]
-    ];
-
-    Print["Validated symmetry of all sampled polynomial matrices."];
-
-    norm = -1 * N[Flatten[{{0, 1}, list0}], prec];
-    obj = -1 * N[Flatten[{{1, 0}, list0}], prec];
-
-    functionalCount = Length[norm];
-    functionalCovered = Table[
-      AnyTrue[
-        pols,
-        Function[pmp,
-          AnyTrue[
-            Flatten[pmp[[1]]["polynomials"][[All, All, k, All]]],
-            Function[value, TrueQ[value != 0]]
-          ]
-        ]
-      ],
-      {k, functionalCount}
-    ];
-    missingFunctionals = Flatten @ Position[functionalCovered, False];
-
-    If[missingFunctionals =!= {},
-      Print[
-        "ERROR: sampled PMP has identically zero functional indices: ",
-        missingFunctionals,
-        ". Expand the x/J sampling grid before running SDPB."
-      ];
-      Quit[1]
-    ];
-
-    Print["Validated all ", functionalCount,
-      " functional directions: none are identically zero."];
-    Print["size of norm = ", Length[norm]];
-    Print["size of obj = ", Length[obj]];
     Print["Writing ", datfile, "..."];
     WritePmpJsonNumerical[datfile, SDP[obj, norm, pols], prec];
     Print["Wrote ", datfile, "."]
