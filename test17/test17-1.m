@@ -269,7 +269,8 @@ PMP2SDP[datfile_, prec_:600] := Module[
     {
         xSamples, jTiers, sampledPoly, sampledPolyinf,
         sampledPoly1st, sampledPoly2nd, sampleAnchor, pols, norm, obj,
-        functionalCount, functionalCovered, missingFunctionals
+        functionalCount, functionalCovered, missingFunctionals,
+        asymmetricBlocks
     },
     xSamples = SetPrecision[
       Join[
@@ -359,11 +360,17 @@ PMP2SDP[datfile_, prec_:600] := Module[
       |>]
     ];
 
-    sampledPoly2nd[j_, xv_] := Module[{zv, phsvol, mfst, msnd, values},
+    sampledPoly2nd[j_, xv_] := Module[
+      {zv, phsvol, crossingTerm, mfst, msnd, values},
       zv = 1;
       phsvol = zv^3;
+      crossingTerm = (-4 mA^2 + zv)^(7/2)/Sqrt[zv];
       mfst = {{0, 0, 0}, {0, polyify[phsvol*(2/zv)], 0}, {0, 0, 0}};
-      msnd = {{0, (-4 mA^2+zv)^(7/2)/Sqrt[zv], 0}, {0, polyify[phsvol], 0}, {0, 0, 0}};
+      msnd = {
+        {0, crossingTerm, 0},
+        {crossingTerm, polyify[phsvol], 0},
+        {0, 0, 0}
+      };
       values = Join[
         {mfst, msnd},
         Table[MNlst[n, zv, j],
@@ -400,6 +407,27 @@ PMP2SDP[datfile_, prec_:600] := Module[
     ];
 
     Print["Built ", Length[pols], " numerical PMP blocks."];
+
+    asymmetricBlocks = Select[
+      Range[Length[pols]],
+      Function[blockIndex,
+        With[
+          {polynomialTensor = pols[[blockIndex, 1]]["polynomials"]},
+          polynomialTensor =!=
+            Transpose[polynomialTensor, {2, 1, 3, 4}]
+        ]
+      ]
+    ];
+
+    If[asymmetricBlocks =!= {},
+      Print[
+        "ERROR: sampled PMP contains asymmetric polynomial matrices in blocks: ",
+        asymmetricBlocks
+      ];
+      Quit[1]
+    ];
+
+    Print["Validated symmetry of all sampled polynomial matrices."];
 
     norm = -1 * N[Flatten[{{0, 1}, list0}], prec];
     obj = -1 * N[Flatten[{{1, 0}, list0}], prec];
