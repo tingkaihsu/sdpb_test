@@ -70,7 +70,7 @@ PMP2SDP[datfile_, prec_:600] := Module[
       PositiveMatrixWithPrefactor[
         DampedRational[1, {}, 1/E, y],
         Table[
-            Table[ polys[ [k, row, column] ], {k, Length[polys]} ],
+            Table[polys[[k, row, column]], {k, Length[polys]}],
             {row, 3}, {column, 3}
         ]
        ]
@@ -86,7 +86,7 @@ PMP2SDP[datfile_, prec_:600] := Module[
       PositiveMatrixWithPrefactor[
         DampedRational[1, {}, 1/E, y],
         Table[
-            Table[ polys[ [k, row, column] ], {k, Length[polys]} ],
+            Table[polys[[k, row, column]], {k, Length[polys]}],
             {row, 3}, {column, 3}
         ]
       ]
