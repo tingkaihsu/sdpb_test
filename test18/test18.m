@@ -43,10 +43,10 @@ PMP2SDP[datfile_, prec_:600] := Module[
         functionalCount, functionalCovered, missingFunctionals
     },
     xTiers = {
-      Range[0, 1/1000, 1/1000],
+      Range[1/10000, 1/1000, 1/1000],
       Range[1/1000, 1/100, 1/1000],
       Range[1/100, 1/10, 1/1000],
-      Range[1/10, 1, 1/1000]
+      Range[1/10, 1-1/10000, 1/1000]
     };
 
     jTiers = {
