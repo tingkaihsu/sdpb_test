@@ -1,8 +1,16 @@
-Import["../SDPB.m"];
-m1 = N[2/5, 1000];
+sourceDirectory = If[
+  StringQ[$InputFileName] && StringLength[$InputFileName] > 0,
+  DirectoryName[ExpandFileName[$InputFileName]],
+  Directory[]
+];
+Import[FileNameJoin[{sourceDirectory, "..", "SDPB.m"}]];
+
+(* Keep physical input exact until the numerical blocks are assembled. *)
+m1 = 2/5;
+mA = 1/1000;
 J1 = 0;
 J2 = 2;
-mgap = N[166/100, 1000];
+mgap = 83/50;
 
 (* 7 null constraints *)
 nulllist = {6, -1, -1, -1};
@@ -15,132 +23,309 @@ NAAAA[n_, x_, J_]:= {((-4 mA^2+x)^(3/2) (32 mA^4+2 (-1+J) (8+J) mA^2 x-(-2+J (7+
 
 
 Nlist[n_,z_,J_] := {
-	{NAAAA[n,z,J],0,0},
-	{0,NBBBB[n,z,J],0},
-	{0,0,0}
+	{NAAAA[n,z,J],0},
+	{0,NBBBB[n,z,J]}
 };
 
 
 polyify[expr_] := Expand @ Cancel @ Together[expr];
 
-PolyInfBBBB[n_,J_,x_] := {0,0,0,0,0,-(1/(403200 z^3)),0}[[n+1]];
+PolyInfBBBB[n_,J_,x_] := {0,0,0,0,0,-(1/(403200 x^3)),0}[[n+1]];
 
 
 PolyInfAAAA[n_,J_,x_] := {0,0,0,0,0,0,(2 mA^2-x)/(403200 x^(3/2) (-4 mA^2+x)^(5/2))}[[n+1]];
 
 
 NPolyInf[n_,J_,x_] := {
-  {PolyInfAAAA[n,J,x],0,0},
-  {0,PolyInfBBBB[n,J,x],0},
-  {0,0,0}
+  {PolyInfAAAA[n,J,x],0},
+  {0,PolyInfBBBB[n,J,x]}
 };
+
+(* ---------------------------------------------------------------------- *)
+(* Paper-inspired sampling and numerical conditioning                     *)
+(* ---------------------------------------------------------------------- *)
+
+ClearAll[
+  chebyshevPhi,
+  compactCoordinate,
+  energyFromPhi,
+  paperSamples,
+  zeroMatrix,
+  g0CoordinateMatrix,
+  lambda22CoordinateMatrix,
+  coefficientMatrices,
+  largeJCoefficientMatrices,
+  congruenceRescale,
+  coefficientTensor,
+  pmpBlock,
+  finiteStateBlock,
+  largeJBlock,
+  validateConfiguration,
+  validateSampling
+];
+
+matrixDimension = 2;
+functionalCount = 2 + Length[list0];
+
+(* Appendix D, eq. (169): Chebyshev nodes in the conformal angle phi.
+   The endpoints phi=0 and phi=Pi are intentionally not sampled. *)
+nPoints = 200;
+lMax = 60;
+zReference = 0;
+useCongruenceRescaling = True;
+
+chebyshevPhi[k_Integer, count_Integer] :=
+  Pi/2 + Pi/2 Cos[((k + 1/2) Pi)/count];
+
+(* For rho(z,mgap,zReference)=Exp[I phi], inversion of the conformal map gives
+     z = mgap + (mgap-zReference) Tan[phi/2]^2.
+   With zReference=0 this is equivalent to the old map
+     z=mgap/(1-x), x=Sin[phi/2]^2. *)
+compactCoordinate[phi_] := Sin[phi/2]^2;
+
+energyFromPhi[phi_] :=
+  mgap + (mgap - zReference) Tan[phi/2]^2;
+
+paperSamples[count_Integer, prec_Integer] := SortBy[
+  Table[
+    With[{phi = N[chebyshevPhi[k, count], prec]},
+      <|
+        "Index" -> k,
+        "Phi" -> phi,
+        "CompactCoordinate" -> N[compactCoordinate[phi], prec],
+        "Energy" -> N[energyFromPhi[phi], prec]
+      |>
+    ],
+    {k, 0, count - 1}
+  ],
+  #["Energy"] &
+];
+
+zeroMatrix = ConstantArray[0, {matrixDimension, matrixDimension}];
+
+(* First functional coordinate: g0. *)
+g0CoordinateMatrix[z_] := {
+  {0, 0},
+  {0, 2 z^2}
+};
+
+(* Second functional coordinate: the on-shell coupling of the fixed J=2 state. *)
+lambda22CoordinateMatrix[z_] := {
+  {(-4 mA^2 + z)^(7/2)/Sqrt[z], 0},
+  {0, z^3}
+};
+
+coefficientMatrices[
+  z_,
+  spin_Integer,
+  lambda22Matrix_: zeroMatrix
+] := Join[
+  {g0CoordinateMatrix[z], lambda22Matrix},
+  Table[Nlist[n, z, spin], {n, 0, nulllist[[1]]}]
+];
+
+largeJCoefficientMatrices[z_] := Join[
+  {zeroMatrix, zeroMatrix},
+  Table[NPolyInf[n, 0, z], {n, 0, nulllist[[1]]}]
+];
+
+(* Paper eqs. (174)-(175), adapted to the two diagonal channels used here.
+   Every coefficient matrix of one constraint receives the same congruence
+   transformation, so the PSD cone and the bound are unchanged. *)
+congruenceRescale[matrices_List, prec_Integer] := Module[
+  {numericMatrices, channelNorms, diagonalRescaling},
+
+  numericMatrices = N[matrices, prec];
+  channelNorms = Table[
+    Max @@ Abs[numericMatrices[[All, channel, channel]]],
+    {channel, matrixDimension}
+  ];
+  channelNorms = Replace[channelNorms, value_ /; TrueQ[value == 0] -> 1, {1}];
+
+  diagonalRescaling = DiagonalMatrix[1/Sqrt[channelNorms]];
+  N[diagonalRescaling . # . diagonalRescaling, prec] & /@ numericMatrices
+];
+
+coefficientTensor[matrices_List] := Table[
+  Table[
+    matrices[[coefficient, row, column]],
+    {coefficient, Length[matrices]}
+  ],
+  {row, matrixDimension},
+  {column, matrixDimension}
+];
+
+pmpBlock[matrices_List, variable_Symbol, prec_Integer] := Module[
+  {preparedMatrices, tensor},
+
+  If[Dimensions[matrices] =!= {functionalCount, matrixDimension, matrixDimension},
+    Print[
+      "Invalid coefficient-matrix dimensions: ", Dimensions[matrices],
+      "; expected ", {functionalCount, matrixDimension, matrixDimension}, "."
+    ];
+    Abort[]
+  ];
+
+  If[matrices =!= Transpose[matrices, {1, 3, 2}],
+    Print["A sampled coefficient matrix is not symmetric."];
+    Abort[]
+  ];
+
+  preparedMatrices = If[
+    TrueQ[useCongruenceRescaling],
+    congruenceRescale[matrices, prec],
+    N[matrices, prec]
+  ];
+  tensor = coefficientTensor[preparedMatrices];
+
+  If[!FreeQ[tensor, Indeterminate | ComplexInfinity | DirectedInfinity[___]],
+    Print["A sampled block contains a non-finite coefficient."];
+    Abort[]
+  ];
+
+  PositiveMatrixWithPrefactor[
+    DampedRational[1, {}, 1/E, variable],
+    tensor
+  ]
+];
+
+finiteStateBlock[
+  z_,
+  spin_Integer,
+  variable_Symbol,
+  lambda22Matrix_: zeroMatrix,
+  prec_: 600
+] := pmpBlock[
+  coefficientMatrices[z, spin, lambda22Matrix],
+  variable,
+  prec
+];
+
+largeJBlock[z_, variable_Symbol, prec_: 600] := pmpBlock[
+  largeJCoefficientMatrices[z],
+  variable,
+  prec
+];
+
+validateConfiguration[] := Module[{},
+  If[!IntegerQ[nPoints] || !(1 <= nPoints <= 200),
+    Print["nPoints must be an integer between 1 and 200."];
+    Abort[]
+  ];
+
+  If[!IntegerQ[lMax] || lMax < 0 || OddQ[lMax],
+    Print["lMax must be a non-negative even integer."];
+    Abort[]
+  ];
+
+  If[!TrueQ[zReference < mgap],
+    Print["zReference must lie below the continuum threshold mgap."];
+    Abort[]
+  ];
+];
+
+validateSampling[samples_List, spins_List] := Module[
+  {phis, energies, compactValues},
+
+  phis = Lookup[samples, "Phi"];
+  energies = Lookup[samples, "Energy"];
+  compactValues = Lookup[samples, "CompactCoordinate"];
+
+  If[
+    Length[samples] =!= nPoints ||
+    Length[DeleteDuplicates[energies]] =!= nPoints,
+    Print["The energy sample contains missing or duplicate points."];
+    Abort[]
+  ];
+
+  If[
+    !AllTrue[phis, 0 < # < Pi &] ||
+    !AllTrue[compactValues, 0 < # < 1 &] ||
+    !AllTrue[energies, # > mgap &],
+    Print["A Chebyshev sample lies outside the physical domain."];
+    Abort[]
+  ];
+
+  If[spins =!= Range[0, lMax, 2],
+    Print["Spin list is inconsistent with lMax."];
+    Abort[]
+  ];
+];
 
 LaunchKernels[];
 
+PMP2SDP[datfile_, prec_: 600] := Module[
+  {
+    samples, spins, continuumBlocks, largeJBlocks,
+    specialBlocks, pols, norm, obj
+  },
 
-PMP2SDP[datfile_, prec_:600] := Module[
-    {
-        xTiers, jTiers, Poly, PolyInf,
-        Poly2nd, pols, norm, obj,
-        functionalCount, functionalCovered, missingFunctionals
-    },
+  validateConfiguration[];
+  samples = paperSamples[nPoints, prec];
+  spins = Range[0, lMax, 2];
+  validateSampling[samples, spins];
 
-    xTiers = {
-    10^Subdivide[-4, -3, 49],
-    10^Subdivide[-3, -2, 49],
-    10^Subdivide[-2, -1, 49],
-    10^Subdivide[-1, Log10[1 - 10^-4], 49]
-    };
+  Print["Chebyshev energy samples = ", Length[samples]];
+  Print["phi range = ", {First[samples]["Phi"], Last[samples]["Phi"]}];
+  Print["energy range = ", {First[samples]["Energy"], Last[samples]["Energy"]}];
+  Print["even spins = 0, 2, ..., ", lMax, " (", Length[spins], " spins)"];
 
-    nPerTier = 50;
-    n = 4 nPerTier;
-    jMax = 50000;
-    alp = 3/2;
+  DistributeDefinitions[
+    mA, mgap, nulllist, list0, matrixDimension, functionalCount,
+    NBBBB, NAAAA, Nlist, PolyInfBBBB, PolyInfAAAA, NPolyInf,
+    zeroMatrix, g0CoordinateMatrix, lambda22CoordinateMatrix,
+    coefficientMatrices, largeJCoefficientMatrices,
+    useCongruenceRescaling, congruenceRescale, coefficientTensor,
+    pmpBlock, finiteStateBlock, largeJBlock
+  ];
 
-    jAll = DeleteDuplicates[
-      Round[jMax (Range[0, n - 1]/(n - 1))^alp]
-    ];
+  Print["Building finite-spin sampled blocks..."];
+  continuumBlocks = Flatten[
+    ParallelTable[
+      finiteStateBlock[sample["Energy"], spin, x, zeroMatrix, prec],
+      {sample, samples},
+      {spin, spins}
+    ],
+    1
+  ];
 
-    jAll = Sort[jAll];
+  Print["Building one analytic large-J block per energy sample..."];
+  largeJBlocks = ParallelMap[
+    largeJBlock[#["Energy"], x, prec] &,
+    samples
+  ];
 
-    jTiers = Partition[jAll, nPerTier];
+  specialBlocks = {
+    finiteStateBlock[m1, J1, x, zeroMatrix, prec],
+    finiteStateBlock[1, J2, x, lambda22CoordinateMatrix[1], prec]
+  };
 
-    (* continuous spectrum *)
-    Poly[j_, x_, y_] := Module[{g0, lambda22, polys},
-      (* normalization constant on BBBB sector *)
-      g0 = {{0, 0, 0}, {0, x^3*2/x, 0}, {0, 0, 0}};
+  pols = Join[specialBlocks, continuumBlocks, largeJBlocks];
 
-      (* state 2 on-shell couplings *)
-      lambda22 = {{(-4 mA^2+x)^(7/2)/Sqrt[x]*0, 0, 0}, {0, x^3*0, 0}, {0, 0, 0}};
+  norm = -N[Flatten[{{0, 1}, list0}], prec];
+  obj = -N[Flatten[{{1, 0}, list0}], prec];
 
-      polys = Join[
-        {g0, lambda22},
-        Table[ Nlist[n, x, j] , {n, 0, nulllist[[1]]} ]
-      ];
+  If[Length[norm] =!= functionalCount || Length[obj] =!= functionalCount,
+    Print["Objective or normalization dimension mismatch."];
+    Abort[]
+  ];
 
-      PositiveMatrixWithPrefactor[
-        DampedRational[1, {}, 1/E, y],
-        Table[
-            Table[polys[[k, row, column]], {k, Length[polys]}],
-            {row, 3}, {column, 3}
-        ]
-       ]
-    ];
+  Print["functional dimension = ", functionalCount];
+  Print["PMP blocks = ", Length[pols], " (expected ",
+    2 + nPoints (Length[spins] + 1), ")"];
+  Print["Writing ", datfile, "..."];
 
-    PolyInf[j_, x_, y_] := Module[{polys, n0},
-      n0 = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
-      polys = Join[
-        {n0, n0},
-        Table[ NPolyInf[n, j, x], {n, 0, nulllist[[1]]} ]
-      ];
+  WritePmpJson[
+    datfile,
+    SDP[obj, norm, pols],
+    prec,
+    getAnalyticSampleData
+  ];
 
-      PositiveMatrixWithPrefactor[
-        DampedRational[1, {}, 1/E, y],
-        Table[
-            Table[polys[[k, row, column]], {k, Length[polys]}],
-            {row, 3}, {column, 3}
-        ]
-      ]
-    ];
-
-    (* poly of the second state *)
-    Poly2nd[j_, z_, y_] := Module[{g0, lambda22, polys},
-      
-      g0 = {{0, 0, 0}, {0, z^3*2/z, 0}, {0, 0, 0}};
-      lambda22 = {{(-4 mA^2+z)^(7/2)/Sqrt[z]*1, 0, 0}, {0, z^3*1, 0}, {0, 0, 0}};
-      polys = Join[
-        {g0, lambda22},
-        Table[ Nlist[n, z, j],
-          {n, 0, nulllist[[1]]}
-        ] 
-      ];
-      PositiveMatrixWithPrefactor[
-        DampedRational[1, {}, 1/E, y],
-        Table[
-            Table[polys[[k, row, column]], {k, Length[polys]}],
-            {row, 3}, {column, 3}
-        ]
-      ]
-    ];
-    
-    pols = Flatten[{
-      Flatten[ N[ ParallelTable[ Poly[i, m1, x], {i, J1, J1, 2}], prec] ],
-      Flatten[ N[ ParallelTable[ Poly2nd[i, 1, x], {i, J2, J2, 2}], prec] ],
-      Flatten[ N[ ParallelTable[ Poly[i, mgap*1/(1-m), x], {i, Flatten[jTiers]}, {m, Flatten[xTiers]}], prec] ],
-      Flatten[ N[ ParallelTable[ PolyInf[i, mgap*1/(1-m), x], {i, 0, 0, 2}, {m, Flatten[xTiers]}], prec] ]
-    }, 1];
-
-    Print["Built ", Length[pols], " numerical PMP blocks."];
-
-    norm = -1 * N[Flatten[{{0, 1}, list0}], prec];
-    obj = -1 * N[Flatten[{{1, 0}, list0}], prec];
-
-    Print["size of norm = ", Length[norm]];
-    Print["size of obj = ", Length[obj]];
-    Print["Writing ", datfile, "..."];
-    WritePmpJson[datfile, SDP[obj, norm, pols], prec, getAnalyticSampleData];
-
-    Print["Wrote ", datfile, "."]
+  Print["Wrote ", datfile, "."]
 ];
 
-PMP2SDP["n_pmp.json", 1000];
+outputFile = FileNameJoin[{sourceDirectory, "n_pmp.json"}];
+If[!TrueQ[$Test18SkipExport],
+  PMP2SDP[outputFile, 600]
+];
