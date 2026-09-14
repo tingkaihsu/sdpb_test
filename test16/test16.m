@@ -1,13 +1,22 @@
 (* ::Package:: *)
 
-Import["../SDPB.m"]
-m1 = N[1/2, 1000];
+sourceDirectory = If[
+  StringQ[$InputFileName] && StringLength[$InputFileName] > 0,
+  DirectoryName[ExpandFileName[$InputFileName]],
+  Directory[]
+];
+Import[FileNameJoin[{sourceDirectory, "..", "SDPB.m"}]];
+
+(* Keep the spectral data exact until the final numerical conversion. *)
+m1 = 1/2;
 J1 = 0;
 J2 = 2;
-mgap = N[166/100, 1000];
+mgap = 83/50;
 
 nulllist = {51, -1, -1, -1};
 list0 = Table[0, {i, 1, Total[nulllist]+Length[nulllist]}];
+functionalDimension = 2 + Length[list0];
+prefactorPower = 18;
 
 Nlist[n_, z_, J_] := {(2-J (7+J))/(2 z^2),(20-J (7+J) (-13+J (7+J)))/(20 z^3),-(((-12+J (7+J)) (30+J (7+J) (-23+J (7+J))))/(360 z^4)),1/z^5-((-2+J) J (7+J) (9+J) (604+J (7+J) (-52+J (7+J))))/(10080 z^5),-((J (7+J) (-23+J (7+J)))/(20 z^5)),1/z^6-((-4+J) (-2+J) J (7+J) (9+J) (11+J) (-34+J (5+J)) (-20+J (9+J)))/(403200 z^6),-((J (7+J) (540+J (7+J) (-53+J (7+J))))/(360 z^6)),1/z^7-((-4+J) (-2+J) J (7+J) (9+J) (11+J) (-62+J (7+J)) (-48+J (7+J)) (-15+J (7+J)))/(21772800 z^7),-((J (7+J) (-31032+J (7+J) (3024+(-7+J) J (7+J) (14+J))))/(10080 z^7)),1/z^8-((-6+J) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (13+J) (-50+J (7+J)) (960+J (7+J) (-83+J (7+J))))/(1524096000 z^8),-((J (7+J) (1578240+J (7+J) (-209056+J (7+J) (8988+J (7+J) (-160+J (7+J))))))/(403200 z^8)),-(((-2+J) J (7+J) (9+J) (-53+J (7+J)))/(360 z^8)),1/z^9-1/(134120448000 z^9) (-6+J) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (13+J) (5001600+J (7+J) (-600160+J (7+J) (19516+J (7+J) (-240+J (7+J))))),-((J (7+J) (-131466240+J (7+J) (17720496+J (7+J) (-915804+J (7+J) (21808+J (7+J) (-241+J (7+J)))))))/(21772800 z^9)),-(((-2+J) J (7+J) (9+J) (2564+J (7+J) (-108+J (7+J))))/(5040 z^9)),1/z^10-1/(14485008384000 z^10) (-8+J) (-6+J) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (13+J) (15+J) (5277600+J (7+J) (-651672+J (7+J) (20980+J (7+J) (-250+J (7+J))))),-(1/(1524096000 z^10))J (7+J) (11405836800+J (7+J) (-1826254080+J (7+J) (107801568+J (7+J) (-3100260+J (7+J) (46228+J (7+J) (-343+J (7+J))))))),-(((-2+J) J (7+J) (9+J) (-216000+J (7+J) (10752+J (7+J) (-182+J (7+J)))))/(201600 z^10)),1/z^11-1/(1883051089920000 z^11) (-8+J) (-6+J) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (13+J) (15+J) (-797572800+J (7+J) (106776000+J (7+J) (-3946556+J (7+J) (60108+J (7+J) (-405+J (7+J)))))),-(1/(134120448000 z^11))J (7+J) (-1379752704000+J (7+J) (225934848000+J (7+J) (-14770082880+J (7+J) (486509168+J (7+J) (-8812960+J (7+J) (88928+J (7+J) (-468+J (7+J)))))))),-(((-2+J) J (7+J) (9+J) (21948480+J (7+J) (-1323000+J (7+J) (28702+J (7+J) (-277+J (7+J))))))/(10886400 z^11)),-(((-2+J) J (7+J) (9+J) (35064000+J (7+J) (-1763640+J (7+J) (31942+J (7+J) (-277+J (7+J))))))/(21772800 z^11)),1/z^12-1/(289989867847680000 z^12) (-10+J) (-8+J) (-6+J) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (13+J) (15+J) (17+J) (-833676480+J (7+J) (114378912+J (7+J) (-4230052+J (7+J) (63448+J (7+J) (-417+J (7+J)))))),-(1/(14485008384000 z^12))J (7+J) (180894269952000+J (7+J) (-33122195274240+J (7+J) (2349433112832+J (7+J) (-85849259040+J (7+J) (1788748560+J (7+J) (-22054832+J (7+J) (158952+J (7+J) (-618+J (7+J))))))))),-(1/(762048000 z^12))(-2+J) J (7+J) (9+J) (-2563473600+J (7+J) (175893840+J (7+J) (-4726576+J (7+J) (61658+J (7+J) (-395+J (7+J)))))),-(1/(1524096000 z^12))(-2+J) J (7+J) (9+J) (-5573865600+J (7+J) (318324240+J (7+J) (-6824476+J (7+J) (71108+J (7+J) (-395+J (7+J)))))),1/z^13-1/(52198176212582400000 z^13) (-10+J) (-8+J) (-6+J) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (13+J) (15+J) (17+J) (172008748800+J (7+J) (-25008497280+J (7+J) (1017235728+J (7+J) (-17785440+J (7+J) (152128+J (7+J) (-628+J (7+J))))))),-(1/(1883051089920000 z^13))J (7+J) (-30370283513856000+J (7+J) (5685348310272000+J (7+J) (-431278994177280+J (7+J) (17117281051776+J (7+J) (-396920087856+J (7+J) (5654064144+J (7+J) (-50058872+J (7+J) (268176+J (7+J) (-795+J (7+J)))))))))),-(1/(67060224000 z^13))(-2+J) J (7+J) (9+J) (357678604800+J (7+J) (-27684313920+J (7+J) (855078608+J (7+J) (-13637120+J (7+J) (118668+J (7+J) (-538+J (7+J))))))),-(1/(134120448000 z^13))(-2+J) J (7+J) (9+J) (942637132800+J (7+J) (-59261829120+J (7+J) (1465072608+J (7+J) (-18734520+J (7+J) (134068+J (7+J) (-538+J (7+J))))))),1/z^14-((-12+J) (-10+J) (-8+J) (-6+J) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (13+J) (15+J) (17+J) (19+J) (178803072000+J (7+J) (-26522288640+J (7+J) (1083860832+J (7+J) (-18822392+J (7+J) (158628+J (7+J) (-642+J (7+J))))))))/(10857220652217139200000 z^14),-(1/(289989867847680000 z^14))J (7+J) (5582653171070976000+J (7+J) (-1130338166370048000+J (7+J) (90722029433978880+J (7+J) (-3853417628059776+J (7+J) (97298039791872+J (7+J) (-1547871265360+J (7+J) (15899813776+J (7+J) (-105145568+J (7+J) (431816+J (7+J) (-1001+J (7+J))))))))))),-(1/(289989867847680000 z^14))J (7+J) (18904909351071744000+J (7+J) (-3159997781508403200+J (7+J) (212491113563151360+J (7+J) (-7648220048749056+J (7+J) (164888697966912+J (7+J) (-2260267109520+J (7+J) (20284193776+J (7+J) (-119680088+J (7+J) (451836+J (7+J) (-1001+J (7+J))))))))))),-(1/(7242504192000 z^14))(-2+J) J (7+J) (9+J) (-57858694502400+J (7+J) (4940899119360+J (7+J) (-172748862720+J (7+J) (3196589328+J (7+J) (-34081280+J (7+J) (211008+J (7+J) (-708+J (7+J)))))))),-(1/(14485008384000 z^14))(-2+J) J (7+J) (9+J) (-179566979328000+J (7+J) (12489984864000+J (7+J) (-350374821120+J (7+J) (5203121328+J (7+J) (-45129680+J (7+J) (234768+J (7+J) (-708+J (7+J)))))))),1/z^15-((-12+J) (-10+J) (-8+J) (-6+J) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (13+J) (15+J) (17+J) (19+J) (-48228426086400+J (7+J) (7471309098240+J (7+J) (-327436493664+J (7+J) (6325658024+J (7+J) (-62930772+J (7+J) (336322+J (7+J) (-917+J (7+J)))))))))/(2584018515227679129600000 z^15),-(1/(52198176212582400000 z^15))J (7+J) (-1247747313202790400000+J (7+J) (257807412952510464000+J (7+J) (-21713822416662681600+J (7+J) (976289459242567680+J (7+J) (-26434504759413888+J (7+J) (459223576873344+J (7+J) (-5286173524128+J (7+J) (40717222480+J (7+J) (-207319640+J (7+J) (668976+J (7+J) (-1238+J (7+J)))))))))))),-(1/(52198176212582400000 z^15))J (7+J) (-4427589781962547200000+J (7+J) (778134090027525120000+J (7+J) (-55587311278507929600+J (7+J) (2133844925721868800+J (7+J) (-49603448066289408+J (7+J) (744185486893824+J (7+J) (-7462993855968+J (7+J) (50767274800+J (7+J) (-232960640+J (7+J) (696696+J (7+J) (-1238+J (7+J)))))))))))),-(1/(941525544960000 z^15))(-2+J) J (7+J) (9+J) (10916797731840000+J (7+J) (-1018511499110400+J (7+J) (39142949166720+J (7+J) (-814016017152+J (7+J) (10077356168+J (7+J) (-76691252+J (7+J) (353250+J (7+J) (-907+J (7+J))))))))),-(1/(1883051089920000 z^15))(-2+J) J (7+J) (9+J) (38408970023424000+J (7+J) (-2914947731980800+J (7+J) (91204340699520+J (7+J) (-1546371339552+J (7+J) (15657273368+J (7+J) (-98663852+J (7+J) (388350+J (7+J) (-907+J (7+J))))))))),1/z^16-((-14+J) (-12+J) (-10+J) (-8+J) (-6+J) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (13+J) (15+J) (17+J) (19+J) (21+J) (-49949104896000+J (7+J) (7864546348800+J (7+J) (-346775577120+J (7+J) (6684386328+J (7+J) (-65927780+J (7+J) (347718+J (7+J) (-933+J (7+J)))))))))/(697684999111473364992000000 z^16),-((J (7+J) (305478770084167680000000+J (7+J) (-66880855243136286720000+J (7+J) (5873152091579080704000+J (7+J) (-277205314388051865600+J (7+J) (7958521963421475840+J (7+J) (-148608950149018368+J (7+J) (1873341464128704+J (7+J) (-16222546312128+J (7+J) (96556311280+J (7+J) (-387804560+J (7+J) (1003236+J (7+J) (-1508+J (7+J))))))))))))))/(10857220652217139200000 z^16)),-((J (7+J) (1188386342061144145920000+J (7+J) (-217971526056244789248000+J (7+J) (16315470556851061555200+J (7+J) (-662248807410304512000+J (7+J) (16420500781059271680+J (7+J) (-265833327608356608+J (7+J) (2921409120924864+J (7+J) (-22249607260608+J (7+J) (118056830320+J (7+J) (-431047760+J (7+J) (1040676+J (7+J) (-1508+J (7+J))))))))))))))/(10857220652217139200000 z^16)),-(1/(144994933923840000 z^16))(-2+J) J (7+J) (9+J) (-2358577574825472000+J (7+J) (237610799759116800+J (7+J) (-9941557443736320+J (7+J) (227429331438240+J (7+J) (-3164274187792+J (7+J) (28016444448+J (7+J) (-159178952+J (7+J) (563810+J (7+J) (-1137+J (7+J)))))))))),-(1/(289989867847680000 z^16))(-2+J) J (7+J) (9+J) (-9288820773872640000+J (7+J) (765214719981696000+J (7+J) (-26297097573945600+J (7+J) (496256191980480+J (7+J) (-5707230603792+J (7+J) (41913607728+J (7+J) (-200019752+J (7+J) (613860+J (7+J) (-1137+J (7+J)))))))))),1/z^17-((-14+J) (-12+J) (-10+J) (-8+J) (-6+J) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (13+J) (15+J) (17+J) (19+J) (21+J) (17046656188416000+J (7+J) (-2775655413504000+J (7+J) (129135434676480+J (7+J) (-2693784807936+J (7+J) (29839696528+J (7+J) (-187759616+J (7+J) (673224+J (7+J) (-1280+J (7+J))))))))))/(212096239729887902957568000000 z^17),-((J (7+J) (-87853552280843169300480000+J (7+J) (19584641136608558678016000+J (7+J) (-1783834766769185877196800+J (7+J) (87808102998808260096000+J (7+J) (-2650174153472579208192+J (7+J) (52576896713946183936+J (7+J) (-714113670487896000+J (7+J) (6790569461809664+J (7+J) (-45576671260848+J (7+J) (214685735264+J (7+J) (-693742452+J (7+J) (1463280+J (7+J) (-1813+J (7+J)))))))))))))))/(2584018515227679129600000 z^17)),-((J (7+J) (-356782416111642673152000000+J (7+J) (68177518035168076333056000+J (7+J) (-5344027626418386709708800+J (7+J) (227778687728448460369920+J (7+J) (-5972738835680399729664+J (7+J) (103209702498806706432+J (7+J) (-1225240506943814592+J (7+J) (10240675349197824+J (7+J) (-60956946250928+J (7+J) (258094604768+J (7+J) (-763939124+J (7+J) (1512784+J (7+J) (-1813+J (7+J)))))))))))))))/(2584018515227679129600000 z^17)),-(1/(26099088106291200000 z^17))(-2+J) J (7+J) (9+J) (582699698380800000000+J (7+J) (-62900634396722688000+J (7+J) (2822389999565068800+J (7+J) (-69946031480532480+J (7+J) (1070137386647136+J (7+J) (-10661654391696+J (7+J) (70646061304+J (7+J) (-309730172+J (7+J) (865536+J (7+J) (-1400+J (7+J))))))))))),-(1/(52198176212582400000 z^17))(-2+J) J (7+J) (9+J) (2521949401939968000000+J (7+J) (-223540198278644736000+J (7+J) (8341871152470912000+J (7+J) (-172808387428884480+J (7+J) (2211002533791936+J (7+J) (-18416939498496+J (7+J) (102380333104+J (7+J) (-381594272+J (7+J) (934836+J (7+J) (-1400+J (7+J))))))))))),-(1/(627683696640000 z^17))(-4+J) (-2+J) J (7+J) (9+J) (11+J) (-1098365329152000+J (7+J) (57080097100800+J (7+J) (-1240016055840+J (7+J) (14651007048+J (7+J) (-102462260+J (7+J) (427338+J (7+J) (-993+J (7+J)))))))),1/z^18-((-16+J) (-14+J) (-12+J) (-10+J) (-8+J) (-6+J) (-4+J) (-2+J) J (7+J) (9+J) (11+J) (13+J) (15+J) (17+J) (19+J) (21+J) (23+J) (17607094156800000+J (7+J) (-2905063330752000+J (7+J) (136020135744000+J (7+J) (-2838087378720+J (7+J) (31287521168+J (7+J) (-195162000+J (7+J) (691768+J (7+J) (-1298+J (7+J))))))))))/(72112721508161887005573120000000 z^18)}[[n+1]];
 
@@ -18,80 +27,371 @@ Nlist[n_, z_, J_] := {(2-J (7+J))/(2 z^2),(20-J (7+J) (-13+J (7+J)))/(20 z^3),-(
 
 
 
-polyify[expr_, var_] := Expand @ Cancel @ Together[expr];
+(* ---------------------------------------------------------------------- *)
+(* Functional vectors and polynomial blocks                               *)
+(* ---------------------------------------------------------------------- *)
 
-Poly[J_, z_, y_] := Module[{pref, polys, fst, snd},
-  pref = z^18;
+ClearAll[
+  rawFunctionalVector,
+  polyify,
+  polynomializeVector,
+  spinScale,
+  makePolynomialBlock,
+  continuumBlock,
+  fixedStateBlock
+];
 
-  fst = polyify[pref*( 2/z ), z];
-  snd = polyify[pref*( 0 ), z];
+rawFunctionalVector[z_, spin_, secondEntry_: 0] := Join[
+  {2/z, secondEntry},
+  Table[Nlist[n, z, spin], {n, 0, nulllist[[1]]}]
+];
 
-  polys = Table[
-    polyify[pref*Nlist[n, z, J], z]
-    , {n, 0, nulllist[[1]]}
+polyify[expr_, var_Symbol] := Expand[Cancel[Together[expr]]];
+
+polynomializeVector[vector_List, z_Symbol] :=
+  polyify[z^prefactorPower #, z] & /@ vector;
+
+(* A positive blockwise rescaling leaves the feasible cone unchanged, but
+   prevents the coefficients of high-spin blocks from growing like J^36. *)
+spinScale[spin_Integer] := 1/(1 + spin (spin + 7))^prefactorPower;
+
+makePolynomialBlock[
+  spin_Integer,
+  zValue_,
+  variable_Symbol,
+  secondEntry_: 0,
+  useSpinScaling_: True
+] := Module[{zInternal, vector, badComponents, scale},
+  vector = polynomializeVector[
+    rawFunctionalVector[zInternal, spin, secondEntry],
+    zInternal
   ];
 
-  If[!AllTrue[Join[{fst, snd}, polys], PolynomialQ[#, z] &],
-    Print["Non-polynomial terms remain."];
-    Print[Pick[Range[1 + Length[polys]], Not /@ (PolynomialQ[#, z] & /@ Join[{fst,snd}, polys])]];
+  badComponents = Flatten @ Position[
+    PolynomialQ[#, zInternal] & /@ vector,
+    False
   ];
+  If[badComponents =!= {},
+    Print["Non-polynomial components before the mass shift: ", badComponents];
+    Abort[]
+  ];
+
+  vector = Expand[# /. zInternal -> zValue] & /@ vector;
+  badComponents = Flatten @ Position[
+    PolynomialQ[#, variable] & /@ vector,
+    False
+  ];
+  If[badComponents =!= {},
+    Print["Non-polynomial components after the mass shift: ", badComponents];
+    Abort[]
+  ];
+
+  If[Length[vector] =!= functionalDimension,
+    Print[
+      "Functional dimension mismatch: expected ", functionalDimension,
+      ", received ", Length[vector]
+    ];
+    Abort[]
+  ];
+
+  scale = If[TrueQ[useSpinScaling], spinScale[spin], 1];
 
   PositiveMatrixWithPrefactor[
-    DampedRational[1, {}, 1/E, y],
-    {{Join[{fst, snd}, polys]}}
+    DampedRational[1, {}, 1/E, variable],
+    {{scale vector}}
   ]
 ];
 
+continuumBlock[spin_Integer, variable_Symbol] :=
+  makePolynomialBlock[spin, mgap + variable, variable, 0, True];
 
-Poly1[J_, z_, y_] := Module[{pref, polys, fst, snd},
-  pref = z^18;
+fixedStateBlock[
+  spin_Integer,
+  massSquared_,
+  variable_Symbol,
+  secondEntry_: 0
+] := makePolynomialBlock[
+  spin,
+  massSquared,
+  variable,
+  secondEntry,
+  True
+];
 
-  fst = polyify[pref*( 2/z ), z];
-  snd = polyify[pref*( 1 ), z];
+(* ---------------------------------------------------------------------- *)
+(* Analytically generated asymptotic constraints                          *)
+(* ---------------------------------------------------------------------- *)
 
-  polys = Table[
-    polyify[pref*Nlist[n, z, J], z]
-    , {n, 0, nulllist[[1]]}
-  ];
+ClearAll[
+  fixedMassLargeJVector,
+  fixedMassLargeJBlock,
+  toCasimir,
+  impactVector,
+  impactBlock
+];
 
-  If[!AllTrue[Join[{fst, snd}, polys], PolynomialQ[#, z] &],
-    Print["Non-polynomial terms remain."];
-    Print[Pick[Range[1 + Length[polys]], Not /@ (PolynomialQ[#, z] & /@ Join[{fst,snd}, polys])]];
-  ];
+(* Fixed mass, J -> Infinity.  Dividing by the largest power of J is a
+   positive rescaling and reproduces the old hand-written Polyinf block. *)
+fixedMassLargeJVector[z_] := Module[
+  {spin, vector, rationalVector, degrees, maxDegree},
 
-  PositiveMatrixWithPrefactor[
-    DampedRational[1, {}, 1/E, y],
-    {{Join[{fst, snd}, polys]}}
+  vector = rawFunctionalVector[z, spin, 0];
+  rationalVector = Together /@ vector;
+  degrees = Exponent[Numerator[#], spin] & /@ rationalVector;
+  maxDegree = Max[degrees];
+
+  MapThread[
+    Function[{entry, degree},
+      If[
+        degree === maxDegree,
+        Coefficient[Numerator[entry], spin, maxDegree]/Denominator[entry],
+        0
+      ]
+    ],
+    {rationalVector, degrees}
   ]
 ];
 
+fixedMassLargeJBlock[variable_Symbol] := Module[
+  {zInternal, vector, badComponents},
 
-Polyinf[J_, x_, y_] := PositiveMatrixWithPrefactor[
-        DampedRational[1,{},1/E,y],{{{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-(1/72112721508161887005573120000000)}}}];
+  vector = polynomializeVector[
+    fixedMassLargeJVector[zInternal],
+    zInternal
+  ];
+  vector = Expand[# /. zInternal -> mgap + variable] & /@ vector;
+
+  badComponents = Flatten @ Position[
+    PolynomialQ[#, variable] & /@ vector,
+    False
+  ];
+  If[badComponents =!= {},
+    Print["Invalid fixed-mass large-J components: ", badComponents];
+    Abort[]
+  ];
+
+  PositiveMatrixWithPrefactor[
+    DampedRational[1, {}, 1/E, variable],
+    {{vector}}
+  ]
+];
+
+(* Every Nlist entry is invariant under J -> -7-J and can therefore be
+   written in terms of the ten-dimensional spin Casimir q = J(J+7). *)
+toCasimir[expr_, spin_Symbol, casimir_Symbol] := Module[
+  {entry, numerator, denominator, remainder},
+
+  entry = Together[expr];
+  numerator = Numerator[entry];
+  denominator = Denominator[entry];
+
+  remainder = PolynomialRemainder[
+    numerator,
+    spin^2 + 7 spin - casimir,
+    spin
+  ];
+
+  If[!FreeQ[remainder, spin] || !FreeQ[denominator, spin],
+    Print["Could not rewrite a null constraint in terms of J(J+7)."];
+    Abort[]
+  ];
+
+  Cancel[remainder/denominator]
+];
+
+(* Correlated large-mass/large-spin limit with r = J(J+7)/z fixed.
+   This is the missing impact-parameter-type boundary of the moment cone. *)
+impactVector[r_] := Module[
+  {z, spin, casimir, vector, casimirVector, result},
+
+  vector = rawFunctionalVector[z, spin, 0];
+  casimirVector = toCasimir[#, spin, casimir] & /@ vector;
+
+  result = FullSimplify[
+    Limit[
+      z (casimirVector /. casimir -> r z),
+      z -> Infinity
+    ],
+    Assumptions -> r >= 0
+  ];
+
+  If[
+    !FreeQ[result, DirectedInfinity | Indeterminate] ||
+    !AllTrue[result, PolynomialQ[#, r] &],
+    Print["The correlated large-J limit is not a finite polynomial vector."];
+    Abort[]
+  ];
+
+  result
+];
+
+impactBlock[variable_Symbol] := Module[{vector},
+  vector = impactVector[variable];
+
+  If[Length[vector] =!= functionalDimension,
+    Print["Impact-vector dimension mismatch."];
+    Abort[]
+  ];
+
+  PositiveMatrixWithPrefactor[
+    DampedRational[1, {}, 1/E, variable],
+    {{vector}}
+  ]
+];
+
+(* ---------------------------------------------------------------------- *)
+(* PMP assembly                                                           *)
+(* ---------------------------------------------------------------------- *)
+
+(* Dense low spins locate the usual extremal states.  The sparse probes
+   monitor the transition to the analytic asymptotic blocks.  A final
+   solution must still be checked for omitted finite-spin violations. *)
+coreSpinMax = 200;
+spinProbeList = {250, 300, 400, 500, 700, 1000, 1500, 2500, 5000};
+continuumSpinList = DeleteDuplicates @ Join[
+  Range[0, coreSpinMax, 2],
+  spinProbeList
+];
+
+(* Post-SDPB certification helper.  Supply the dual functional in the same
+   component order as obj/norm.  Any returned spin must be added to
+   continuumSpinList before regenerating the PMP. *)
+ClearAll[
+  continuumPolynomialVector,
+  minimumAtSpin,
+  findViolatingSpins
+];
+
+continuumPolynomialVector[spin_Integer, variable_Symbol] := Module[
+  {zInternal, vector},
+
+  vector = polynomializeVector[
+    rawFunctionalVector[zInternal, spin, 0],
+    zInternal
+  ];
+
+  spinScale[spin] (Expand[# /. zInternal -> mgap + variable] & /@ vector)
+];
+
+minimumAtSpin[
+  functional_List,
+  spin_Integer,
+  variable_Symbol,
+  prec_: 80
+] := Module[{polynomial},
+  If[Length[functional] =!= functionalDimension,
+    Print["Dual-functional dimension mismatch."];
+    Abort[]
+  ];
+
+  polynomial = N[
+    functional . continuumPolynomialVector[spin, variable],
+    prec
+  ];
+
+  NMinimize[
+    {polynomial, variable >= 0},
+    variable,
+    WorkingPrecision -> prec,
+    AccuracyGoal -> Floor[prec/3],
+    PrecisionGoal -> Floor[prec/3]
+  ]
+];
+
+findViolatingSpins[
+  functional_List,
+  spins_List,
+  tolerance_: 10^-30,
+  prec_: 80
+] := DeleteCases[
+  Table[
+    Module[{minimum},
+      minimum = Quiet @ Check[
+        minimumAtSpin[functional, spin, x, prec],
+        $Failed
+      ];
+
+      Which[
+        minimum === $Failed,
+          <|"Spin" -> spin, "Status" -> "MinimizationFailed"|>,
+        First[minimum] < -Abs[tolerance],
+          <|
+            "Spin" -> spin,
+            "Minimum" -> First[minimum],
+            "Location" -> (x /. Last[minimum])
+          |>,
+        True,
+          Nothing
+      ]
+    ],
+    {spin, spins}
+  ],
+  Nothing
+];
 
 LaunchKernels[];
 
-PMP2SDP[datfile_, prec_:600] := Module[
-    {
-        pols, norm, obj
-    },
-    pols = 
-    Flatten[{
-        Flatten[N[ParallelTable[Poly1[i, 1, x],{i, J2, J2, 2}],prec]],
-        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 0, 1000, 2}],prec]],
-        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 1500, 5000, 100}],prec]],
-        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 6000, 20000, 500}],prec]],
-        Flatten[N[ParallelTable[Poly[i, mgap+x, x],{i, 20000, 50000, 2000}],prec]],
-        Flatten[N[ParallelTable[Poly[i, m1, x],{i, J1, J1, 2}],prec]],
-        Flatten[N[ParallelTable[Polyinf[i, mgap+x, x],{i, 0, 0, 2}],prec]]
-    },1];
-    norm = -1 * N[Flatten[{{0, 1}, list0}], prec];
-    obj = -1 * N[Flatten[{{1, 0}, list0}], prec];
-    
-    Print["size of nomr = ", Length[norm]];
-    Print["size of obj = ", Length[obj]];
+PMP2SDP[datfile_, prec_: 600] := Module[
+  {continuumBlocks, specialBlocks, asymptoticBlocks, pols, norm, obj},
 
-    WritePmpJson[datfile, SDP[obj, norm, pols], prec, getAnalyticSampleData]
+  Print["Building ", Length[continuumSpinList], " finite-spin blocks..."];
+  DistributeDefinitions[
+    Nlist,
+    nulllist,
+    prefactorPower,
+    functionalDimension,
+    mgap,
+    rawFunctionalVector,
+    polyify,
+    polynomializeVector,
+    spinScale,
+    makePolynomialBlock,
+    continuumBlock
+  ];
+  continuumBlocks = ParallelMap[
+    continuumBlock[#, x] &,
+    continuumSpinList
+  ];
+
+  specialBlocks = {
+    fixedStateBlock[J2, 1, x, 1],
+    fixedStateBlock[J1, m1, x, 0]
+  };
+
+  Print["Building analytic large-J blocks..."];
+  asymptoticBlocks = {
+    fixedMassLargeJBlock[x],
+    impactBlock[x]
+  };
+
+  pols = N[
+    Join[specialBlocks, continuumBlocks, asymptoticBlocks],
+    prec
+  ];
+
+  norm = -N[Flatten[{{0, 1}, list0}], prec];
+  obj = -N[Flatten[{{1, 0}, list0}], prec];
+
+  If[
+    Length[norm] =!= functionalDimension ||
+    Length[obj] =!= functionalDimension,
+    Print["Objective or normalization dimension mismatch."];
+    Abort[]
+  ];
+
+  Print["functional dimension = ", functionalDimension];
+  Print["number of PMP blocks = ", Length[pols]];
+  Print["finite spins = ", continuumSpinList];
+
+  WritePmpJson[
+    datfile,
+    SDP[obj, norm, pols],
+    prec,
+    getAnalyticSampleData
+  ]
 ];
 
-PMP2SDP["n_pmp.json", 1000];
+outputFile = FileNameJoin[{sourceDirectory, "n_pmp.json"}];
+If[!TrueQ[$Test16SkipExport],
+  PMP2SDP[outputFile, 600]
+];

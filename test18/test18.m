@@ -44,19 +44,26 @@ PMP2SDP[datfile_, prec_:600] := Module[
         Poly2nd, pols, norm, obj,
         functionalCount, functionalCovered, missingFunctionals
     },
+
     xTiers = {
-      Range[1/10000, 1/1000, 1/1000],
-      Range[1/1000, 1/100, 1/1000],
-      Range[1/100, 1/10, 1/1000],
-      Range[1/10, 1-1/10000, 1/1000]
+    10^Subdivide[-4, -3, 49],
+    10^Subdivide[-3, -2, 49],
+    10^Subdivide[-2, -1, 49],
+    10^Subdivide[-1, Log10[1 - 10^-4], 49]
     };
 
-    jTiers = {
-      Range[0, 1000, 2],
-      Range[1500, 5000, 100],
-      Range[6000, 20000, 500],
-      Range[20000, 50000, 2000]
-    };
+    nPerTier = 50;
+    n = 4 nPerTier;
+    jMax = 50000;
+    alp = 3/2;
+
+    jAll = DeleteDuplicates[
+      Round[jMax (Range[0, n - 1]/(n - 1))^alp]
+    ];
+
+    jAll = Sort[jAll];
+
+    jTiers = Partition[jAll, nPerTier];
 
     (* continuous spectrum *)
     Poly[j_, x_, y_] := Module[{g0, lambda22, polys},
