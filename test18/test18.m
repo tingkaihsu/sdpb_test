@@ -302,8 +302,8 @@ PMP2SDP[datfile_, prec_: 600] := Module[
 
   pols = Join[specialBlocks, continuumBlocks, largeJBlocks];
 
-  norm = -N[Flatten[{{0, 1}, list0}], prec];
-  obj = -N[Flatten[{{1, 0}, list0}], prec];
+  norm = N[Flatten[{{0, 1}, list0}], prec];
+  obj = N[Flatten[{{1, 0}, list0}], prec];
 
   If[Length[norm] =!= functionalCount || Length[obj] =!= functionalCount,
     Print["Objective or normalization dimension mismatch."];
