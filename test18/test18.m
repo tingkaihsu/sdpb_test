@@ -44,6 +44,8 @@ ClearAll[
   fixedMassLargeJBlock,
   toCasimir,
   impactVector,
+  lowestPolynomialPower,
+  stripCommonBoundaryPower,
   impactBlock
 ];
 
@@ -261,8 +263,43 @@ impactVector[channel_String, r_] := Module[
   result
 ];
 
-impactBlock[channel_String, variable_Symbol] := Module[{vector},
-  vector = impactVector[channel, variable];
+(* If every component of an impact vector contains the same power r^k,
+   remove it before constructing the PMP block.  For r >= 0 and polynomial
+   q(r), r^k q(r) >= 0 is equivalent to q(r) >= 0: the statement is immediate
+   for r > 0, while the endpoint follows by continuity.  Keeping a common
+   zero creates an artificial null interpolation direction and a singular
+   Schur block in SDPB. *)
+lowestPolynomialPower[expr_, variable_Symbol] := Module[{rules},
+  If[TrueQ[PossibleZeroQ[expr]], Return[Infinity]];
+  rules = CoefficientRules[Expand[expr], variable];
+  If[rules === {}, Infinity, Min[First /@ rules[[All, 1]]]]
+];
+
+stripCommonBoundaryPower[vector_List, variable_Symbol] := Module[
+  {orders, commonPower, reducedVector},
+  orders = DeleteCases[
+    lowestPolynomialPower[#, variable] & /@ vector,
+    Infinity
+  ];
+  commonPower = If[orders === {}, 0, Min[orders]];
+  reducedVector = Expand[
+    Cancel[Together[#/variable^commonPower]]
+  ] & /@ vector;
+  {reducedVector, commonPower}
+];
+
+impactBlock[channel_String, variable_Symbol] := Module[
+  {rawVector, vector, commonPower},
+  rawVector = impactVector[channel, variable];
+  {vector, commonPower} = stripCommonBoundaryPower[rawVector, variable];
+
+  If[commonPower > 0,
+    Print[
+      "Removed the common boundary factor ", variable, "^", commonPower,
+      " from the ", channel, " impact block."
+    ]
+  ];
+
   If[Length[vector] =!= functionalCount,
     Print["Impact-vector dimension mismatch for ", channel, "."];
     Abort[]
