@@ -22,290 +22,321 @@ NBBBB[n_, z_, J_] := {z-1/2 J (7+J) z,1-1/20 J (7+J) (-13+J (7+J)),-(((-12+J (7+
 NAAAA[n_, x_, J_]:= {((-4 mA^2+x)^(3/2) (32 mA^4+2 (-1+J) (8+J) mA^2 x-(-2+J (7+J)) x^2))/(2 x^(5/2)),1/(20 x^(7/2))Sqrt[-4 mA^2+x] (-1280 mA^6+960 mA^4 x+2 (-120+(-1+J) J (7+J) (8+J)) mA^2 x^2-(-20+J (7+J) (-13+J (7+J))) x^3),1/(360 x^(9/2) Sqrt[-4 mA^2+x])(92160 mA^8-92160 mA^6 x+34560 mA^4 x^2+2 (-2880+(-2+J) (-1+J) J (7+J) (8+J) (9+J)) mA^2 x^3-(-12+J (7+J)) (30+J (7+J) (-23+J (7+J))) x^4),-((J (7+J) mA^2 (80 mA^4+2 (-38+J (7+J)) mA^2 x-(-23+J (7+J)) x^2))/(5 x^(7/2) Sqrt[-4 mA^2+x])),1/(10080 x^(11/2) (-4 mA^2+x)^(3/2))(-10321920 mA^10+12902400 mA^8 x-6451200 mA^6 x^2+1612800 mA^4 x^3+2 (-100800+(-3+J) (-2+J) (-1+J) J (7+J) (8+J) (9+J) (10+J)) mA^2 x^4+(10080-(-2+J) J (7+J) (9+J) (604+J (7+J) (-52+J (7+J)))) x^5),1/(180 x^(9/2) (-4 mA^2+x)^(3/2))J (7+J) (11520 mA^8-11520 mA^6 x-4 (-936+J (7+J) (-26+J (7+J))) mA^4 x^2+2 (-216+J (7+J) (-26+J (7+J))) mA^2 x^3-9 (-23+J (7+J)) x^4),1/(403200 x^(13/2) (-4 mA^2+x)^(5/2))(1651507200 mA^12-2477260800 mA^10 x+1548288000 mA^8 x^2-516096000 mA^6 x^3+96768000 mA^4 x^4+2 (-4838400+(-4+J) (-3+J) (-2+J) (-1+J) J (7+J) (8+J) (9+J) (10+J) (11+J)) mA^2 x^5-(-403200+(-4+J) (-2+J) J (7+J) (9+J) (11+J) (-34+J (5+J)) (-20+J (9+J))) x^6)}[[n+1]];
 
 
-Nlist[n_,z_,J_] := {
-	{NAAAA[n,z,J],0},
-	{0,NBBBB[n,z,J]}
-};
-
-
-polyify[expr_] := Expand @ Cancel @ Together[expr];
-
-PolyInfBBBB[n_,J_,x_] := {0,0,0,0,0,-(1/(403200 x^3)),0}[[n+1]];
-
-
-PolyInfAAAA[n_,J_,x_] := {0,0,0,0,0,0,(2 mA^2-x)/(403200 x^(3/2) (-4 mA^2+x)^(5/2))}[[n+1]];
-
-
-NPolyInf[n_,J_,x_] := {
-  {PolyInfAAAA[n,J,x],0},
-  {0,PolyInfBBBB[n,J,x]}
-};
-
 (* ---------------------------------------------------------------------- *)
-(* Paper-inspired sampling and numerical conditioning                     *)
+(* Analytic half-line PMP formulation, matching test16.m                  *)
 (* ---------------------------------------------------------------------- *)
 
 ClearAll[
-  chebyshevPhi,
-  compactCoordinate,
-  energyFromPhi,
-  paperSamples,
-  zeroMatrix,
-  g0CoordinateMatrix,
-  lambda22CoordinateMatrix,
-  coefficientMatrices,
-  largeJCoefficientMatrices,
-  congruenceRescale,
-  coefficientTensor,
-  pmpBlock,
-  finiteStateBlock,
-  largeJBlock,
-  validateConfiguration,
-  validateSampling
+  phaseAAAA,
+  phaseBBBB,
+  rawAAAA,
+  rawBBBB,
+  rawChannelVector,
+  validatePhysicalDomain,
+  channelClearingFactor,
+  polynomializeChannelVector,
+  spinScale,
+  makeChannelBlock,
+  continuumBlocksForSpin,
+  fixedStateBlocks,
+  jDegree,
+  fixedMassLargeJVector,
+  fixedMassLargeJBlock,
+  toCasimir,
+  impactVector,
+  impactBlock
 ];
 
-matrixDimension = 2;
 functionalCount = 2 + Length[list0];
+channelNames = {"AAAA", "BBBB"};
 
-(* Appendix D, eq. (169): Chebyshev nodes in the conformal angle phi.
-   The endpoints phi=0 and phi=Pi are intentionally not sampled. *)
-nPoints = 200;
-lMax = 60;
-zReference = 0;
-useCongruenceRescaling = True;
-
-chebyshevPhi[k_Integer, count_Integer] :=
-  Pi/2 + Pi/2 Cos[((k + 1/2) Pi)/count];
-
-(* For rho(z,mgap,zReference)=Exp[I phi], inversion of the conformal map gives
-     z = mgap + (mgap-zReference) Tan[phi/2]^2.
-   With zReference=0 this is equivalent to the old map
-     z=mgap/(1-x), x=Sin[phi/2]^2. *)
-compactCoordinate[phi_] := Sin[phi/2]^2;
-
-energyFromPhi[phi_] :=
-  mgap + (mgap - zReference) Tan[phi/2]^2;
-
-paperSamples[count_Integer, prec_Integer] := SortBy[
-  Table[
-    With[{phi = N[chebyshevPhi[k, count], prec]},
-      <|
-        "Index" -> k,
-        "Phi" -> phi,
-        "CompactCoordinate" -> N[compactCoordinate[phi], prec],
-        "Energy" -> N[energyFromPhi[phi], prec]
-      |>
-    ],
-    {k, 0, count - 1}
-  ],
-  #["Energy"] &
+validatePhysicalDomain[] := If[
+  !TrueQ[mgap > 4 mA^2 && m1 > 4 mA^2 && 1 > 4 mA^2],
+  Print["All continuum and isolated-state masses must satisfy z > 4 mA^2."];
+  Abort[]
 ];
 
-zeroMatrix = ConstantArray[0, {matrixDimension, matrixDimension}];
+(* The following factors are strictly positive on every continuum and
+   isolated-state point used below.  Dividing a diagonal channel by one of
+   them is therefore an invertible congruence rescaling and preserves the
+   positivity problem exactly. *)
+phaseAAAA[z_] := (z - 4 mA^2)^(7/2)/Sqrt[z];
+phaseBBBB[z_] := z^3;
 
-(* First functional coordinate: g0. *)
-g0CoordinateMatrix[z_] := {
-  {0, 0},
-  {0, 2 z^2}
-};
+(* PowerExpand is safe here because every use satisfies z > 4 mA^2 > 0. *)
+rawAAAA[n_Integer, z_, spin_] := Cancel @ Together @ PowerExpand[
+  NAAAA[n, z, spin]/phaseAAAA[z]
+];
 
-(* Second functional coordinate: the on-shell coupling of the fixed J=2 state. *)
-lambda22CoordinateMatrix[z_] := {
-  {(-4 mA^2 + z)^(7/2)/Sqrt[z], 0},
-  {0, z^3}
-};
+rawBBBB[n_Integer, z_, spin_] := Cancel @ Together[
+  NBBBB[n, z, spin]/phaseBBBB[z]
+];
 
-coefficientMatrices[
+(* Coefficient order: g0, normalized J=2 coupling, seven null directions. *)
+rawChannelVector[
+  "AAAA",
   z_,
-  spin_Integer,
-  lambda22Matrix_: zeroMatrix
+  spin_,
+  normalizedEntry_: 0
 ] := Join[
-  {g0CoordinateMatrix[z], lambda22Matrix},
-  Table[Nlist[n, z, spin], {n, 0, nulllist[[1]]}]
+  {0, normalizedEntry},
+  Table[rawAAAA[n, z, spin], {n, 0, nulllist[[1]]}]
 ];
 
-largeJCoefficientMatrices[z_] := Join[
-  {zeroMatrix, zeroMatrix},
-  Table[NPolyInf[n, 0, z], {n, 0, nulllist[[1]]}]
+rawChannelVector[
+  "BBBB",
+  z_,
+  spin_,
+  normalizedEntry_: 0
+] := Join[
+  {2/z, normalizedEntry},
+  Table[rawBBBB[n, z, spin], {n, 0, nulllist[[1]]}]
 ];
 
-(* Paper eqs. (174)-(175), adapted to the two diagonal channels used here.
-   Every coefficient matrix of one constraint receives the same congruence
-   transformation, so the PSD cone and the bound are unchanged. *)
-congruenceRescale[matrices_List, prec_Integer] := Module[
-  {numericMatrices, channelNorms, diagonalRescaling},
+(* The first seven kernels require at most six powers of each physical
+   denominator.  These factors are positive throughout the relevant domain. *)
+channelClearingFactor["AAAA", z_] := z^6 (z - 4 mA^2)^6;
+channelClearingFactor["BBBB", z_] := z^6;
 
-  numericMatrices = N[matrices, prec];
-  channelNorms = Table[
-    Max @@ Abs[numericMatrices[[All, channel, channel]]],
-    {channel, matrixDimension}
+polynomializeChannelVector[channel_String, vector_List, z_Symbol] :=
+  Expand[Cancel[Together[channelClearingFactor[channel, z] #]]] & /@ vector;
+
+(* The largest power in spin is J^10 = O[(J(J+7))^5]. *)
+spinScalePower = 5;
+spinScale[spin_Integer] := 1/(1 + spin (spin + 7))^spinScalePower;
+
+makeChannelBlock[
+  channel_String,
+  spin_Integer,
+  zValue_,
+  variable_Symbol,
+  normalizedEntry_: 0,
+  useSpinScaling_: True
+] := Module[{zInternal, vector, badComponents, scale},
+  vector = polynomializeChannelVector[
+    channel,
+    rawChannelVector[channel, zInternal, spin, normalizedEntry],
+    zInternal
   ];
-  channelNorms = Replace[channelNorms, value_ /; TrueQ[value == 0] -> 1, {1}];
+  vector = Expand[# /. zInternal -> zValue] & /@ vector;
 
-  diagonalRescaling = DiagonalMatrix[1/Sqrt[channelNorms]];
-  N[diagonalRescaling . # . diagonalRescaling, prec] & /@ numericMatrices
-];
-
-coefficientTensor[matrices_List] := Table[
-  Table[
-    matrices[[coefficient, row, column]],
-    {coefficient, Length[matrices]}
-  ],
-  {row, matrixDimension},
-  {column, matrixDimension}
-];
-
-pmpBlock[matrices_List, variable_Symbol, prec_Integer] := Module[
-  {preparedMatrices, tensor},
-
-  If[Dimensions[matrices] =!= {functionalCount, matrixDimension, matrixDimension},
+  badComponents = Flatten @ Position[
+    PolynomialQ[#, variable] & /@ vector,
+    False
+  ];
+  If[badComponents =!= {},
     Print[
-      "Invalid coefficient-matrix dimensions: ", Dimensions[matrices],
-      "; expected ", {functionalCount, matrixDimension, matrixDimension}, "."
+      "Non-polynomial ", channel, " components at spin ", spin,
+      ": ", badComponents
     ];
     Abort[]
   ];
 
-  If[matrices =!= Transpose[matrices, {1, 3, 2}],
-    Print["A sampled coefficient matrix is not symmetric."];
+  If[Length[vector] =!= functionalCount,
+    Print[
+      "Functional dimension mismatch in ", channel, ": expected ",
+      functionalCount, ", received ", Length[vector], "."
+    ];
     Abort[]
   ];
 
-  preparedMatrices = If[
-    TrueQ[useCongruenceRescaling],
-    congruenceRescale[matrices, prec],
-    N[matrices, prec]
-  ];
-  tensor = coefficientTensor[preparedMatrices];
+  scale = If[TrueQ[useSpinScaling], spinScale[spin], 1];
 
-  If[!FreeQ[tensor, Indeterminate | ComplexInfinity | DirectedInfinity[___]],
-    Print["A sampled block contains a non-finite coefficient."];
+  PositiveMatrixWithPrefactor[
+    DampedRational[1, {}, 1/E, variable],
+    {{scale vector}}
+  ]
+];
+
+continuumBlocksForSpin[spin_Integer, variable_Symbol] :=
+  makeChannelBlock[#, spin, mgap + variable, variable, 0, True] & /@
+    channelNames;
+
+fixedStateBlocks[
+  spin_Integer,
+  massSquared_,
+  variable_Symbol,
+  normalizedEntry_: 0
+] := makeChannelBlock[
+  #,
+  spin,
+  massSquared,
+  variable,
+  normalizedEntry,
+  True
+] & /@ channelNames;
+
+(* ---------------------------------------------------------------------- *)
+(* Analytic high-spin boundaries                                          *)
+(* ---------------------------------------------------------------------- *)
+
+jDegree[expr_, spin_Symbol] := Module[{rational},
+  If[TrueQ[expr === 0],
+    -Infinity,
+    rational = Together[expr];
+    Exponent[Numerator[rational], spin] -
+      Exponent[Denominator[rational], spin]
+  ]
+];
+
+fixedMassLargeJVector[channel_String, z_] := Module[
+  {spin, vector, rationalVector, degrees, maxDegree},
+  vector = rawChannelVector[channel, z, spin, 0];
+  rationalVector = Together /@ vector;
+  degrees = jDegree[#, spin] & /@ rationalVector;
+  maxDegree = Max[degrees];
+
+  MapThread[
+    Function[{entry, degree},
+      If[
+        degree === maxDegree,
+        Coefficient[Numerator[entry], spin, maxDegree]/Denominator[entry],
+        0
+      ]
+    ],
+    {rationalVector, degrees}
+  ]
+];
+
+fixedMassLargeJBlock[channel_String, variable_Symbol] := Module[
+  {zInternal, vector, badComponents},
+  vector = polynomializeChannelVector[
+    channel,
+    fixedMassLargeJVector[channel, zInternal],
+    zInternal
+  ];
+  vector = Expand[# /. zInternal -> mgap + variable] & /@ vector;
+
+  badComponents = Flatten @ Position[
+    PolynomialQ[#, variable] & /@ vector,
+    False
+  ];
+  If[badComponents =!= {},
+    Print["Invalid fixed-mass large-J block for ", channel, "."];
     Abort[]
   ];
 
   PositiveMatrixWithPrefactor[
     DampedRational[1, {}, 1/E, variable],
-    tensor
+    {{vector}}
   ]
 ];
 
-finiteStateBlock[
-  z_,
-  spin_Integer,
-  variable_Symbol,
-  lambda22Matrix_: zeroMatrix,
-  prec_: 600
-] := pmpBlock[
-  coefficientMatrices[z, spin, lambda22Matrix],
-  variable,
-  prec
-];
+toCasimir[expr_, spin_Symbol, casimir_Symbol] := Module[
+  {entry, numerator, denominator, remainder},
+  entry = Together[expr];
+  numerator = Numerator[entry];
+  denominator = Denominator[entry];
+  remainder = PolynomialRemainder[
+    numerator,
+    spin^2 + 7 spin - casimir,
+    spin
+  ];
 
-largeJBlock[z_, variable_Symbol, prec_: 600] := pmpBlock[
-  largeJCoefficientMatrices[z],
-  variable,
-  prec
-];
-
-validateConfiguration[] := Module[{},
-  If[!IntegerQ[nPoints] || !(1 <= nPoints <= 200),
-    Print["nPoints must be an integer between 1 and 200."];
+  If[!FreeQ[remainder, spin] || !FreeQ[denominator, spin],
+    Print["Could not rewrite a kernel in J(J+7)."];
     Abort[]
   ];
 
-  If[!IntegerQ[lMax] || lMax < 0 || OddQ[lMax],
-    Print["lMax must be a non-negative even integer."];
-    Abort[]
-  ];
-
-  If[!TrueQ[zReference < mgap],
-    Print["zReference must lie below the continuum threshold mgap."];
-    Abort[]
-  ];
+  Cancel[remainder/denominator]
 ];
 
-validateSampling[samples_List, spins_List] := Module[
-  {phis, energies, compactValues},
-
-  phis = Lookup[samples, "Phi"];
-  energies = Lookup[samples, "Energy"];
-  compactValues = Lookup[samples, "CompactCoordinate"];
-
-  If[
-    Length[samples] =!= nPoints ||
-    Length[DeleteDuplicates[energies]] =!= nPoints,
-    Print["The energy sample contains missing or duplicate points."];
-    Abort[]
+(* Correlated boundary z,J -> Infinity with r=J(J+7)/z fixed. *)
+impactVector[channel_String, r_] := Module[
+  {z, spin, casimir, vector, casimirVector, result},
+  vector = rawChannelVector[channel, z, spin, 0];
+  casimirVector = toCasimir[#, spin, casimir] & /@ vector;
+  result = FullSimplify[
+    Limit[z (casimirVector /. casimir -> r z), z -> Infinity],
+    Assumptions -> r >= 0
   ];
 
   If[
-    !AllTrue[phis, 0 < # < Pi &] ||
-    !AllTrue[compactValues, 0 < # < 1 &] ||
-    !AllTrue[energies, # > mgap &],
-    Print["A Chebyshev sample lies outside the physical domain."];
+    !FreeQ[result, DirectedInfinity[___] | ComplexInfinity | Indeterminate] ||
+    !AllTrue[result, PolynomialQ[#, r] &],
+    Print["Invalid correlated large-spin vector for ", channel, "."];
     Abort[]
   ];
 
-  If[spins =!= Range[0, lMax, 2],
-    Print["Spin list is inconsistent with lMax."];
+  result
+];
+
+impactBlock[channel_String, variable_Symbol] := Module[{vector},
+  vector = impactVector[channel, variable];
+  If[Length[vector] =!= functionalCount,
+    Print["Impact-vector dimension mismatch for ", channel, "."];
     Abort[]
   ];
+
+  PositiveMatrixWithPrefactor[
+    DampedRational[1, {}, 1/E, variable],
+    {{vector}}
+  ]
 ];
+
+(* Match the spin treatment of test16.m. *)
+coreSpinMax = 200;
+spinProbeList = {250, 300, 400, 500, 700, 1000, 1500, 2500, 5000};
+continuumSpinList = DeleteDuplicates @ Join[
+  Range[0, coreSpinMax, 2],
+  spinProbeList
+];
+
+(* Keep the zero-objective feasibility test as the default.  Once this run
+   converges, set feasibilityOnly=False and choose objectiveSign=+1 or -1. *)
+feasibilityOnly = True;
+objectiveSign = -1;
 
 LaunchKernels[];
 
 PMP2SDP[datfile_, prec_: 600] := Module[
-  {
-    samples, spins, continuumBlocks, largeJBlocks,
-    specialBlocks, pols, norm, obj
-  },
+  {continuumBlocks, specialBlocks, asymptoticBlocks, pols, norm, obj},
 
-  validateConfiguration[];
-  samples = paperSamples[nPoints, prec];
-  spins = Range[0, lMax, 2];
-  validateSampling[samples, spins];
-
-  Print["Chebyshev energy samples = ", Length[samples]];
-  Print["phi range = ", {First[samples]["Phi"], Last[samples]["Phi"]}];
-  Print["energy range = ", {First[samples]["Energy"], Last[samples]["Energy"]}];
-  Print["even spins = 0, 2, ..., ", lMax, " (", Length[spins], " spins)"];
+  validatePhysicalDomain[];
 
   DistributeDefinitions[
-    mA, mgap, nulllist, list0, matrixDimension, functionalCount,
-    NBBBB, NAAAA, Nlist, PolyInfBBBB, PolyInfAAAA, NPolyInf,
-    zeroMatrix, g0CoordinateMatrix, lambda22CoordinateMatrix,
-    coefficientMatrices, largeJCoefficientMatrices,
-    useCongruenceRescaling, congruenceRescale, coefficientTensor,
-    pmpBlock, finiteStateBlock, largeJBlock
+    mA, mgap, nulllist, list0, functionalCount, channelNames,
+    NBBBB, NAAAA, phaseAAAA, phaseBBBB, rawAAAA, rawBBBB,
+    rawChannelVector, channelClearingFactor, polynomializeChannelVector,
+    spinScalePower, spinScale, makeChannelBlock, continuumBlocksForSpin
   ];
 
-  Print["Building finite-spin sampled blocks..."];
+  Print[
+    "Building analytic continuum blocks for ",
+    Length[continuumSpinList], " spins and two channels..."
+  ];
   continuumBlocks = Flatten[
-    ParallelTable[
-      finiteStateBlock[sample["Energy"], spin, x, zeroMatrix, prec],
-      {sample, samples},
-      {spin, spins}
-    ],
+    ParallelMap[continuumBlocksForSpin[#, x] &, continuumSpinList],
     1
   ];
 
-  Print["Building one analytic large-J block per energy sample..."];
-  largeJBlocks = ParallelMap[
-    largeJBlock[#["Energy"], x, prec] &,
-    samples
+  specialBlocks = Join[
+    fixedStateBlocks[J1, m1, x, 0],
+    fixedStateBlocks[J2, 1, x, 1]
   ];
 
-  specialBlocks = {
-    finiteStateBlock[m1, J1, x, zeroMatrix, prec],
-    finiteStateBlock[1, J2, x, lambda22CoordinateMatrix[1], prec]
-  };
+  Print["Building fixed-mass and correlated asymptotic blocks..."];
+  asymptoticBlocks = Join[
+    fixedMassLargeJBlock[#, x] & /@ channelNames,
+    impactBlock[#, x] & /@ channelNames
+  ];
 
-  pols = Join[specialBlocks, continuumBlocks, largeJBlocks];
+  pols = N[
+    Join[specialBlocks, continuumBlocks, asymptoticBlocks],
+    prec
+  ];
 
-  (* norm is negative *)
+  If[Length[pols] =!= 2 Length[continuumSpinList] + 8,
+    Print["Unexpected number of PMP blocks: ", Length[pols], "."];
+    Abort[]
+  ];
+
   norm = -N[Flatten[{{0, 1}, list0}], prec];
-  (* obj = N[Flatten[{{1, 0}, list0}], prec]; *)
-  obj = ConstantArray[0, functionalCount];
+  obj = If[
+    TrueQ[feasibilityOnly],
+    ConstantArray[0, functionalCount],
+    objectiveSign N[Flatten[{{1, 0}, list0}], prec]
+  ];
 
   If[Length[norm] =!= functionalCount || Length[obj] =!= functionalCount,
     Print["Objective or normalization dimension mismatch."];
@@ -313,8 +344,9 @@ PMP2SDP[datfile_, prec_: 600] := Module[
   ];
 
   Print["functional dimension = ", functionalCount];
-  Print["PMP blocks = ", Length[pols], " (expected ",
-    2 + nPoints (Length[spins] + 1), ")"];
+  Print["finite spins = ", continuumSpinList];
+  Print["PMP blocks = ", Length[pols]];
+  Print["feasibility-only mode = ", feasibilityOnly];
   Print["Writing ", datfile, "..."];
 
   WritePmpJson[
