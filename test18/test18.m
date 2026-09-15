@@ -1,5 +1,11 @@
-Import["../SDPB.m"];
+test18Directory = If[
+  StringQ[$InputFileName] && StringLength[$InputFileName] > 0,
+  DirectoryName[ExpandFileName[$InputFileName]],
+  Directory[]
+];
+Import[FileNameJoin[{test18Directory, "..", "SDPB.m"}]];
 m1 = N[2/5, 1000];
+mA = N[1/5, 1000];
 J1 = 0;
 J2 = 2;
 mgap = N[166/100, 1000];
@@ -15,24 +21,22 @@ NAAAA[n_, x_, J_]:= {((-4 mA^2+x)^(3/2) (32 mA^4+2 (-1+J) (8+J) mA^2 x-(-2+J (7+
 
 
 Nlist[n_,z_,J_] := {
-	{NAAAA[n,z,J],0,0},
-	{0,NBBBB[n,z,J],0},
-	{0,0,0}
+	{NAAAA[n,z,J],0},
+	{0,NBBBB[n,z,J]}
 };
 
 
 polyify[expr_] := Expand @ Cancel @ Together[expr];
 
-PolyInfBBBB[n_,J_,x_] := {0,0,0,0,0,-(1/(403200 z^3)),0}[[n+1]];
+PolyInfBBBB[n_,J_,x_] := {0,0,0,0,0,-(1/(403200 x^3)),0}[[n+1]];
 
 
 PolyInfAAAA[n_,J_,x_] := {0,0,0,0,0,0,(2 mA^2-x)/(403200 x^(3/2) (-4 mA^2+x)^(5/2))}[[n+1]];
 
 
 NPolyInf[n_,J_,x_] := {
-  {PolyInfAAAA[n,J,x],0,0},
-  {0,PolyInfBBBB[n,J,x],0},
-  {0,0,0}
+  {PolyInfAAAA[n,J,x],0},
+  {0,PolyInfBBBB[n,J,x]}
 };
 
 LaunchKernels[];
@@ -40,10 +44,15 @@ LaunchKernels[];
 
 PMP2SDP[datfile_, prec_:600] := Module[
     {
-        npts, phiSamples, massSamples, jTiers, Poly, PolyInf,
+        npts, phiSamples, massSamples, Jmax, spinSamples, Poly, PolyInf,
         Poly2nd, pols, norm, obj,
-        functionalCount, functionalCovered, missingFunctionals
+        functionalCount, expectedBlocks
     },
+    If[! TrueQ[Min[m1, 1, mgap] > 4 mA^2],
+      Print["Invalid spectrum: every sampled pole must satisfy z > 4 mA^2."];
+      Abort[]
+    ];
+
     (* Paper eq. (D.1): Chebyshev nodes in the conformal angle.
        Here m = 1-mgap/z = Sin[phi/2]^2. *)
     npts = 200;
@@ -53,20 +62,25 @@ PMP2SDP[datfile_, prec_:600] := Module[
     ], prec];
     massSamples = Sin[#/2]^2 & /@ phiSamples;
 
-    jTiers = {
-      Range[0, 1000, 2],
-      Range[1500, 5000, 100],
-      Range[6000, 20000, 500],
-      Range[20000, 50000, 2000]
-    };
+    If[
+      Length[massSamples] =!= npts ||
+        ! AllTrue[massSamples, 0 < # < 1 &],
+      Print["Invalid mass-sampling grid."];
+      Abort[]
+    ];
+
+    (* Keep every allowed even spin through Jmax; the J -> Infinity
+       contribution is imposed separately by PolyInf below. *)
+    Jmax = 100;
+    spinSamples = Range[0, Jmax, 2];
 
     (* continuous spectrum *)
     Poly[j_, x_, y_] := Module[{g0, lambda22, polys},
       (* normalization constant on BBBB sector *)
-      g0 = {{0, 0, 0}, {0, x^3*2/x, 0}, {0, 0, 0}};
+      g0 = {{0, 0}, {0, x^3*2/x}};
 
       (* state 2 on-shell couplings *)
-      lambda22 = {{(-4 mA^2+x)^(7/2)/Sqrt[x]*0, 0, 0}, {0, x^3*0, 0}, {0, 0, 0}};
+      lambda22 = {{(-4 mA^2+x)^(7/2)/Sqrt[x]*0, 0}, {0, x^3*0}};
 
       polys = Join[
         {g0, lambda22},
@@ -77,13 +91,13 @@ PMP2SDP[datfile_, prec_:600] := Module[
         DampedRational[1, {}, 1/E, y],
         Table[
             Table[polys[[k, row, column]], {k, Length[polys]}],
-            {row, 3}, {column, 3}
+            {row, 2}, {column, 2}
         ]
        ]
     ];
 
     PolyInf[j_, x_, y_] := Module[{polys, n0},
-      n0 = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
+      n0 = {{0, 0}, {0, 0}};
       polys = Join[
         {n0, n0},
         Table[ NPolyInf[n, j, x], {n, 0, nulllist[[1]]} ]
@@ -93,7 +107,7 @@ PMP2SDP[datfile_, prec_:600] := Module[
         DampedRational[1, {}, 1/E, y],
         Table[
             Table[polys[[k, row, column]], {k, Length[polys]}],
-            {row, 3}, {column, 3}
+            {row, 2}, {column, 2}
         ]
       ]
     ];
@@ -101,8 +115,8 @@ PMP2SDP[datfile_, prec_:600] := Module[
     (* poly of the second state *)
     Poly2nd[j_, z_, y_] := Module[{g0, lambda22, polys},
       
-      g0 = {{0, 0, 0}, {0, z^3*2/z, 0}, {0, 0, 0}};
-      lambda22 = {{(-4 mA^2+z)^(7/2)/Sqrt[z]*1, 0, 0}, {0, z^3*1, 0}, {0, 0, 0}};
+      g0 = {{0, 0}, {0, z^3*2/z}};
+      lambda22 = {{(-4 mA^2+z)^(7/2)/Sqrt[z]*1, 0}, {0, z^3*1}};
       polys = Join[
         {g0, lambda22},
         Table[ Nlist[n, z, j],
@@ -113,7 +127,7 @@ PMP2SDP[datfile_, prec_:600] := Module[
         DampedRational[1, {}, 1/E, y],
         Table[
             Table[polys[[k, row, column]], {k, Length[polys]}],
-            {row, 3}, {column, 3}
+            {row, 2}, {column, 2}
         ]
       ]
     ];
@@ -121,14 +135,31 @@ PMP2SDP[datfile_, prec_:600] := Module[
     pols = Flatten[{
       Flatten[ N[ ParallelTable[ Poly[i, m1, x], {i, J1, J1, 2}], prec] ],
       Flatten[ N[ ParallelTable[ Poly2nd[i, 1, x], {i, J2, J2, 2}], prec] ],
-      Flatten[ N[ ParallelTable[ Poly[i, mgap*1/(1-m), x], {i, Flatten[jTiers]}, {m, massSamples}], prec] ],
+      Flatten[ N[ ParallelTable[ Poly[i, mgap*1/(1-m), x], {i, spinSamples}, {m, massSamples}], prec] ],
       Flatten[ N[ ParallelTable[ PolyInf[i, mgap*1/(1-m), x], {i, 0, 0, 2}, {m, massSamples}], prec] ]
     }, 1];
 
-    Print["Built ", Length[pols], " numerical PMP blocks."];
+    expectedBlocks = 2 + npts (Length[spinSamples] + 1);
+    If[Length[pols] =!= expectedBlocks,
+      Print[
+        "Unexpected block count: built ", Length[pols],
+        ", expected ", expectedBlocks, "."
+      ];
+      Abort[]
+    ];
+    Print[
+      "Built ", Length[pols], " numerical PMP blocks with J = 0, 2, ..., ",
+      Jmax, "."
+    ];
 
     norm = -1 * N[Flatten[{{0, 1}, list0}], prec];
     obj = -1 * N[Flatten[{{1, 0}, list0}], prec];
+
+    functionalCount = 2 + Length[list0];
+    If[Length[norm] =!= functionalCount || Length[obj] =!= functionalCount,
+      Print["Objective/normalization dimension mismatch."];
+      Abort[]
+    ];
 
     Print["size of norm = ", Length[norm]];
     Print["size of obj = ", Length[obj]];
@@ -138,4 +169,4 @@ PMP2SDP[datfile_, prec_:600] := Module[
     Print["Wrote ", datfile, "."]
 ];
 
-PMP2SDP["n_pmp.json", 1000];
+PMP2SDP[FileNameJoin[{test18Directory, "n_pmp.json"}], 1000];
