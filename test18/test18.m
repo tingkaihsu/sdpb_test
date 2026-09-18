@@ -10,42 +10,95 @@ J1 = 0;
 J2 = 2;
 mgap = N[166/100, 1000];
 
-(* 7 null constraints *)
-nulllist = {6, -1, -1, -1};
-list0 = Table[0, {i, 1, Total[nulllist]+Length[nulllist]}];
+(* Independent functional coordinates for the three null-sum-rule families. *)
+crossNullIndices = {0};
+aaNullIndices = {0};
+bbNullIndices = {0};
 
-NBBBB[n_, z_, J_] := {z-1/2 J (7+J) z,1-1/20 J (7+J) (-13+J (7+J)),-(((-12+J (7+J)) (30+J (7+J) (-23+J (7+J))))/(360 z)),1/z^2-((-2+J) J (7+J) (9+J) (604+J (7+J) (-52+J (7+J))))/(10080 z^2),-((J (7+J) (-23+J (7+J)))/(20 z^2)),1/z^3-((-4+J) (-2+J) J (7+J) (9+J) (11+J) (-34+J (5+J)) (-20+J (9+J)))/(403200 z^3),-((J (7+J) (540+J (7+J) (-53+J (7+J))))/(360 z^3))}[[n+1]];
+nullCount = Total[
+  Length /@ {crossNullIndices, aaNullIndices, bbNullIndices}
+];
+list0 = ConstantArray[0, nullCount];
 
 
-NAAAA[n_, x_, J_]:= {((-4 mA^2+x)^(3/2) (32 mA^4+2 (-1+J) (8+J) mA^2 x-(-2+J (7+J)) x^2))/(2 x^(5/2)),1/(20 x^(7/2))Sqrt[-4 mA^2+x] (-1280 mA^6+960 mA^4 x+2 (-120+(-1+J) J (7+J) (8+J)) mA^2 x^2-(-20+J (7+J) (-13+J (7+J))) x^3),1/(360 x^(9/2) Sqrt[-4 mA^2+x])(92160 mA^8-92160 mA^6 x+34560 mA^4 x^2+2 (-2880+(-2+J) (-1+J) J (7+J) (8+J) (9+J)) mA^2 x^3-(-12+J (7+J)) (30+J (7+J) (-23+J (7+J))) x^4),-((J (7+J) mA^2 (80 mA^4+2 (-38+J (7+J)) mA^2 x-(-23+J (7+J)) x^2))/(5 x^(7/2) Sqrt[-4 mA^2+x])),1/(10080 x^(11/2) (-4 mA^2+x)^(3/2))(-10321920 mA^10+12902400 mA^8 x-6451200 mA^6 x^2+1612800 mA^4 x^3+2 (-100800+(-3+J) (-2+J) (-1+J) J (7+J) (8+J) (9+J) (10+J)) mA^2 x^4+(10080-(-2+J) J (7+J) (9+J) (604+J (7+J) (-52+J (7+J)))) x^5),1/(180 x^(9/2) (-4 mA^2+x)^(3/2))J (7+J) (11520 mA^8-11520 mA^6 x-4 (-936+J (7+J) (-26+J (7+J))) mA^4 x^2+2 (-216+J (7+J) (-26+J (7+J))) mA^2 x^3-9 (-23+J (7+J)) x^4),1/(403200 x^(13/2) (-4 mA^2+x)^(5/2))(1651507200 mA^12-2477260800 mA^10 x+1548288000 mA^8 x^2-516096000 mA^6 x^3+96768000 mA^4 x^4+2 (-4838400+(-4+J) (-3+J) (-2+J) (-1+J) J (7+J) (8+J) (9+J) (10+J) (11+J)) mA^2 x^5-(-403200+(-4+J) (-2+J) J (7+J) (9+J) (11+J) (-34+J (5+J)) (-20+J (9+J))) x^6)}[[n+1]];
+NABAB[n_, x_, J_, m_] := {((-1 + J) J (7 + J) (8 + J))/(40 x^2), -(((-1+J) J (7+J) (8+J))/(40 (m^2-x) x^2))}[[n+1]];
 
 
-Nlist[n_,z_,J_] := {
-	{NAAAA[n,z,J],0},
-	{0,NBBBB[n,z,J]}
+NAABB[n_, x_, J_, m_]:= {((-1+J) J (7+J) (8+J) (-4 m^2+x)^(3/4) Hypergeometric2F1[2-J,9+J,6,1/2-x/(2 Sqrt[x (-4 m^2+x)])])/(40 x^(11/4)), ((-2+J) (-1+J) J (7+J) (8+J) (9+J) (-4 m^2+x)^(7/4) Hypergeometric2F1[3-J,10+J,7,1/2-x/(2 Sqrt[x (-4 m^2+x)])])/(720 x^(7/4) (x (-4 m^2+x))^(3/2))}[[n+1]];
+
+
+NBBBB[n_, x_, J_, m_] := {x - 1/2 J (7 + J) x, 1-1/20 J (7+J) (-13+J (7+J))}[[n+1]];
+
+NAAAA[n_, x_, J_, mA_] := {((-4 mA^2+x)^(3/2) (32 mA^4+2 (-1+J) (8+J) mA^2 x-(-2+J (7+J)) x^2))/(2 x^(5/2)), 1/(20 x^(7/2))Sqrt[-4 mA^2+x] (-1280 mA^6+960 mA^4 x+2 (-120+(-1+J) J (7+J) (8+J)) mA^2 x^2-(-20+J (7+J) (-13+J (7+J))) x^3)}[[n+1]];
+
+
+NCross[n_, z_, J_] := {
+  {0, 0, -1/2 NAABB[n, z, J, mA]},
+  {0, NABAB[n, z, J, mA], 0},
+  {-1/2 NAABB[n, z, J, mA], 0, 0}
 };
 
-
-polyify[expr_] := Expand @ Cancel @ Together[expr];
-
-PolyInfBBBB[n_,J_,x_] := {0,0,0,0,0,-(1/(403200 x^3)),0}[[n+1]];
-
-
-PolyInfAAAA[n_,J_,x_] := {0,0,0,0,0,0,(2 mA^2-x)/(403200 x^(3/2) (-4 mA^2+x)^(5/2))}[[n+1]];
-
-
-NPolyInf[n_,J_,x_] := {
-  {PolyInfAAAA[n,J,x],0},
-  {0,PolyInfBBBB[n,J,x]}
+NAAMatrix[n_, z_, J_] := {
+  {NAAAA[n, z, J, mA], 0, 0},
+  {0, 0, 0},
+  {0, 0, 0}
 };
+
+NBBMatrix[n_, z_, J_] := {
+  {0, 0, 0},
+  {0, 0, 0},
+  {0, 0, NBBBB[n, z, J, mA]}
+};
+
+(* A standard universal spin-2 couples to T_A + T_B.  In the
+   {AA, AB, BB} basis its bare coupling direction is therefore {1,0,1}. *)
+universalSpin2Direction = {1, 0, 1};
+
+contractUniversalSpin2[matrix_] :=
+  universalSpin2Direction . matrix . universalSpin2Direction;
+
+
+(* ---------------------------------------------------------------------- *)
+(* Large-spin diagnostics (not yet imposed as PMP constraints)             *)
+(* ---------------------------------------------------------------------- *)
+
+ClearAll[
+  phaseABAB10,
+  aabbFixedMassGrowthBase10,
+  fixedMassLargeJData10,
+  largeJImpactWeights10
+];
+
+phaseABAB10[x_, mass_] := (x - mass^2)^7/x^4;
+
+
+(* At fixed x > 4 mass^2, the AABB Gegenbauer polynomial is evaluated
+   outside [-1,1] and grows exponentially with spin. *)
+aabbFixedMassGrowthBase10[x_, mass_] :=
+  (Sqrt[x] + 2 mass)/Sqrt[x - 4 mass^2];
+
+fixedMassLargeJData10[x_, mass_] := <|
+  "ABABCoefficientAfterJ4Scaling" -> 1/(40 x^2),
+  "AABBGrowthBasePerSpin" -> aabbFixedMassGrowthBase10[x, mass],
+  "AABBEvenSpinRatio" -> aabbFixedMassGrowthBase10[x, mass]^2
+|>;
+
+(* Joint large-J/large-mass limit with b = J/Sqrt[x] fixed.  If the
+   physical convention is bPhysical = 2 J/Sqrt[x], use b -> bPhysical/2. *)
+largeJImpactWeights10[b_, mass_] := <|
+  "ABAB" -> b^4/40,
+  "AABB" -> b^4 Hypergeometric0F1[6, mass^2 b^2]/40
+|>;
+
 
 LaunchKernels[];
 
 
 PMP2SDP[datfile_, prec_:600] := Module[
     {
-        npts, phiSamples, massSamples, Jmax, spinSamples, Poly, PolyInf,
-        Poly2nd, pols, norm, obj,
+        npts, phiSamples, massSamples, Jmax,
+        evenSpinSamples, oddSpinSamples,
+        Poly, PolyABOdd, Poly2nd, pols, norm, obj,
         functionalCount, expectedBlocks
     },
     If[! TrueQ[Min[m1, 1, mgap] > 4 mA^2],
@@ -69,77 +122,88 @@ PMP2SDP[datfile_, prec_:600] := Module[
       Abort[]
     ];
 
-    (* Keep every allowed even spin through Jmax; the J -> Infinity
-       contribution is imposed separately by PolyInf below. *)
+    (* Neutral AA/BB states have even spin.  The charged AB sector also
+       admits odd spin.  Large-J constraints are not imposed yet. *)
     Jmax = 100;
-    spinSamples = Range[0, Jmax, 2];
+    evenSpinSamples = Range[0, Jmax, 2];
+    oddSpinSamples = Range[1, Jmax, 2];
 
     (* continuous spectrum *)
     Poly[j_, x_, y_] := Module[{g0, lambda22, polys},
-      (* normalization constant on BBBB sector *)
-      g0 = {{0, 0}, {0, x^3*2/x}};
+      (* normalization constant on ABAB sector *)
+      g0 = {{0, 0, 0}, {0, (2 (mA^2 - x)^6)/x^4, 0}, {0, 0, 0}};
 
-      (* state 2 on-shell couplings *)
-      lambda22 = {{(-4 mA^2+x)^(7/2)/Sqrt[x]*0, 0}, {0, x^3*0}};
+      (* Only the isolated second state contributes to lambda22. *)
+      lambda22 = ConstantArray[0, {3, 3}];
 
       polys = Join[
         {g0, lambda22},
-        Table[ Nlist[n, x, j] , {n, 0, nulllist[[1]]} ]
+        NCross[#, x, j] & /@ crossNullIndices,
+        NAAMatrix[#, x, j] & /@ aaNullIndices,
+        NBBMatrix[#, x, j] & /@ bbNullIndices
       ];
 
       PositiveMatrixWithPrefactor[
         DampedRational[1, {}, 1/E, y],
         Table[
             Table[polys[[k, row, column]], {k, Length[polys]}],
-            {row, 2}, {column, 2}
+            {row, 3}, {column, 3}
         ]
        ]
     ];
 
-    PolyInf[j_, x_, y_] := Module[{polys, n0},
-      n0 = {{0, 0}, {0, 0}};
+    (* Odd spins occur only in the charged AB sector.  A 1 x 1 block avoids
+       adding identically zero neutral rows to these constraints. *)
+    PolyABOdd[j_, x_, y_] := Module[{g0, lambda22, polys},
+      g0 = (2 (mA^2 - x)^6)/x^4;
+      lambda22 = 0;
+
       polys = Join[
-        {n0, n0},
-        Table[ NPolyInf[n, j, x], {n, 0, nulllist[[1]]} ]
+        {g0, lambda22},
+        NABAB[#, x, j, mA] & /@ crossNullIndices,
+        ConstantArray[0, Length[aaNullIndices] + Length[bbNullIndices]]
       ];
 
       PositiveMatrixWithPrefactor[
         DampedRational[1, {}, 1/E, y],
-        Table[
-            Table[polys[[k, row, column]], {k, Length[polys]}],
-            {row, 2}, {column, 2}
-        ]
+        {{polys}}
       ]
     ];
 
-    (* poly of the second state *)
-    Poly2nd[j_, z_, y_] := Module[{g0, lambda22, polys},
-      
-      g0 = {{0, 0}, {0, z^3*2/z}};
-      lambda22 = {{(-4 mA^2+z)^(7/2)/Sqrt[z]*1, 0}, {0, z^3*1}};
+    (* The isolated spin-2 state has the fixed universal coupling direction
+       {gHAA, gHAB, gHBB} proportional to {1, 0, 1}.  Its only nonnegative
+       spectral variable is the bare coupling squared lambdaH2, so this is
+       a 1 x 1 block rather than a general 3 x 3 coupled-channel block. *)
+    Poly2nd[j_, x_, y_] := Module[{g0, lambdaH2, polys},
+      g0 = {{0, 0, 0}, {0, (2 (mA^2 - x)^6)/x^4, 0}, {0, 0, 0}};
+
+      (* Unit coefficient means that the second functional coordinate
+         normalizes the bare universal coupling squared. *)
+      lambdaH2 = 1;
+
       polys = Join[
-        {g0, lambda22},
-        Table[ Nlist[n, z, j],
-          {n, 0, nulllist[[1]]}
-        ] 
+        {contractUniversalSpin2[g0], lambdaH2},
+        contractUniversalSpin2[NCross[#, x, j]] & /@ crossNullIndices,
+        contractUniversalSpin2[NAAMatrix[#, x, j]] & /@ aaNullIndices,
+        contractUniversalSpin2[NBBMatrix[#, x, j]] & /@ bbNullIndices
       ];
+
       PositiveMatrixWithPrefactor[
         DampedRational[1, {}, 1/E, y],
-        Table[
-            Table[polys[[k, row, column]], {k, Length[polys]}],
-            {row, 2}, {column, 2}
-        ]
+        {{polys}}
       ]
     ];
     
     pols = Flatten[{
       Flatten[ N[ ParallelTable[ Poly[i, m1, x], {i, J1, J1, 2}], prec] ],
       Flatten[ N[ ParallelTable[ Poly2nd[i, 1, x], {i, J2, J2, 2}], prec] ],
-      Flatten[ N[ ParallelTable[ Poly[i, mgap*1/(1-m), x], {i, spinSamples}, {m, massSamples}], prec] ],
-      Flatten[ N[ ParallelTable[ PolyInf[i, mgap*1/(1-m), x], {i, 0, 0, 2}, {m, massSamples}], prec] ]
+      Flatten[ N[ ParallelTable[ Poly[i, mgap/(1-m), x], {i, evenSpinSamples}, {m, massSamples}], prec] ],
+      Flatten[ N[ ParallelTable[ PolyABOdd[i, mgap/(1-m), x], {i, oddSpinSamples}, {m, massSamples}], prec] ]
     }, 1];
 
-    expectedBlocks = 2 + npts (Length[spinSamples] + 1);
+    expectedBlocks = 2 + npts (
+      Length[evenSpinSamples] + Length[oddSpinSamples]
+    );
     If[Length[pols] =!= expectedBlocks,
       Print[
         "Unexpected block count: built ", Length[pols],
@@ -147,9 +211,11 @@ PMP2SDP[datfile_, prec_:600] := Module[
       ];
       Abort[]
     ];
+
     Print[
-      "Built ", Length[pols], " numerical PMP blocks with J = 0, 2, ..., ",
-      Jmax, "."
+      "Built ", Length[pols],
+      " numerical PMP blocks: neutral/even J = 0, 2, ..., ", Jmax,
+      "; charged/odd J = 1, 3, ..., ", Jmax - 1, "."
     ];
 
     norm = -1 * N[Flatten[{{0, 1}, list0}], prec];
