@@ -247,11 +247,12 @@ AABBNullWeight10[
   ];
 
 
+ABABNullWeight10[x,m,J,1,0]//FullSimplify
+AABBNullWeight10[x,m,J,1,0]//FullSimplify
+
 ABABNullWeight10[x,m,J,4,2]//FullSimplify
 AABBNullWeight10[x,m,J,4,2]//FullSimplify
 
 ABABNullWeight10[x,m,J,5,2]//FullSimplify
 AABBNullWeight10[x,m,J,5,2]//FullSimplify
-
-
 

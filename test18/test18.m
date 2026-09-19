@@ -11,9 +11,9 @@ J2 = 2;
 mgap = N[166/100, 1000];
 
 (* Independent functional coordinates for the three null-sum-rule families. *)
-crossNullIndices = {0};
-aaNullIndices = {0};
-bbNullIndices = {0};
+crossNullIndices = Range[0, 1];
+aaNullIndices = Range[0, 1];
+bbNullIndices = Range[0, 1];
 
 nullCount = Total[
   Length /@ {crossNullIndices, aaNullIndices, bbNullIndices}
