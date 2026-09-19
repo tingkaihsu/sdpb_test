@@ -247,12 +247,24 @@ AABBNullWeight10[
   ];
 
 
-ABABNullWeight10[x,m,J,1,0]//FullSimplify
-AABBNullWeight10[x,m,J,1,0]//FullSimplify
+abab10 = ABABNullWeight10[x,m,J,1,0]//FullSimplify
+aabb10 = AABBNullWeight10[x,m,J,1,0]//FullSimplify
 
-ABABNullWeight10[x,m,J,4,2]//FullSimplify
-AABBNullWeight10[x,m,J,4,2]//FullSimplify
+abab11 = ABABNullWeight10[x,m,J,1,1]//FullSimplify
+aabb11 = AABBNullWeight10[x,m,J,1,1]//FullSimplify
 
-ABABNullWeight10[x,m,J,5,2]//FullSimplify
-AABBNullWeight10[x,m,J,5,2]//FullSimplify
 
+abab20 = ABABNullWeight10[x,m,J,2,0]//FullSimplify
+aabb20 = AABBNullWeight10[x,m,J,2,0]//FullSimplify
+
+abab21 = ABABNullWeight10[x,m,J,2,1]//FullSimplify
+aabb21 = AABBNullWeight10[x,m,J,2,1]//FullSimplify
+
+abab22 = ABABNullWeight10[x,m,J,2,2]//FullSimplify
+aabb22 = AABBNullWeight10[x,m,J,2,2]//FullSimplify
+
+
+{abab10, abab11, abab20, abab21, abab22}
+
+
+{aabb10, aabb11, aabb20, aabb21, aabb22}
