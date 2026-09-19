@@ -54,7 +54,7 @@ NBBMatrix[n_, z_, J_] := {
 
 (* D=10 zero-subtracted positive moment for AA -> AA. *)
 g0AAWeight[x_] :=
-  2 (x - 4 mA^2)^(7/2)/(Sqrt[x] (x - 2 mA^2));
+  (2 (-4 mA^2+x)^(7/2))/(Sqrt[x] (-2 mA^2+x));
 
 (* In the block-diagonal basis {AA, AB, BB}, a standard universal spin-2
    couples equally to the two neutral channels and not to AB. *)
