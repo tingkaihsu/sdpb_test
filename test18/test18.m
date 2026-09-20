@@ -6,7 +6,7 @@ test18Directory = If[
 Import[FileNameJoin[{test18Directory, "..", "SDPB.m"}]];
 
 m1 = N[2/5, 1000];
-mA = N[1/5, 1000];
+mA = N[1/1000, 1000];
 J1 = 0;
 J2 = 2;
 mgap = N[166/100, 1000];
