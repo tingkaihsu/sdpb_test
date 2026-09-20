@@ -264,7 +264,57 @@ abab22 = ABABNullWeight10[x,m,J,2,2]//FullSimplify
 aabb22 = AABBNullWeight10[x,m,J,2,2]//FullSimplify
 
 
-{abab10, abab11, abab20, abab21, abab22}
+abab30 = ABABNullWeight10[x,m,J,3,0]//FullSimplify
+aabb30 = AABBNullWeight10[x,m,J,3,0]//FullSimplify
+
+abab31 = ABABNullWeight10[x,m,J,3,1]//FullSimplify
+aabb31 = AABBNullWeight10[x,m,J,3,1]//FullSimplify
+
+abab32 = ABABNullWeight10[x,m,J,3,2]//FullSimplify
+aabb32 = AABBNullWeight10[x,m,J,3,2]//FullSimplify
+
+abab33 = ABABNullWeight10[x,m,J,3,3]//FullSimplify
+aabb33 = AABBNullWeight10[x,m,J,3,3]//FullSimplify
 
 
-{aabb10, aabb11, aabb20, aabb21, aabb22}
+abab40 = ABABNullWeight10[x,m,J,4,0]//FullSimplify
+aabb40 = AABBNullWeight10[x,m,J,4,0]//FullSimplify
+
+abab41 = ABABNullWeight10[x,m,J,4,1]//FullSimplify
+aabb41 = AABBNullWeight10[x,m,J,4,1]//FullSimplify
+
+abab42 = ABABNullWeight10[x,m,J,4,2]//FullSimplify
+aabb42 = AABBNullWeight10[x,m,J,4,2]//FullSimplify
+
+abab43 = ABABNullWeight10[x,m,J,4,3]//FullSimplify
+aabb43 = AABBNullWeight10[x,m,J,4,3]//FullSimplify
+
+abab44 = ABABNullWeight10[x,m,J,4,4]//FullSimplify
+aabb44 = AABBNullWeight10[x,m,J,4,4]//FullSimplify
+
+abab50 = ABABNullWeight10[x,m,J,5,0]//FullSimplify
+aabb50 = AABBNullWeight10[x,m,J,5,0]//FullSimplify
+
+abab51 = ABABNullWeight10[x,m,J,5,1]//FullSimplify
+aabb51 = AABBNullWeight10[x,m,J,5,1]//FullSimplify
+
+abab52 = ABABNullWeight10[x,m,J,5,2]//FullSimplify
+aabb52 = AABBNullWeight10[x,m,J,5,2]//FullSimplify
+
+abab53 = ABABNullWeight10[x,m,J,5,3]//FullSimplify
+aabb53 = AABBNullWeight10[x,m,J,5,3]//FullSimplify
+
+abab54 = ABABNullWeight10[x,m,J,5,4]//FullSimplify
+aabb54 = AABBNullWeight10[x,m,J,5,4]//FullSimplify
+
+abab55 = ABABNullWeight10[x,m,J,5,5]//FullSimplify
+aabb55 = AABBNullWeight10[x,m,J,5,5]//FullSimplify
+
+
+lstabab = {abab10, abab11, abab20, abab21, abab22, abab30, abab31, abab32, abab33, abab40, abab41, abab42, abab43, abab44, abab50, abab51, abab52, abab53, abab54, abab55}
+
+
+lstaabb = {aabb10, aabb11, aabb20, aabb21, aabb22, aabb30, aabb31, aabb32, aabb33, aabb40, aabb41, aabb42, aabb43, aabb44, aabb50, aabb51, aabb52, aabb53, aabb54, aabb55}
+
+
+Length[lstabab]
