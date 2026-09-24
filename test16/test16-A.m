@@ -8,7 +8,7 @@ sourceDirectory = If[
 Import[FileNameJoin[{sourceDirectory, "..", "SDPB.m"}]];
 
 (* Keep the spectral data exact until the final numerical conversion. *)
-m1 = 2/5;
+m1 = 1/5;
 mgap = 83/50;
 mA = 1/1000;
 

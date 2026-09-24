@@ -5,7 +5,7 @@ test18Directory = If[
 ];
 Import[FileNameJoin[{test18Directory, "..", "SDPB.m"}]];
 
-m1 = N[2/5, 1000];
+m1 = N[1/5, 1000];
 mA = N[1/1000, 1000];
 J1 = 0;
 J2 = 2;
@@ -52,9 +52,9 @@ NBBMatrix[n_, z_, J_] := {
   {0, 0, NBBBB[n, z, J, mA]}
 };
 
-(* D=10 zero-subtracted positive moment for AA -> AA. *)
-g0AAWeight[x_] :=
-  (2 (-4 mA^2+x)^(7/2))/(Sqrt[x] (-2 mA^2+x));
+(* D=10 zero-subtracted positive moment for BB -> BB. *)
+g0BBWeight[x_] :=
+  2 x^2;
 
 (* In the block-diagonal basis {AA, AB, BB}, a standard universal spin-2
    couples equally to the two neutral channels and not to AB. *)
@@ -140,7 +140,7 @@ PMP2SDP[datfile_, prec_:600] := Module[
     Poly[j_, x_, y_] := Module[{g0, lambda22, polys},
       (* Block-diagonal basis {AA, AB, BB}: the neutral {AA, BB} sector is
          a 2 x 2 block, while AB is an independent 1 x 1 block. *)
-      g0 = {{g0AAWeight[x], 0, 0}, {0, 0, 0}, {0, 0, 0}};
+      g0 = {{g0BBWeight[x], 0, 0}, {0, 0, 0}, {0, 0, 0}};
 
       (* Only the isolated second state contributes to lambda22. *)
       lambda22 = ConstantArray[0, {3, 3}];
@@ -163,7 +163,7 @@ PMP2SDP[datfile_, prec_:600] := Module[
 
     (* The first isolated state is neutral, so it only sees {AA, BB}. *)
     Poly1st[j_, x_, y_] := Module[{g0, lambda22, polys},
-      g0 = {{g0AAWeight[x], 0, 0}, {0, 0, 0}, {0, 0, 0}};
+      g0 = {{g0BBWeight[x], 0, 0}, {0, 0, 0}, {0, 0, 0}};
       lambda22 = ConstantArray[0, {3, 3}];
 
       polys = neutralBlock /@ Join[
@@ -203,7 +203,7 @@ PMP2SDP[datfile_, prec_:600] := Module[
        direction {gHAA, gHAB, gHBB} proportional to {1, 0, 1}.  Its only
        nonnegative spectral variable is the bare coupling squared lambdaH2. *)
     Poly2nd[j_, x_, y_] := Module[{g0, lambdaH2, polys},
-      g0 = {{g0AAWeight[x], 0, 0}, {0, 0, 0}, {0, 0, 0}};
+      g0 = {{g0BBWeight[x], 0, 0}, {0, 0, 0}, {0, 0, 0}};
 
       (* Unit coefficient means that the second functional coordinate
          normalizes the bare universal coupling squared. *)
