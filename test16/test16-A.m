@@ -38,23 +38,69 @@ continuumJList = DeleteDuplicates @ Join[
   JList
 ];
 
-(* Positive blockwise rescaling for the q^4 = O(J^8) growth, where
+(* The physical null vectors contain half-integer threshold factors.  This
+   common factor is strictly positive on the complete spectrum and equals
+   one at the isolated spin-2 mass x = 1. *)
+polynomializationNormalization =
+  (1 - 4 mA^2)^(13/2) (1 - 2 mA^2);
+
+polynomializationFactor[x_] :=
+  x^(21/2) (x - 4 mA^2)^(13/2) (x - 2 mA^2)/
+    polynomializationNormalization;
+
+polynomialG0[x_] :=
+  2 x^10 (x - 4 mA^2)^10/polynomializationNormalization;
+
+(* Build the polynomial null vector once, before inserting masses or spins. *)
+Clear[nullMass, nullSpin];
+polynomialNullTemplate = Table[
+  Expand @ Cancel @ PowerExpand @ Together[
+    polynomializationFactor[nullMass]
+      Nlist[n, nullMass, nullSpin, mA]
+  ],
+  {n, NullIndices}
+];
+
+If[!AllTrue[
+    polynomialNullTemplate,
+    PolynomialQ[#, {nullMass, nullSpin}] &
+  ],
+  Print["Failed to polynomialize one or more null constraints."];
+  Abort[]
+];
+
+polynomialNullVector[x_, J_] :=
+  polynomialNullTemplate /. {nullMass -> x, nullSpin -> J};
+
+(* Positive blockwise rescaling for the q^9 = O(J^18) growth, where
    q = J (J + 7) is the ten-dimensional spin Casimir. *)
-spinScale[J_Integer] := 1/(1 + J (J + 7))^4;
+spinScale[J_Integer] := 1/(1 + J (J + 7))^9;
 
-(* Analytic boundaries of the large-spin spectrum.  The fixed-mass
-   vector was divided by its strictly positive mass-dependent factor. *)
-fixedMassLargeJVector = {0, 0, 0, 0, 0, 0, -1};
+(* At fixed mass, only null constraint 17 survives after division by q^9.
+   Its remaining mass-dependent factor is strictly negative, so it can be
+   replaced by -1 without changing the positivity condition. *)
+fixedMassLargeJVector = ReplacePart[
+  ConstantArray[0, functionalDimension],
+  3 + 17 -> -1
+];
 
-impactVector[r_] := {
-  2,
-  0,
-  -r/2,
-  -r^2/20,
-  -r^3/360,
-  0,
-  -r^4/10080
+(* Joint large-mass/large-spin limit with r = J (J + 7)/s fixed. *)
+impactNullIndices = {0, 1, 2, 3, 5, 8, 11, 14, 17};
+impactDenominators = {
+  2, 20, 360, 10080, 403200, 21772800,
+  1524096000, 134120448000, 14485008384000
 };
+
+impactVector[r_] := Join[
+  {2, 0},
+  ReplacePart[
+    ConstantArray[0, Length[NullIndices]],
+    Thread[
+      1 + impactNullIndices ->
+        -r^Range[Length[impactNullIndices]]/impactDenominators
+    ]
+  ]
+];
 
 LaunchKernels[];
 
@@ -65,14 +111,14 @@ PMP2SDP[datfile_, prec_: 600] := Module[
     },
 
     Poly[j_, x_, y_] := Module[{g0, lambda22, polys},
-        g0 = 2 x^5 (-4 mA^2 + x)^5;
+        g0 = polynomialG0[x];
 
         (* Only the isolated second state contributes to lambda22. *)
         lambda22 = 0;
 
         polys = Join[
             {g0, lambda22},
-            Nlist[#, x, j, mA] & /@ NullIndices
+            polynomialNullVector[x, j]
         ];
 
         PositiveMatrixWithPrefactor[
@@ -83,12 +129,12 @@ PMP2SDP[datfile_, prec_: 600] := Module[
 
     (* The first isolated state. *)
     Poly1st[j_, x_, y_] := Module[{g0, lambda22, polys},
-        g0 = 2 x^5 (-4 mA^2 + x)^5;
+        g0 = polynomialG0[x];
         lambda22 = 0;
 
         polys = Join[
             {g0, lambda22},
-            Nlist[#, x, j, mA] & /@ NullIndices
+            polynomialNullVector[x, j]
         ];
 
         PositiveMatrixWithPrefactor[
@@ -100,12 +146,12 @@ PMP2SDP[datfile_, prec_: 600] := Module[
 
     (* The isolated spin-2 state. *)
     Poly2nd[j_, x_, y_] := Module[{g0, lambdaH2, polys},
-        g0 = 2 x^5 (-4 mA^2 + x)^5;
-        lambdaH2 = 1;
+        g0 = polynomialG0[x];
+        lambdaH2 = polynomializationFactor[x];
 
         polys = Join[
             {g0, lambdaH2},
-            Nlist[#, x, j, mA] & /@ NullIndices
+            polynomialNullVector[x, j]
         ];
 
         PositiveMatrixWithPrefactor[
