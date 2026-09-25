@@ -140,7 +140,7 @@ PMP2SDP[datfile_, prec_:600] := Module[
     Poly[j_, x_, y_] := Module[{g0, lambda22, polys},
       (* Block-diagonal basis {AA, AB, BB}: the neutral {AA, BB} sector is
          a 2 x 2 block, while AB is an independent 1 x 1 block. *)
-      g0 = {{0, 0, 0}, {0, g0BBWeight[x], 0}, {0, 0, 0}};
+      g0 = {{0, 0, 0}, {0, 0, 0}, {0, 0, g0BBWeight[x]}};
 
       (* Only the isolated second state contributes to lambda22. *)
       lambda22 = ConstantArray[0, {3, 3}];
@@ -163,7 +163,7 @@ PMP2SDP[datfile_, prec_:600] := Module[
 
     (* The first isolated state is neutral, so it only sees {AA, BB}. *)
     Poly1st[j_, x_, y_] := Module[{g0, lambda22, polys},
-      g0 = {{0, 0, 0}, {0, g0BBWeight[x], 0}, {0, 0, 0}};
+      g0 = {{0, 0, 0}, {0, 0, 0}, {0, 0, g0BBWeight[x]}};
       lambda22 = ConstantArray[0, {3, 3}];
 
       polys = neutralBlock /@ Join[
@@ -203,7 +203,7 @@ PMP2SDP[datfile_, prec_:600] := Module[
        direction {gHAA, gHAB, gHBB} proportional to {1, 0, 1}.  Its only
        nonnegative spectral variable is the bare coupling squared lambdaH2. *)
     Poly2nd[j_, x_, y_] := Module[{g0, lambdaH2, polys},
-      g0 = {{0, 0, 0}, {0, g0BBWeight[x], 0}, {0, 0, 0}};
+      g0 = {{0, 0, 0}, {0, 0, 0}, {0, 0, g0BBWeight[x]}};
 
       (* Unit coefficient means that the second functional coordinate
          normalizes the bare universal coupling squared. *)
@@ -247,7 +247,7 @@ PMP2SDP[datfile_, prec_:600] := Module[
     ];
 
     (* Bound the universal isolated-state coupling squared in units of
-       the AA positive moment g0AA. *)
+       the BB positive moment g0BB. *)
     norm = -1 * N[Flatten[{{0, 1}, list0}], prec];
     obj = -1 * N[Flatten[{{1, 0}, list0}], prec];
 
