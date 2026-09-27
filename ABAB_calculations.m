@@ -310,11 +310,56 @@ aabb54 = AABBNullWeight10[x,m,J,5,4]//FullSimplify
 abab55 = ABABNullWeight10[x,m,J,5,5]//FullSimplify
 aabb55 = AABBNullWeight10[x,m,J,5,5]//FullSimplify
 
+abab60 = ABABNullWeight10[x,m,J,6,0]//FullSimplify
+aabb60 = AABBNullWeight10[x,m,J,6,0]//FullSimplify
 
-lstabab = {abab10, abab11, abab20, abab21, abab22, abab30, abab31, abab32, abab33, abab40, abab41, abab42, abab43, abab44, abab50, abab51, abab52, abab53, abab54, abab55}
+abab61 = ABABNullWeight10[x,m,J,6,1]//FullSimplify
+aabb61 = AABBNullWeight10[x,m,J,6,1]//FullSimplify
+
+abab62 = ABABNullWeight10[x,m,J,6,2]//FullSimplify
+aabb62 = AABBNullWeight10[x,m,J,6,2]//FullSimplify
+
+abab63 = ABABNullWeight10[x,m,J,6,3]//FullSimplify
+aabb63 = AABBNullWeight10[x,m,J,6,3]//FullSimplify
+
+abab64 = ABABNullWeight10[x,m,J,6,4]//FullSimplify
+aabb64 = AABBNullWeight10[x,m,J,6,4]//FullSimplify
+
+abab65 = ABABNullWeight10[x,m,J,6,5]//FullSimplify
+aabb65 = AABBNullWeight10[x,m,J,6,5]//FullSimplify
+
+abab66 = ABABNullWeight10[x,m,J,6,6]//FullSimplify
+aabb66 = AABBNullWeight10[x,m,J,6,6]//FullSimplify
+
+abab70 = ABABNullWeight10[x,m,J,7,0]//FullSimplify
+aabb70 = AABBNullWeight10[x,m,J,7,0]//FullSimplify
+
+abab71 = ABABNullWeight10[x,m,J,7,1]//FullSimplify
+aabb71 = AABBNullWeight10[x,m,J,7,1]//FullSimplify
+
+abab72 = ABABNullWeight10[x,m,J,7,2]//FullSimplify
+aabb72 = AABBNullWeight10[x,m,J,7,2]//FullSimplify
+
+abab73 = ABABNullWeight10[x,m,J,7,3]//FullSimplify
+aabb73 = AABBNullWeight10[x,m,J,7,3]//FullSimplify
+
+abab74 = ABABNullWeight10[x,m,J,7,4]//FullSimplify
+aabb74 = AABBNullWeight10[x,m,J,7,4]//FullSimplify
+
+abab75 = ABABNullWeight10[x,m,J,7,5]//FullSimplify
+aabb75 = AABBNullWeight10[x,m,J,7,5]//FullSimplify
+
+abab76 = ABABNullWeight10[x,m,J,7,6]//FullSimplify
+aabb76 = AABBNullWeight10[x,m,J,7,6]//FullSimplify
+
+abab77 = ABABNullWeight10[x,m,J,7,7]//FullSimplify
+aabb77 = AABBNullWeight10[x,m,J,7,7]//FullSimplify
 
 
-lstaabb = {aabb10, aabb11, aabb20, aabb21, aabb22, aabb30, aabb31, aabb32, aabb33, aabb40, aabb41, aabb42, aabb43, aabb44, aabb50, aabb51, aabb52, aabb53, aabb54, aabb55}
+lstabab = {abab10, abab11, abab20, abab21, abab22, abab30, abab31, abab32, abab33, abab40, abab41, abab42, abab43, abab44, abab50, abab51, abab52, abab53, abab54, abab55, abab60, abab61, abab62, abab63, abab64, abab65, abab66, abab70, abab71, abab72, abab73, abab74, abab75, abab76, abab77}
+
+
+lstaabb = {aabb10, aabb11, aabb20, aabb21, aabb22, aabb30, aabb31, aabb32, aabb33, aabb40, aabb41, aabb42, aabb43, aabb44, aabb50, aabb51, aabb52, aabb53, aabb54, aabb55, aabb60, aabb61, aabb62, aabb63, aabb64, aabb65, aabb66, aabb70, aabb71, aabb72, aabb73, aabb74, aabb75, aabb76, aabb77}
 
 
 Length[lstabab]
