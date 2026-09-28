@@ -1,20 +1,17 @@
 (* ::Package:: *)
 
-ParentAmp[sh_, th_, uh_] :=
-  sh^2 + th^2 + uh^2 + c sh th uh + d (sh^4 + th^4 + uh^4);
+ParentAmp[sh_, th_] := (-Gamma[-th]*Gamma[-uh])/Gamma[1+sh]-(Gamma[-sh]*Gamma[-uh])/Gamma[1+th]-(Gamma[-sh]*Gamma[-th])/Gamma[1+uh]/.{uh -> -sh-th};
   
 TestABAB[s_, t_, m_] :=
   ParentAmp[
     s - m^2,
-    t,
-    m^2 - s - t
+    t
   ];
 
 TestAABB[s_, t_, m_] :=
   ParentAmp[
     s,
-    t - m^2,
-    m^2 - s - t
+    t - m^2
   ];
 
 (* Test s-t crossing *)
