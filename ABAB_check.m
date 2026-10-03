@@ -172,8 +172,13 @@ aabb76 = NAABB[x,m,J,7,6]//FullSimplify;
 abab77 = NABAB[x,m,J,7,7]//FullSimplify;
 aabb77 = NAABB[x,m,J,7,7]//FullSimplify;
 
+abab74
 
-lstabab = {abab00, abab10, abab11, abab20, abab21, abab22, abab30, abab31, abab32, abab33, abab40, abab41, abab42, abab43, abab44, abab50, abab51, abab52, abab53, abab54, abab55, abab60, abab61, abab62, abab63, abab64, abab65, abab66, abab70, abab71, abab72, abab73, abab74, abab75, abab76, abab77}
+
+lstabab = {abab00, abab10, abab11, abab20, abab21, abab22, abab30, abab31, abab32, abab33, abab40, abab41, abab42, abab43, abab44, abab50, abab51, abab52, abab53, abab54, abab55, abab60, abab61, abab62, abab63, abab64, abab65, abab66, abab70, abab71, abab72, abab73, abab74, abab75, abab76, abab77};
+
+(* safe copy *)
+ToString[lstabab, InputForm, PageWidth->Infinity]
 
 
 lstaabb = {aabb00, aabb10, aabb11, aabb20, aabb21, aabb22, aabb30, aabb31, aabb32, aabb33, aabb40, aabb41, aabb42, aabb43, aabb44, aabb50, aabb51, aabb52, aabb53, aabb54, aabb55, aabb60, aabb61, aabb62, aabb63, aabb64, aabb65, aabb66, aabb70, aabb71, aabb72, aabb73, aabb74, aabb75, aabb76, aabb77}
