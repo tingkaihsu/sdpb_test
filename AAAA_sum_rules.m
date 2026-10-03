@@ -64,6 +64,9 @@ DblCtr[mA_, k_Integer, q_Integer, Nmax_Integer] := Residue[ Residue[ 1/(s*t) ( M
 DblCtrSum[s_,k_,q_]:=Residue[((1)/(s*t)*((1)/(s^(k-q)*t^q)-(1)/(s^q*t^(k-q)))-(1)/((4*mA^2-s-t)*t)*((1)/((4*mA^2-s-t)^(k-q)*t^q)-(1)/((4*mA^2-s-t)^q*t^(k-q))))*(((-4 (mA)^(2)+s))^(7/2))/(Sqrt[s])*PartialWaveD[10,J,1+(2*t)/(s-4*mA^2)],{t,0}];
 
 (* ===== Input cell 10 ===== *)
+
+x00 = DblCtrSum[x,0,0]//FullSimplify;
+
 x10 = DblCtrSum[x,1,0]//FullSimplify;
 
 (* ===== Input cell 11 ===== *)
@@ -150,7 +153,7 @@ largeJ[list_List,J_Symbol:J]:=Module[{p},p=Max[Exponent[Together@Simplify[#],J]&
 Assuming[J>0,Limit[list/J^p,J->Infinity]]]
 
 (* ===== Input cell 20 ===== *)
-lst = {x10,x20,x30, x40, x41 ,x50, x51,x52,x60,x61,x62,x70,x71,x73,x80,x81,x83,x90,x91,x93,x94,x100,x101,x103,x104,x110,x111,x112,x113,x114,x115};
+lst = {x00,x10,x20,x30, x40, x41 ,x50, x51,x52,x60,x61,x62,x70,x71,x73,x80,x81,x83,x90,x91,x93,x94,x100,x101,x103,x104,x110,x111,x112,x113,x114,x115};
 
 
 
@@ -163,305 +166,53 @@ Length[lst]
 (* ===== Input cell 21 ===== *)
 lst//FullSimplify
 
-(* ===== Input cell 22 ===== *)
-(* Adaptive exact linear-dependence checker for null constraints. *)
+(* Exact polynomial coefficient rank; earlier labels are kept first. *)
+ClearAll[FindRedundantNulls];
+SetAttributes[FindRedundantNulls, HoldAll];
 
-ClearAll[
-  HoldNames,
-  DependenceAtoms,
-  SafeRationalRules,
-  EvaluationVector,
-  ProbeMatrix,
-  RankIncrementIndependentColumns,
-  VerifyRelation,
-  RelationToRule,
-  CheckNullDependenceByProbing
-];
+FindRedundantNulls[names_List, variables_List] := Module[
+  {held, labels, expressions, denominator, polynomials,
+   monomials, matrix, reduced, keep, drop},
+  held = HoldComplete[names];
+  expressions = Together /@ names;
+  labels = Table[
+    Extract[held, {1, i}, HoldForm],
+    {i, Length[expressions]}
+  ];
 
-SetAttributes[HoldNames, HoldAll];
-HoldNames[syms_List] := HoldForm /@ Unevaluated[syms];
+  (* One common denominator preserves constant-coefficient dependence. *)
+  denominator = Fold[
+    PolynomialLCM, 1, Denominator /@ expressions
+  ];
+  polynomials = Expand[Cancel[denominator #]] & /@ expressions;
+  monomials = Union[
+    Flatten[(First /@ CoefficientRules[#, variables]) & /@ polynomials, 1]
+  ];
 
-Options[DependenceAtoms] = {
-  "ExtraAtoms" -> {},
-  "AtomHeads" -> {delCoeff}
-};
-
-DependenceAtoms[exprs_, OptionsPattern[]] := Module[
-  {heads, extra, held, found},
-  heads = OptionValue["AtomHeads"];
-  extra = OptionValue["ExtraAtoms"];
-  held = Hold[exprs];
-  found = DeleteDuplicates @ Cases[
-      held,
-      f_[___] /; MemberQ[heads, Unevaluated[f]],
-      {0, Infinity}
+  keep = If[monomials === {}, {},
+    matrix = Table[
+      Fold[
+        Coefficient[#1, #2[[1]], #2[[2]]] &,
+        polynomial,
+        Transpose[{variables, powers}]
+      ],
+      {powers, monomials}, {polynomial, polynomials}
     ];
-  DeleteDuplicates @ Join[extra, found]
-];
-
-Options[SafeRationalRules] = {
-  "IntegerRange" -> {-7, 7},
-  "ExcludeZeroFor" -> {},
-  "Seed" -> Automatic
-};
-
-SafeRationalRules[vars_List, OptionsPattern[]] := Module[
-  {range, seed, excludeZero, values, pick},
-  range = OptionValue["IntegerRange"];
-  seed = OptionValue["Seed"];
-  excludeZero = OptionValue["ExcludeZeroFor"];
-  If[seed =!= Automatic, SeedRandom[seed]];
-  pick[v_] := Module[{r},
-    r = RandomInteger[range];
-    While[MemberQ[excludeZero, v] && r == 0, r = RandomInteger[range]];
-    r
+    reduced = Select[RowReduce[matrix], AnyTrue[#, # != 0 &] &];
+    (First @ FirstPosition[#, value_ /; value != 0]) & /@ reduced
   ];
-  values = pick /@ vars;
-  Thread[vars -> values]
-];
-
-EvaluationVector[expr_, rules_] := Module[{val},
-  val = Quiet @ Check[Together[expr /. rules], $Failed];
-  If[
-    val === $Failed ||
-      ! FreeQ[val, ComplexInfinity | Indeterminate | DirectedInfinity],
-    $Failed,
-    Flatten[{val}]
-  ]
-];
-
-Options[ProbeMatrix] = {
-  "Samples" -> Automatic,
-  "Variables" -> {J, m1, m2, z, a, b},
-  "ExtraAtoms" -> {},
-  "AtomHeads" -> {delCoeff},
-  "IntegerRange" -> {-7, 7},
-  "MaxAttempts" -> Automatic,
-  "Seed" -> 12345,
-  "Verbose" -> True
-};
-
-ProbeMatrix[exprs_List, OptionsPattern[]] := Module[
-  {
-    n, vars0, atoms, vars, samples, maxAttempts, attempts = 0,
-    rows = {}, rules, vals, good, seed, verbose, excludeZero
-  },
-  n = Length[exprs];
-  vars0 = OptionValue["Variables"];
-  atoms = DependenceAtoms[
-    exprs,
-    "ExtraAtoms" -> OptionValue["ExtraAtoms"],
-    "AtomHeads" -> OptionValue["AtomHeads"]
-  ];
-  vars = DeleteDuplicates @ Join[vars0, atoms];
-  samples = Replace[OptionValue["Samples"], Automatic :> Max[32, n + 12]];
-  maxAttempts = Replace[OptionValue["MaxAttempts"], Automatic :> 5*samples];
-  seed = OptionValue["Seed"];
-  verbose = OptionValue["Verbose"];
-  excludeZero = Select[
-    vars,
-    MemberQ[{J, m1, m2, z, x, mA, u, v}, #] &
-  ];
-  If[seed =!= Automatic, SeedRandom[seed]];
-
-  While[Length[rows] < samples && attempts < maxAttempts,
-    attempts++;
-    rules = SafeRationalRules[
-      vars,
-      "IntegerRange" -> OptionValue["IntegerRange"],
-      "ExcludeZeroFor" -> excludeZero,
-      "Seed" -> Automatic
-    ];
-    vals = EvaluationVector[#, rules] & /@ exprs;
-    good = FreeQ[vals, $Failed] &&
-      SameQ @@ (Length /@ vals) &&
-      AllTrue[Flatten[vals], NumberQ];
-    If[
-      good,
-      rows = Take[Join[rows, Transpose[vals]], UpTo[samples]]
-    ];
-  ];
-
-  If[verbose,
-    Print["Number of constraints: ", n];
-    Print["Number of detected delCoeff-like atoms: ", Length[atoms]];
-    Print["Number of scalar probe rows: ", Length[rows]];
-    Print["Probe attempts used: ", attempts];
-  ];
+  drop = Complement[Range[Length[labels]], keep];
 
   <|
-    "Matrix" -> rows,
-    "VariablesUsed" -> vars,
-    "DetectedAtoms" -> atoms,
-    "Rows" -> Length[rows],
-    "Attempts" -> attempts
+    "KeepLabels" -> labels[[keep]],
+    "DropLabels" -> labels[[drop]]
   |>
 ];
 
-(* Pivot columns of one row reduction are an independent constraint set. *)
-RankIncrementIndependentColumns[m_] := Module[{rr, nonzeroRows},
-  rr = RowReduce[m];
-  nonzeroRows = Select[rr, AnyTrue[#, Not @* PossibleZeroQ] &];
-  First @ FirstPosition[#, _?(Not @* PossibleZeroQ)] & /@ nonzeroRows
+nullDepReport = FindRedundantNulls[
+  {x00, x10,x20,x30, x40, x41 ,x50, x51,x52,x60,x61,x62,x70,x71,x73,x80,x81,x83,x90,x91,x93,x94,x100,x101,x103,x104,x110,x111,x112,x113,x114,x115},
+  {x, J,mA}
 ];
 
-Options[VerifyRelation] = {
-  "SimplifyFunction" -> FullSimplify,
-  "Assumptions" -> True
-};
-
-VerifyRelation[exprs_List, coeffs_List, OptionsPattern[]] := Module[
-  {simp, assump, rel, fast},
-  simp = OptionValue["SimplifyFunction"];
-  assump = OptionValue["Assumptions"];
-  rel = Total[MapThread[#1*#2 &, {coeffs, exprs}]];
-  fast = Quiet @ Check[Together[rel], $Failed];
-  If[
-    fast =!= $Failed && TrueQ[fast === 0],
-    True,
-    Quiet @ Check[
-      TrueQ[simp[If[fast === $Failed, rel, fast] == 0, assump]],
-      False
-    ]
-  ]
-];
-
-RelationToRule[coeffs_List, names_List] := Module[{nz},
-  nz = Flatten @ Position[coeffs, _?(# =!= 0 &)];
-  <|
-    "NonzeroIndices" -> nz,
-    "NonzeroNames" -> names[[nz]],
-    "Coefficients" -> coeffs[[nz]],
-    "Formula" -> HoldForm[
-      Total[MapThread[#1*#2 &, {coeffs[[nz]], names[[nz]]}]] == 0
-    ]
-  |>
-];
-
-Options[CheckNullDependenceByProbing] = Join[
-  Options[ProbeMatrix],
-  Options[VerifyRelation],
-  {
-    "Names" -> Automatic,
-    "ProbeExpressions" -> Automatic,
-    "VerifySymbolically" -> True
-  }
-];
-
-CheckNullDependenceByProbing[exprs_List, OptionsPattern[]] := Module[
-  {
-    names, probeExprs, probe, m, rank, null, independent, dependent,
-    verified, relations
-  },
-  names = Replace[
-    OptionValue["Names"],
-    Automatic :> Array[Subscript[f, #] &, Length[exprs]]
-  ];
-  probeExprs = Replace[
-    OptionValue["ProbeExpressions"],
-    Automatic :> exprs
-  ];
-
-  If[
-    Length[names] =!= Length[exprs],
-    Return[<|"Error" -> "Names and constraints have different lengths."|>]
-  ];
-  If[
-    Length[probeExprs] =!= Length[exprs],
-    Return[<|"Error" -> "ProbeExpressions and constraints have different lengths."|>]
-  ];
-
-  probe = ProbeMatrix[
-    probeExprs,
-    "Samples" -> OptionValue["Samples"],
-    "Variables" -> OptionValue["Variables"],
-    "ExtraAtoms" -> OptionValue["ExtraAtoms"],
-    "AtomHeads" -> OptionValue["AtomHeads"],
-    "IntegerRange" -> OptionValue["IntegerRange"],
-    "MaxAttempts" -> OptionValue["MaxAttempts"],
-    "Seed" -> OptionValue["Seed"],
-    "Verbose" -> OptionValue["Verbose"]
-  ];
-  m = probe["Matrix"];
-  If[
-    Length[m] == 0,
-    Return[<|"Error" -> "No valid numeric probe rows were generated."|>]
-  ];
-
-  independent = RankIncrementIndependentColumns[m];
-  rank = Length[independent];
-  null = If[rank == Length[exprs], {}, NullSpace[m]];
-  dependent = Complement[Range[Length[exprs]], independent];
-
-  relations = RelationToRule[#, names] & /@ null;
-  If[
-    TrueQ[OptionValue["VerifySymbolically"]],
-    verified = VerifyRelation[
-        exprs,
-        #,
-        "SimplifyFunction" -> OptionValue["SimplifyFunction"],
-        "Assumptions" -> OptionValue["Assumptions"]
-      ] & /@ null,
-    verified = ConstantArray[Missing["NotVerified"], Length[null]]
-  ];
-  relations = MapThread[
-    Append[#1, "VerifiedSymbolically" -> #2] &,
-    {relations, verified}
-  ];
-
-  <|
-    "Summary" -> <|
-      "NumberOfConstraints" -> Length[exprs],
-      "ProbeRows" -> Length[m],
-      "ProbeRank" -> rank,
-      "Nullity" -> Length[exprs] - rank,
-      "IndependentCount" -> Length[independent],
-      "DependentCount" -> Length[dependent],
-      "AllCandidateRelationsVerified" ->
-        And @@ Replace[verified, {} -> {True}]
-    |>,
-    "IndependentIndices" -> independent,
-    "IndependentNames" -> names[[independent]],
-    "DependentIndices" -> dependent,
-    "DependentNames" -> names[[dependent]],
-    "Relations" -> relations,
-    "Probe" -> probe,
-    "Matrix" -> m
-  |>
-];
-
-nullDepReport = CheckNullDependenceByProbing[
-  lst,
-  "ProbeExpressions" -> (
-    lst /. {
-      x -> (u^2 + v^2)^2,
-      mA -> (u^2 - v^2)/2
-    }
-  ),
-  "Variables" -> {J, m1, m2, u, v, a, b},
-  "AtomHeads" -> {delCoeff},
-  "IntegerRange" -> {-11, 11},
-  "Seed" -> 20260629,
-  "VerifySymbolically" -> True,
-  "Assumptions" ->
-    Element[{J, m1, m2, x, a, b, mA}, Reals] && x > 4*mA^2
-];
-
-nullDepReport["Summary"];
-nullDepReport["DependentNames"];
-nullDepReport["Relations"][[
-  All,
-  {
-    "NonzeroIndices", "NonzeroNames", "Coefficients", "Formula",
-    "VerifiedSymbolically"
-  }
-]];
-
-lstIndependent = lst[[nullDepReport["IndependentIndices"]]];
-Length /@ {lst, lstIndependent}
-
-(* ===== Input cell 23 ===== *)
-nullDepReport["DependentNames"]
-
-
+nullDepReport
 

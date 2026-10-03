@@ -363,3 +363,64 @@ lstaabb = {aabb10, aabb11, aabb20, aabb21, aabb22, aabb30, aabb31, aabb32, aabb3
 
 
 Length[lstabab]
+
+
+(* Exact polynomial coefficient rank; earlier labels are kept first. *)
+ClearAll[FindRedundantNulls];
+SetAttributes[FindRedundantNulls, HoldAll];
+
+FindRedundantNulls[names_List, variables_List] := Module[
+  {held, labels, expressions, denominator, polynomials,
+   monomials, matrix, reduced, keep, drop},
+  held = HoldComplete[names];
+  (* Integer-shift Gamma ratios are finite products (or their reciprocals). *)
+  expressions = Together /@ (names //. {
+    (HoldPattern[Gamma[a_]/Gamma[b_]] /;
+        IntegerQ[Simplify[a - b]]) :>
+      With[{shift = Simplify[a - b]},
+        If[shift >= 0,
+          Product[b + r, {r, 0, shift - 1}],
+          1/Product[a + r, {r, 0, -shift - 1}]
+        ]
+      ]
+  });
+  labels = Table[
+    Extract[held, {1, i}, HoldForm],
+    {i, Length[expressions]}
+  ];
+
+  (* One common denominator preserves constant-coefficient dependence. *)
+  denominator = Fold[
+    PolynomialLCM, 1, Denominator /@ expressions
+  ];
+  polynomials = Expand[Cancel[denominator #]] & /@ expressions;
+  monomials = Union[
+    Flatten[(First /@ CoefficientRules[#, variables]) & /@ polynomials, 1]
+  ];
+
+  keep = If[monomials === {}, {},
+    matrix = Table[
+      Fold[
+        Coefficient[#1, #2[[1]], #2[[2]]] &,
+        polynomial,
+        Transpose[{variables, powers}]
+      ],
+      {powers, monomials}, {polynomial, polynomials}
+    ];
+    reduced = Select[RowReduce[matrix], AnyTrue[#, # != 0 &] &];
+    (First @ FirstPosition[#, value_ /; value != 0]) & /@ reduced
+  ];
+  drop = Complement[Range[Length[labels]], keep];
+
+  <|
+    "KeepLabels" -> labels[[keep]],
+    "DropLabels" -> labels[[drop]]
+  |>
+];
+
+nullDepReport = FindRedundantNulls[
+  {abab10, abab11, abab20, abab21, abab22, abab30, abab31, abab32, abab33, abab40, abab41, abab42, abab43, abab44, abab50, abab51, abab52, abab53, abab54, abab55, abab60, abab61, abab62, abab63, abab64, abab65, abab66, abab70, abab71, abab72, abab73, abab74, abab75, abab76, abab77},
+  {x,J,m}
+];
+
+nullDepReport
