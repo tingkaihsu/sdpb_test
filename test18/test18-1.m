@@ -93,39 +93,6 @@ contractUniversalSpin2[matrix_] :=
 neutralBlock[matrix_] := matrix[[{1, 3}, {1, 3}]];
 
 
-(* ---------------------------------------------------------------------- *)
-(* Large-spin diagnostics (not yet imposed as PMP constraints)             *)
-(* ---------------------------------------------------------------------- *)
-
-ClearAll[
-  phaseABAB10,
-  aabbFixedMassGrowthBase10,
-  fixedMassLargeJData10,
-  largeJImpactWeights10
-];
-
-phaseABAB10[x_, m_] := (x - m^2)^7/x^4;
-
-
-(* At fixed x > 4 mass^2, the AABB Gegenbauer polynomial is evaluated
-   outside [-1,1] and grows exponentially with spin. *)
-aabbFixedMassGrowthBase10[x_, mass_] :=
-  (Sqrt[x] + 2 mass)/Sqrt[x - 4 mass^2];
-
-fixedMassLargeJData10[x_, mass_] := <|
-  "ABABCoefficientAfterJ4Scaling" -> 1/(40 x^2),
-  "AABBGrowthBasePerSpin" -> aabbFixedMassGrowthBase10[x, mass],
-  "AABBEvenSpinRatio" -> aabbFixedMassGrowthBase10[x, mass]^2
-|>;
-
-(* Joint large-J/large-mass limit with b = J/Sqrt[x] fixed.  If the
-   physical convention is bPhysical = 2 J/Sqrt[x], use b -> bPhysical/2. *)
-largeJImpactWeights10[b_, mass_] := <|
-  "ABAB" -> b^4/40,
-  "AABB" -> b^4 Hypergeometric0F1[6, mass^2 b^2]/40
-|>;
-
-
 LaunchKernels[];
 
 
