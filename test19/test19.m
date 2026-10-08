@@ -1,31 +1,54 @@
 (* ::Package:: *)
 
-test18Directory = If[
+test19Directory = If[
   StringQ[$InputFileName] && StringLength[$InputFileName] > 0,
   DirectoryName[ExpandFileName[$InputFileName]],
   Directory[]
 ];
-Import[FileNameJoin[{test18Directory, "..", "SDPB.m"}]];
+Import[FileNameJoin[{test19Directory, "..", "SDPB.m"}]];
 
+(* ---------------------------------------------------------------------- *)
+(* test19: two isolated CHARGED (AB-channel) states + charged continuum   *)
+(* + neutral (AA/BB) continuum.  Normalized by g_AB0.                      *)
+(*                                                                         *)
+(*   X1 : charged, spin J1, mass^2 m1sq = rho m2sq, free coupling          *)
+(*   X2 : charged, spin J2, mass^2 m2sq, coupling lambdaX2 (bounded)       *)
+(*   charged continuum : x >= mgap,  all J  (AB 1 x 1 blocks)              *)
+(*   neutral continuum : x >= mgapN, even J (AA/BB 2 x 2 blocks)           *)
+(*                                                                         *)
+(* Functional coordinates, in order:                                       *)
+(*   {g_AB0, lambdaX2, cross nulls (36), AA nulls (31), BB nulls (31)}.    *)
+(* Bound: lambdaX2 / g_AB0 <= alpha_g.  Without nulls the bound is          *)
+(*   1/g0ABWeight[m2sq, mA] (~ 1/2 at m2sq = 1).                           *)
+(*                                                                         *)
+(* The neutral continuum is essential, not optional: it is the s-channel   *)
+(* of AA -> BB, and the AA/BB nulls give its 2 x 2 blocks a nonzero         *)
+(* diagonal, so PSD (crossed-channel unitarity) bounds the AA->BB density. *)
+(* ---------------------------------------------------------------------- *)
 
-(* Input ratio g0AA/g0BB.  The functional coordinates are ordered as
-   {g0BB, g0AA, lambdaH2, cross nulls, AA nulls, BB nulls} and the bound is
-   lambdaH2/g0BB <= alphaB + rAA alphaA. *)
-rAA = 100;
-(* In the block-diagonal basis {AA, AB, BB}, a standard universal spin-2
-   couples equally to the two neutral channels and not to AB. *)
-universalSpin2Direction = {1, 0, 1};
+(* Scan parameter: rho = (m1/m2)^2.  Keep 10^3 mA^2 < m1sq < m2sq < mgap. *)
+rho = 6/10;
+m2sq = 1;
+m1sq = rho m2sq;
 
-(* To recover the original result of BB->BB scattering *)
-(* universalSpin2Direction = {0, 0, 1}; *)
-
-m1 = N[3/5, 1000];
 mA = N[1/1000, 1000];
 J1 = 0;
 J2 = 2;
-mgap = N[166/100, 1000];
+mgap = N[166/100, 1000];    (* charged (AB) continuum gap *)
+mgapN = mgap;               (* neutral (AA/BB) continuum gap; scan separately *)
 
-(* Independent functional coordinates for the three null-sum-rule families. *)
+(* Switches *)
+rescaleBlocks = True;       (* divide each block by its largest |entry|;
+                               positivity-preserving, improves conditioning *)
+
+(* Linear charged trajectory through (m1sq, J1) and (m2sq, J2), for reference:
+   alpha(t) = J1 + (J2 - J1)(t - m1sq)/(m2sq - m1sq).  Its J = 4 state sits at
+   x4 = 2 m2sq - m1sq; it is allowed by the charged gap iff x4 >= mgap,
+   i.e. rho <= rhoStar = 2 - mgap/m2sq. *)
+(* rhoStar = 2 - mgap/m2sq;
+Print["rho = ", N[rho, 6], ",  rho* = ", N[rhoStar, 6],
+  ",  predicted J=4 at x4 = ", N[2 m2sq - m1sq, 6], ",  mgap = ", N[mgap, 6]]; *)
+
 crossNullIndices = Range[0, 35];
 aaNullIndices = Range[0, 30];
 bbNullIndices = Range[0, 30];
@@ -71,19 +94,39 @@ NBBMatrix[n_, z_, J_] := {
   {0, 0, NBBBB[n, z, J, mA]}
 };
 
-(* D=10 zero-subtracted positive moment for BB -> BB. *)
-g0BBWeight[x_] :=
-  2 x^2;
 
-(* D=10 zero-subtracted positive moment for AA -> AA:
-   g0AA = M_AA(s = 2 mA^2, t = 0).  It reduces to 2 x^2 as mA -> 0. *)
-g0AAWeight[x_] :=
-  2 (x - 4 mA^2)^(7/2)/(Sqrt[x] (x - 2 mA^2));
+(* D=10 zero-subtracted (k = 0, t^0) positive moment for AB -> AB:
+   g_AB0 = M_AB(s = mA^2, t = 0) = < 2 PhiAB(x)/(x - mA^2) >, PhiAB = (x - mA^2)^7/x^4.
+   Same phase-space convention as NABAB.  Only AB states contribute, for every
+   spin J (P_J(1) = 1); neutral AA/BB states give zero. *)
+g0ABWeight[x_,m_] := (2 (m^2 - x)^6)/x^4;
 
-contractUniversalSpin2[matrix_] :=
-  universalSpin2Direction . matrix . universalSpin2Direction;
+(* All null rows for a state of mass^2 x and spin J, in coordinate order
+   {cross nulls, AA nulls, BB nulls}. *)
+nullMatrices[x_, J_] := Join[
+  NCross[#, x, J] & /@ crossNullIndices,
+  NAAMatrix[#, x, J] & /@ aaNullIndices,
+  NBBMatrix[#, x, J] & /@ bbNullIndices
+];
 
 neutralBlock[matrix_] := matrix[[{1, 3}, {1, 3}]];
+
+(* One charged (AB) state: 1 x 1 row {g_AB0, lambdaX2, cross nulls, AA, BB}.
+   Charged states never enter the AA or BB nulls (Z2 selection rule). *)
+chargedRow[x_, J_, lam_] := Join[
+  {g0ABWeight[x, mA], lam},
+  NABAB[#, x, J, mA] & /@ crossNullIndices,
+  ConstantArray[0, Length[aaNullIndices] + Length[bbNullIndices]]
+];
+
+(* Positive rescaling of a whole block: does not change the feasible set.
+   The scale is an exact power of 2, so the 1000-digit precision of the
+   entries is not degraded by the division. *)
+scaleBlock[mat_] := Module[{s},
+  If[! TrueQ[rescaleBlocks], Return[mat]];
+  s = Max[Abs[Flatten[N[mat, 50]]]];
+  If[TrueQ[s > 0], mat/2^Round[Log2[s]], mat]
+];
 
 
 LaunchKernels[];
@@ -92,12 +135,12 @@ LaunchKernels[];
 PMP2SDP[datfile_, prec_:600] := Module[
     {
         npts, phiSamples, massSamples, Jmax,
-        evenSpinSamples, oddSpinSamples,
-        Poly, Poly1st, PolyABOdd, Poly2nd, pols, norm, obj,
+        allSpinSamples, evenSpinSamples,
+        PolyAB, PolyN, Poly1st, Poly2nd, pols, norm, obj,
         functionalCount, expectedBlocks
     },
-    If[! TrueQ[Min[m1, 1, mgap] > 4 mA^2],
-      Print["Invalid spectrum: every sampled pole must satisfy z > 4 mA^2."];
+    If[! TrueQ[10^3 mA^2 < m1sq < m2sq < mgap && mgapN > 4 mA^2],
+      Print["Invalid spectrum: need 10^3 mA^2 < m1sq < m2sq < mgap and mgapN > 4 mA^2."];
       Abort[]
     ];
 
@@ -117,111 +160,57 @@ PMP2SDP[datfile_, prec_:600] := Module[
       Abort[]
     ];
 
-    (* Neutral AA/BB states have even spin.  The independent AB spectral
-       sector also admits odd spin.  Large-J constraints are not imposed yet. *)
+    (* Charged AB states: all spins.  Neutral AA/BB states: even spins.
+       Large-J constraints are not imposed yet. *)
     Jmax = 100;
+    allSpinSamples = Range[0, Jmax];
     evenSpinSamples = Range[0, Jmax, 2];
-    oddSpinSamples = Range[1, Jmax, 2];
 
-    (* continuous spectrum *)
-    Poly[j_, x_, y_] := Module[{g0, g0AA, lambda22, polys},
-      (* Block-diagonal basis {AA, AB, BB}: the neutral {AA, BB} sector is
-         a 2 x 2 block, while AB is an independent 1 x 1 block. *)
-      g0 = {{0, 0, 0}, {0, 0, 0}, {0, 0, g0BBWeight[x]}};
-      g0AA = {{g0AAWeight[x], 0, 0}, {0, 0, 0}, {0, 0, 0}};
-
-      (* Only the isolated second state contributes to lambda22. *)
-      lambda22 = ConstantArray[0, {3, 3}];
-
-      polys = Join[
-        {g0, g0AA, lambda22},
-        NCross[#, x, j] & /@ crossNullIndices,
-        NAAMatrix[#, x, j] & /@ aaNullIndices,
-        NBBMatrix[#, x, j] & /@ bbNullIndices
-      ];
-
-      PositiveMatrixWithPrefactor[
-        DampedRational[1, {}, 1/E, y],
-        Table[
-            Table[polys[[k, row, column]], {k, Length[polys]}],
-            {row, 3}, {column, 3}
-        ]
-       ]
+    (* Charged continuum (x >= mgap, all J): 1 x 1 AB block. *)
+    PolyAB[j_, x_, y_] := PositiveMatrixWithPrefactor[
+      DampedRational[1, {}, 1/E, y],
+      scaleBlock[{{chargedRow[x, j, 0]}}]
     ];
 
-    (* The first isolated state is neutral, so it only sees {AA, BB}. *)
-    Poly1st[j_, x_, y_] := Module[{g0, g0AA, lambda22, polys},
-      g0 = {{0, 0, 0}, {0, 0, 0}, {0, 0, g0BBWeight[x]}};
-      g0AA = {{g0AAWeight[x], 0, 0}, {0, 0, 0}, {0, 0, 0}};
-      lambda22 = ConstantArray[0, {3, 3}];
-
+    (* Neutral continuum (x >= mgapN, even J): 2 x 2 {AA, BB} block with null
+       rows only (AAAA, BBBB on the diagonal, -1/2 AABB off the diagonal). *)
+    PolyN[j_, x_, y_] := Module[{polys},
       polys = neutralBlock /@ Join[
-        {g0, g0AA, lambda22},
-        NCross[#, x, j] & /@ crossNullIndices,
-        NAAMatrix[#, x, j] & /@ aaNullIndices,
-        NBBMatrix[#, x, j] & /@ bbNullIndices
+        {ConstantArray[0, {3, 3}], ConstantArray[0, {3, 3}]},
+        nullMatrices[x, j]
       ];
 
       PositiveMatrixWithPrefactor[
         DampedRational[1, {}, 1/E, y],
-        Table[
+        scaleBlock[Table[
           Table[polys[[k, row, column]], {k, Length[polys]}],
           {row, 2}, {column, 2}
-        ]
+        ]]
       ]
     ];
 
-    (* Odd spins occur only in the independent AB spectral sector. *)
-    PolyABOdd[j_, x_, y_] := Module[{g0, g0AA, lambda22, polys},
-      g0 = 0;
-      g0AA = 0;
-      lambda22 = 0;
-
-      polys = Join[
-        {g0, g0AA, lambda22},
-        NABAB[#, x, j, mA] & /@ crossNullIndices,
-        ConstantArray[0, Length[aaNullIndices] + Length[bbNullIndices]]
-      ];
-
-      PositiveMatrixWithPrefactor[
-        DampedRational[1, {}, 1/E, y],
-        {{polys}}
-      ]
+    (* First isolated state X1: charged, free coupling (no lambda entry). *)
+    Poly1st[j_, x_, y_] := PositiveMatrixWithPrefactor[
+      DampedRational[1, {}, 1/E, y],
+      scaleBlock[{{chargedRow[x, j, 0]}}]
     ];
 
-    (* The isolated spin-2 state has the fixed universal neutral coupling
-       direction {gHAA, gHAB, gHBB} proportional to {1, 0, 1}.  Its only
-       nonnegative spectral variable is the bare coupling squared lambdaH2. *)
-    Poly2nd[j_, x_, y_] := Module[{g0, g0AA, lambdaH2, polys},
-      g0 = {{0, 0, 0}, {0, 0, 0}, {0, 0, g0BBWeight[x]}};
-      g0AA = {{g0AAWeight[x], 0, 0}, {0, 0, 0}, {0, 0, 0}};
-
-      (* Unit coefficient means that the third functional coordinate
-         normalizes the bare universal coupling squared. *)
-      lambdaH2 = 1;
-
-      polys = Join[
-        {contractUniversalSpin2[g0], contractUniversalSpin2[g0AA], lambdaH2},
-        contractUniversalSpin2[NCross[#, x, j]] & /@ crossNullIndices,
-        contractUniversalSpin2[NAAMatrix[#, x, j]] & /@ aaNullIndices,
-        contractUniversalSpin2[NBBMatrix[#, x, j]] & /@ bbNullIndices
-      ];
-
-      PositiveMatrixWithPrefactor[
-        DampedRational[1, {}, 1/E, y],
-        {{polys}}
-      ]
+    (* Second isolated state X2: charged; unit lambda entry normalizes
+       lambdaX2 = g_{X2 AB}^2. *)
+    Poly2nd[j_, x_, y_] := PositiveMatrixWithPrefactor[
+      DampedRational[1, {}, 1/E, y],
+      scaleBlock[{{chargedRow[x, j, 1]}}]
     ];
-    
+
     pols = Flatten[{
-      Flatten[ N[ ParallelTable[ Poly1st[i, m1, x], {i, J1, J1, 2}], prec] ],
-      Flatten[ N[ ParallelTable[ Poly2nd[i, 1, x], {i, J2, J2, 2}], prec] ],
-      Flatten[ N[ ParallelTable[ Poly[i, mgap/(1-m), x], {i, evenSpinSamples}, {m, massSamples}], prec] ],
-      Flatten[ N[ ParallelTable[ PolyABOdd[i, mgap/(1-m), x], {i, oddSpinSamples}, {m, massSamples}], prec] ]
+      Flatten[ N[ ParallelTable[ Poly1st[i, m1sq, x], {i, J1, J1, 2}], prec] ],
+      Flatten[ N[ ParallelTable[ Poly2nd[i, m2sq, x], {i, J2, J2, 2}], prec] ],
+      Flatten[ N[ ParallelTable[ PolyAB[i, mgap/(1-m), x], {i, allSpinSamples}, {m, massSamples}], prec] ],
+      Flatten[ N[ ParallelTable[ PolyN[i, mgapN/(1-m), x], {i, evenSpinSamples}, {m, massSamples}], prec] ]
     }, 1];
 
     expectedBlocks = 2 + npts (
-      Length[evenSpinSamples] + Length[oddSpinSamples]
+      Length[allSpinSamples] + Length[evenSpinSamples]
     );
     If[Length[pols] =!= expectedBlocks,
       Print[
@@ -233,17 +222,17 @@ PMP2SDP[datfile_, prec_:600] := Module[
 
     Print[
       "Built ", Length[pols],
-      " numerical PMP blocks: neutral and AB/even J = 0, 2, ..., ", Jmax,
-      "; AB/odd J = 1, 3, ..., ", Jmax - 1, "."
+      " numerical PMP blocks: charged J = 0, 1, ..., ", Jmax,
+      " (x >= mgap); neutral J = 0, 2, ..., ", Jmax, " (x >= mgapN)."
     ];
 
-    (* Bound the universal isolated-state coupling squared in units of
-       the BB positive moment g0BB, at fixed rAA = g0AA/g0BB:
-       lambdaH2/g0BB <= alphaB + rAA alphaA. *)
-    norm = -1 * N[Flatten[{{0, 0, 1}, list0}], prec];
-    obj = -1 * N[Flatten[{{1, rAA, 0}, list0}], prec];
+    (* Bound the second charged isolated state's coupling squared in units of
+       the AB positive moment g_AB0:  lambdaX2/g_AB0 <= alpha_g.
+       norm fixes the lambdaX2 coefficient to -1; obj minimizes alpha_g. *)
+    norm = -1 * N[Flatten[{{0, 1}, list0}], prec];
+    obj = -1 * N[Flatten[{{1, 0}, list0}], prec];
 
-    functionalCount = 3 + Length[list0];
+    functionalCount = 2 + Length[list0];
     If[Length[norm] =!= functionalCount || Length[obj] =!= functionalCount,
       Print["Objective/normalization dimension mismatch."];
       Abort[]
@@ -257,4 +246,4 @@ PMP2SDP[datfile_, prec_:600] := Module[
     Print["Wrote ", datfile, "."]
 ];
 
-PMP2SDP[FileNameJoin[{test18Directory, "n_pmp.json"}], 1000];
+PMP2SDP[FileNameJoin[{test19Directory, "n_pmp.json"}], 1000];
