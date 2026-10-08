@@ -45,16 +45,26 @@ KerLow[2,1,10]
 
 (* partial waves *)
 PartialWaveD[d_, J_, z_] := Hypergeometric2F1[-J, J + d - 3, (d - 2)/2, (1 - z)/2];
-phiABAB[s_,m_]:= (s - m^2)^7/s^4;
+(* AB-channel weight convention (positivity-only bounds).
+   The code multiplies by the AB phase space PhiAB = (x - m^2)^7/x^4 (d = 10, m_B = 0),
+   so the AB density it implicitly uses is rho~_J = n_J rho_J / PhiAB^2 >= 0,
+   where Im M_AB = Sum_J n_J rho_J/PhiAB P_J is the physical normalization.
+   This is equivalent to the physical setup ONLY if every AB-channel row uses wAB:
+   SumABAB (gAB00.m), KerABAB and KerAABB2 (ABAB_check.m), and the NABAB rows in the SDPB files.
+   Switch to 1/PhiAB everywhere before imposing unitarity upper bounds (rho_J <= 2, |S_J| <= 1)
+   or comparing spectral densities to explicit UV models. *)
+wAB[x_, m_] := (x - m^2)^7/x^4;
+(* Matched AA/BB-channel convention: Sqrt[PhiAA PhiBB], with PhiAA = (x-4m^2)^(7/2)/Sqrt[x] (AAAA file)
+   and PhiBB = x^3 (BBBB file). Keep these three consistent; see the note above. *)
 phiAABB[s_,m_]:= s^(5/4) (s - 4 m^2)^(7/4);
 
-KerABAB[x_,J_,k_,q_,m_]:=Residue[(1/((x-m^2)^(k-q+1)*t^(q+1))-1/((2m^2-x-t-m^2)^(k-q+1)*t^(q+1)))*phiABAB[x,m]*PartialWaveD[10,J,1 + 2 x t/(x - m^2)^2],{t,0}];
+KerABAB[x_,J_,k_,q_,m_]:=Residue[(1/((x-m^2)^(k-q+1)*t^(q+1))-1/((2m^2-x-t-m^2)^(k-q+1)*t^(q+1)))*wAB[x, m]*PartialWaveD[10,J,1 + 2 x t/(x - m^2)^2],{t,0}];
 
 (* term 2: s' on the neutral cut ... *)
 KerAABB1[x_,J_,k_,q_,m_]:=Residue[(1/((x)^(q+1)*(t-m^2)^(k-q+1)))*phiAABB[x,m]*PartialWaveD[10,J,(2 t + x - 2 m^2)/Sqrt[x (x - 4 m^2)]],{t,m^2}];
 
 (* term 3: the second term on the u-channel cut *)
-KerAABB2[x_,J_,k_,q_,m_]:=Residue[-(1/((2m^2-x-t)^(q+1)*(t-m^2)^(k-q+1)))*phiABAB[x,m]*(-1)^J*PartialWaveD[10,J,-1-(2 (2 m^2-t-x) x)/(-m^2+x)^2],{t,m^2}];
+KerAABB2[x_,J_,k_,q_,m_]:=Residue[-(1/((2m^2-x-t)^(q+1)*(t-m^2)^(k-q+1)))*wAB[x, m]*(-1)^J*PartialWaveD[10,J,-1-(2 (2 m^2-t-x) x)/(-m^2+x)^2],{t,m^2}];
 
 
 NABAB[x_,m_,J_,k_, q_] := KerABAB[x, J, k, q, m] - KerAABB2[x, J, k, q, m];
