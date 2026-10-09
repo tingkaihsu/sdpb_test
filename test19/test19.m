@@ -17,9 +17,11 @@ Import[FileNameJoin[{test19Directory, "..", "SDPB.m"}]];
 (*   neutral continuum : x >= mgapN, even J (AA/BB 2 x 2 blocks)           *)
 (*                                                                         *)
 (* Functional coordinates, in order:                                       *)
-(*   {g_AB0, lambdaX2, cross nulls (36), AA nulls (31), BB nulls (31)}.    *)
-(* Bound: lambdaX2 / g_AB0 <= alpha_g.  Without nulls the bound is          *)
-(*   1/g0ABWeight[m2sq, mA] (~ 1/2 at m2sq = 1).                           *)
+(*   {g_AB0, g0AA, g0BB, lambdaX2, cross nulls (36), AA nulls (31),        *)
+(*    BB nulls (31)}.                                                      *)
+(* Bound: lambdaX2 / g_AB0 <= alpha_g + rAA alpha_A + rBB alpha_B, with     *)
+(*   rAA = g0AA/g_AB0, rBB = g0BB/g_AB0.  As rAA, rBB -> Infinity it        *)
+(*   reduces to 1/g0ABWeight[m2sq, mA] (~ 1/2 at m2sq = 1).                *)
 (*                                                                         *)
 (* The neutral continuum is essential, not optional: it is the s-channel   *)
 (* of AA -> BB, and the AA/BB nulls give its 2 x 2 blocks a nonzero         *)
@@ -36,6 +38,12 @@ J1 = 0;
 J2 = 2;
 mgap = N[166/100, 1000];    (* charged (AB) continuum gap *)
 mgapN = mgap;               (* neutral (AA/BB) continuum gap; scan separately *)
+
+(* Neutral-to-charged forward-moment ratios (inputs to scan).
+   rAA, rBB -> Infinity reproduces the old result 1/2;
+   rAA, rBB -> 0 means no neutral spectrum (expect bound -> 0 or infeasible). *)
+rAA = 1;     (* g0AA / g_AB0 *)
+rBB = 1;     (* g0BB / g_AB0 *)
 
 (* Switches *)
 rescaleBlocks = True;       (* divide each block by its largest |entry|;
@@ -101,6 +109,12 @@ NBBMatrix[n_, z_, J_] := {
    spin J (P_J(1) = 1); neutral AA/BB states give zero. *)
 g0ABWeight[x_,m_] := (2 (m^2 - x)^6)/x^4;
 
+(* D=10 zero-subtracted positive moments of the neutral channels (as in test18):
+   g0AA = M_AA(s = 2 mA^2, t = 0),  g0BB = M_BB(s = 0, t = 0).
+   Only neutral (AA/BB) states contribute; charged states give zero. *)
+g0AAWeight[x_] := 2 (x - 4 mA^2)^(7/2)/(Sqrt[x] (x - 2 mA^2));
+g0BBWeight[x_] := 2 x^2;
+
 (* All null rows for a state of mass^2 x and spin J, in coordinate order
    {cross nulls, AA nulls, BB nulls}. *)
 nullMatrices[x_, J_] := Join[
@@ -111,10 +125,10 @@ nullMatrices[x_, J_] := Join[
 
 neutralBlock[matrix_] := matrix[[{1, 3}, {1, 3}]];
 
-(* One charged (AB) state: 1 x 1 row {g_AB0, lambdaX2, cross nulls, AA, BB}.
-   Charged states never enter the AA or BB nulls (Z2 selection rule). *)
+(* One charged (AB) state: 1 x 1 row {g_AB0, g0AA, g0BB, lambdaX2, cross, AA, BB}.
+   Charged states never enter g0AA, g0BB, or the AA/BB nulls (Z2 selection rule). *)
 chargedRow[x_, J_, lam_] := Join[
-  {g0ABWeight[x, mA], lam},
+  {g0ABWeight[x, mA], 0, 0, lam},
   NABAB[#, x, J, mA] & /@ crossNullIndices,
   ConstantArray[0, Length[aaNullIndices] + Length[bbNullIndices]]
 ];
@@ -172,11 +186,15 @@ PMP2SDP[datfile_, prec_:600] := Module[
       scaleBlock[{{chargedRow[x, j, 0]}}]
     ];
 
-    (* Neutral continuum (x >= mgapN, even J): 2 x 2 {AA, BB} block with null
-       rows only (AAAA, BBBB on the diagonal, -1/2 AABB off the diagonal). *)
+    (* Neutral continuum (x >= mgapN, even J): 2 x 2 {AA, BB} block.  Rows:
+       g0AA on the AA entry, g0BB on the BB entry, and the nulls (AAAA, BBBB on
+       the diagonal, -1/2 AABB off the diagonal); no g_AB0, no lambdaX2. *)
     PolyN[j_, x_, y_] := Module[{polys},
       polys = neutralBlock /@ Join[
-        {ConstantArray[0, {3, 3}], ConstantArray[0, {3, 3}]},
+        {ConstantArray[0, {3, 3}],                         (* g_AB0: none *)
+         {{g0AAWeight[x], 0, 0}, {0, 0, 0}, {0, 0, 0}},    (* g0AA: AA entry *)
+         {{0, 0, 0}, {0, 0, 0}, {0, 0, g0BBWeight[x]}},    (* g0BB: BB entry *)
+         ConstantArray[0, {3, 3}]},                        (* lambdaX2: none *)
         nullMatrices[x, j]
       ];
 
@@ -227,12 +245,13 @@ PMP2SDP[datfile_, prec_:600] := Module[
     ];
 
     (* Bound the second charged isolated state's coupling squared in units of
-       the AB positive moment g_AB0:  lambdaX2/g_AB0 <= alpha_g.
-       norm fixes the lambdaX2 coefficient to -1; obj minimizes alpha_g. *)
-    norm = -1 * N[Flatten[{{0, 1}, list0}], prec];
-    obj = -1 * N[Flatten[{{1, 0}, list0}], prec];
+       the AB positive moment g_AB0, at fixed rAA = g0AA/g_AB0, rBB = g0BB/g_AB0:
+       lambdaX2/g_AB0 <= alpha_g + rAA alpha_A + rBB alpha_B.
+       norm fixes the lambdaX2 coefficient to -1; obj minimizes the right side. *)
+    norm = -1 * N[Flatten[{{0, 0, 0, 1}, list0}], prec];
+    obj = -1 * N[Flatten[{{1, rAA, rBB, 0}, list0}], prec];
 
-    functionalCount = 2 + Length[list0];
+    functionalCount = 4 + Length[list0];
     If[Length[norm] =!= functionalCount || Length[obj] =!= functionalCount,
       Print["Objective/normalization dimension mismatch."];
       Abort[]
