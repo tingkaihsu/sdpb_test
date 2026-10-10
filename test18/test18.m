@@ -7,14 +7,9 @@ test18Directory = If[
 ];
 Import[FileNameJoin[{test18Directory, "..", "SDPB.m"}]];
 
-
-(* Input ratio g0AA/g0BB.  The functional coordinates are ordered as
-   {g0BB, g0AA, lambdaH2, cross nulls, AA nulls, BB nulls} and the bound is
-   lambdaH2/g0BB <= alphaB + rAA alphaA. *)
-rAA = 100;
 (* In the block-diagonal basis {AA, AB, BB}, a standard universal spin-2
    couples equally to the two neutral channels and not to AB. *)
-universalSpin2Direction = {1, 0, 1};
+universalSpin2Direction = {0, 0, 1};
 
 (* To recover the original result of BB->BB scattering *)
 (* universalSpin2Direction = {0, 0, 1}; *)
@@ -75,11 +70,6 @@ NBBMatrix[n_, z_, J_] := {
 g0BBWeight[x_] :=
   2 x^2;
 
-(* D=10 zero-subtracted positive moment for AA -> AA:
-   g0AA = M_AA(s = 2 mA^2, t = 0).  It reduces to 2 x^2 as mA -> 0. *)
-g0AAWeight[x_] :=
-  2 (x - 4 mA^2)^(7/2)/(Sqrt[x] (x - 2 mA^2));
-
 contractUniversalSpin2[matrix_] :=
   universalSpin2Direction . matrix . universalSpin2Direction;
 
@@ -124,17 +114,16 @@ PMP2SDP[datfile_, prec_:600] := Module[
     oddSpinSamples = Range[1, Jmax, 2];
 
     (* continuous spectrum *)
-    Poly[j_, x_, y_] := Module[{g0, g0AA, lambda22, polys},
+    Poly[j_, x_, y_] := Module[{g0, lambda22, polys},
       (* Block-diagonal basis {AA, AB, BB}: the neutral {AA, BB} sector is
          a 2 x 2 block, while AB is an independent 1 x 1 block. *)
       g0 = {{0, 0, 0}, {0, 0, 0}, {0, 0, g0BBWeight[x]}};
-      g0AA = {{g0AAWeight[x], 0, 0}, {0, 0, 0}, {0, 0, 0}};
 
       (* Only the isolated second state contributes to lambda22. *)
       lambda22 = ConstantArray[0, {3, 3}];
 
       polys = Join[
-        {g0, g0AA, lambda22},
+        {g0, lambda22},
         NCross[#, x, j] & /@ crossNullIndices,
         NAAMatrix[#, x, j] & /@ aaNullIndices,
         NBBMatrix[#, x, j] & /@ bbNullIndices
@@ -150,13 +139,12 @@ PMP2SDP[datfile_, prec_:600] := Module[
     ];
 
     (* The first isolated state is neutral, so it only sees {AA, BB}. *)
-    Poly1st[j_, x_, y_] := Module[{g0, g0AA, lambda22, polys},
+    Poly1st[j_, x_, y_] := Module[{g0, lambda22, polys},
       g0 = {{0, 0, 0}, {0, 0, 0}, {0, 0, g0BBWeight[x]}};
-      g0AA = {{g0AAWeight[x], 0, 0}, {0, 0, 0}, {0, 0, 0}};
       lambda22 = ConstantArray[0, {3, 3}];
 
       polys = neutralBlock /@ Join[
-        {g0, g0AA, lambda22},
+        {g0, lambda22},
         NCross[#, x, j] & /@ crossNullIndices,
         NAAMatrix[#, x, j] & /@ aaNullIndices,
         NBBMatrix[#, x, j] & /@ bbNullIndices
@@ -172,13 +160,12 @@ PMP2SDP[datfile_, prec_:600] := Module[
     ];
 
     (* Odd spins occur only in the independent AB spectral sector. *)
-    PolyABOdd[j_, x_, y_] := Module[{g0, g0AA, lambda22, polys},
+    PolyABOdd[j_, x_, y_] := Module[{g0, lambda22, polys},
       g0 = 0;
-      g0AA = 0;
       lambda22 = 0;
 
       polys = Join[
-        {g0, g0AA, lambda22},
+        {g0, lambda22},
         NABAB[#, x, j, mA] & /@ crossNullIndices,
         ConstantArray[0, Length[aaNullIndices] + Length[bbNullIndices]]
       ];
@@ -192,16 +179,15 @@ PMP2SDP[datfile_, prec_:600] := Module[
     (* The isolated spin-2 state has the fixed universal neutral coupling
        direction {gHAA, gHAB, gHBB} proportional to {1, 0, 1}.  Its only
        nonnegative spectral variable is the bare coupling squared lambdaH2. *)
-    Poly2nd[j_, x_, y_] := Module[{g0, g0AA, lambdaH2, polys},
+    Poly2nd[j_, x_, y_] := Module[{g0, lam, polys},
       g0 = {{0, 0, 0}, {0, 0, 0}, {0, 0, g0BBWeight[x]}};
-      g0AA = {{g0AAWeight[x], 0, 0}, {0, 0, 0}, {0, 0, 0}};
 
       (* Unit coefficient means that the third functional coordinate
          normalizes the bare universal coupling squared. *)
-      lambdaH2 = 1;
+      lam  = {{0, 0, 0}, {0, 0, 0}, {0, 0, 1}};
 
       polys = Join[
-        {contractUniversalSpin2[g0], contractUniversalSpin2[g0AA], lambdaH2},
+        {contractUniversalSpin2[g0], lam},
         contractUniversalSpin2[NCross[#, x, j]] & /@ crossNullIndices,
         contractUniversalSpin2[NAAMatrix[#, x, j]] & /@ aaNullIndices,
         contractUniversalSpin2[NBBMatrix[#, x, j]] & /@ bbNullIndices
@@ -240,10 +226,10 @@ PMP2SDP[datfile_, prec_:600] := Module[
     (* Bound the universal isolated-state coupling squared in units of
        the BB positive moment g0BB, at fixed rAA = g0AA/g0BB:
        lambdaH2/g0BB <= alphaB + rAA alphaA. *)
-    norm = -1 * N[Flatten[{{0, 0, 1}, list0}], prec];
-    obj = -1 * N[Flatten[{{1, rAA, 0}, list0}], prec];
+    norm = -1 * N[Flatten[{{0, 1}, list0}], prec];
+    obj = -1 * N[Flatten[{{1, 0}, list0}], prec];
 
-    functionalCount = 3 + Length[list0];
+    functionalCount = 2 + Length[list0];
     If[Length[norm] =!= functionalCount || Length[obj] =!= functionalCount,
       Print["Objective/normalization dimension mismatch."];
       Abort[]

@@ -4,17 +4,29 @@
 (* All original Input cells are included in their original order. *)
 (* Only the Linear Dependence block has been replaced by the optimized checker. *)
 
-(* ===== Input cell 1 ===== *)
-del[a_, b_] := delCoeff @@ Sort[{a,b}];
 
 
+del[a_, b_] := delCoeff @@ Sort[{a, b}];
 
-validTriples[Nmax_Integer]:=
-	Flatten[Table[{a,b}, {a, 0, Nmax}, {b, 0, Nmax-a}], 1];
+validTriples[Nmax_Integer] :=
+    Flatten[Table[{a, b}, {a, 0, Nmax}, {b, 0, Nmax - a}], 1];
+
+(* ---------- amplitude ansatz ---------- *)
+
+(* Commented-out single-term prototype kept for reference *)
+
+(* BBBB scattering change the ansatz to be s-u symmetric *)
+Mlow[s_, t_, mA_, Nmax_Integer] := Module[{u},
+	u = -s-t;
+    gAB^2(1/(s-mA^2)+1/(t-mA^2)+1/(u-mA^2))+Total[
+        Function[{ab},
+            del[ab[[1]], ab[[2]]]
+            * (s)^ab[[1]]
+            * (u)^ab[[2]]
+        ] /@ validTriples[Nmax]
+    ] ];
 
 
-
-Mlow[s_, t_, m1_,m2_] := d0+d2*(s^2+t^2+u^2)+d3*(s*t*u)+d4*(s^2+t^2+u^2)^2/.{u -> -s-t};
 
 (* ===== Input cell 2 ===== *)
 s1 = 0;
@@ -23,21 +35,14 @@ s1 = 0;
 s2 = 0-t;
 
 
-Ker[s_,t_,m1_,m2_,k_,s1_,s2_] := (Mlow[s,t,m1,m2])/((s-s1)*((s-s1)*(s-s2))^(k/2));
+Ker[s_,t_,mA_,k_,s1_,s2_,Nmax_Integer] := (Mlow[s,t,mA,Nmax])/((s-s1)*((s-s1)*(s-s2))^(k/2));
 
-(* ===== Input cell 3 ===== *)
-Series[-Residue[Ker[s,t,m1,m2,2,s1,s2],{s,Infinity}],{t,0,2}]
+(* 0 subtraction *)
+SeriesCoefficient[-Residue[Ker[s,t,mA,0,s1,s2,10],{s,Infinity}],{t,0,0}]
 
-(* ===== Input cell 4 ===== *)
-Series[-Residue[Ker[s,t,m1,m2,0,s1,s2],{s,Infinity}],{t,0,4}]//FullSimplify
-
-(* ===== Input cell 5 ===== *)
-Series[-Residue[Ker[s,t,m1,m2,4,s1,s2],{s,Infinity}],{t,0,0}]//FullSimplify
 
 (* ===== Input cell 6 ===== *)
 PartialWaveD[d_,J_,x_]:=Hypergeometric2F1[-J,J+d-3,(d-2)/2,(1-x)/2];
-
-
 PartialWaveD[4,J,x]-LegendreP[J,x]//FullSimplify
 
 (* ===== Input cell 7 ===== *)

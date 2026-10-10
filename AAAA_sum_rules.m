@@ -28,14 +28,15 @@ validTriples[Nmax_Integer] :=
 (* Commented-out single-term prototype kept for reference *)
 
 (* AAAA scattering change the ansatz to be s-u symmetric *)
-Mfwdlow[s_, t_, mA_, Nmax_Integer] :=
-    Total[
+Mfwdlow[s_, t_, mA_, Nmax_Integer] := Module[{u},
+	u = 4mA^2-s-t;
+    gAA^2(1/(s-mA^2)+1/(t-mA^2)+1/(u-mA^2))+Total[
         Function[{ab},
             del[ab[[1]], ab[[2]]]
             * (s-2*mA^2)^ab[[1]]
             * (u-2*mA^2)^ab[[2]]
         ] /@ validTriples[Nmax]
-    ] /. {u -> 4*mA^2 - s - t};
+    ] ];
 
 (* ===== Input cell 4 ===== *)
 Ker[s_,t_,s1_,s2_,k_, mA_]:=(Mfwdlow[s,t,mA,10])/((s-s1)*((s-s1)*(s-s2))^(k/2));
@@ -48,13 +49,16 @@ s2 = 2*mA^2-t;
 
 (* ===== Input cell 5 ===== *)
 (* g0 + ... *)
--Residue[Ker[s,t,s1,s2,0,mA],{s,Infinity}]//FullSimplify
+Series[-Residue[Ker[s,t,s1,s2,0,mA],{s,Infinity}],{t,0,0}]//FullSimplify
+
 
 (* ===== Input cell 6 ===== *)
 SumRule[s_,t_,s1_,s2_,k_,J_,mA_]:=((1)/((s-s1)*((s-s1)*(s-s2))^(k/2))-1/((4*mA^2-s-t-s1)*((4*mA^2-s-t-s1)*(4*mA^2-s-t-s2))^(k/2)))*(((-4 (mA)^(2)+s))^(7/2))/(Sqrt[s])*PartialWaveD[10,J,1+(2*t)/(s-4*mA^2)];
 
 (* ===== Input cell 7 ===== *)
 SeriesCoefficient[SumRule[x,t,s1,s2,0,J,mA],{t,0,0}]//FullSimplify
+
+
 
 (* ===== Input cell 8 ===== *)
 DblCtr[mA_, k_Integer, q_Integer, Nmax_Integer] := Residue[ Residue[ 1/(s*t) ( Mfwdlow[s, t, mA, Nmax]/(s^(k-q)*t^q) - Mfwdlow[t, s, mA, Nmax]/(t^(k-q)*s^q) ), {s, Infinity}], {t, 0}];
