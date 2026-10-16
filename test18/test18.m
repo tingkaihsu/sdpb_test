@@ -184,7 +184,7 @@ PMP2SDP[datfile_, prec_:600] := Module[
 
       (* Unit coefficient means that the third functional coordinate
          normalizes the bare universal coupling squared. *)
-      lam  = {{0, 0, 0}, {0, 0, 0}, {0, 0, 1}};
+      lam  = 1;
 
       polys = Join[
         {contractUniversalSpin2[g0], lam},

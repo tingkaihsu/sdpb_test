@@ -18,7 +18,7 @@ validTriples[Nmax_Integer] :=
 (* BBBB scattering change the ansatz to be s-u symmetric *)
 Mlow[s_, t_, mA_, Nmax_Integer] := Module[{u},
 	u = -s-t;
-    gAB^2(1/(s-mA^2)+1/(t-mA^2)+1/(u-mA^2))+Total[
+    -gAB^2(1/(s-mA^2)+1/(t-mA^2)+1/(u-mA^2))+Total[
         Function[{ab},
             del[ab[[1]], ab[[2]]]
             * (s)^ab[[1]]
@@ -52,7 +52,7 @@ SumRule[s_,t_,s1_,s2_,k_,J_]:=(1/((s-s1)*((s-s1)*(s-s2))^(k/2))-1/((-s-t-s1)*((-
 Series[SumRule[x,t,s1,s2,0,J],{t,0,0}]
 
 (* ===== Input cell 9 ===== *)
-DblCtr[k_Integer, q_Integer] := Residue[ Residue[ 1/(s*t) ( Mlow[s,t,m1,m2]/(s^(k-q)*t^q) -  Mlow[t,s,m1,m2]/(t^(k-q)*s^q) ), {s, Infinity}], {t, 0}];
+DblCtr[k_Integer, q_Integer] := Residue[ Residue[ 1/(s*t) ( Mlow[s,t,m,10]/(s^(k-q)*t^q) -  Mlow[t,s,m,10]/(t^(k-q)*s^q) ), {s, Infinity}], {t, 0}];
 
 (* ===== Input cell 10 ===== *)
 DblCtr[1,0]

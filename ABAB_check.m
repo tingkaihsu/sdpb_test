@@ -14,7 +14,7 @@ validTriples[Nmax_Integer] :=
     
 MABAB[s_, t_, mA_, Nmax_Integer] := Module[{u},
 	u = 2mA^2-s-t;
-    gAB^2(1/s+1/u)+gAA*gAB*(1/(t-mA^2))+Total[
+    -gABB^2(1/s+1/u)-gAAA*gABB*(1/(t-mA^2))+Total[
         Function[{ab},
             gABABCoeff[ab[[1]], ab[[2]]]
             * (s-mA^2)^ab[[1]]
@@ -27,7 +27,7 @@ gAABBCoeff[a_,b_] := gABAB @@ Sort[{a,b}];
 
 MAABB[s_,t_,m_,Nmax_Integer] :=Module[{u},
 	u = 2m^2-s-t;
-    gAA*gAB(1/(s-m^2))+gAB^2(1/t+1/u)+Total[
+    -gAAA*gABB(1/(s-m^2))-gABB^2(1/t+1/u)+Total[
         Function[{ab},
             gABABCoeff[ab[[1]], ab[[2]]]
             * (t-m^2)^ab[[1]]
@@ -41,7 +41,12 @@ MABAB[s,t,m,10]-MAABB[t,s,m,10]//FullSimplify
 
 (* test Kernel *)
 
-KerLow[k_,q_,Nmax_Integer]:= SeriesCoefficient[SeriesCoefficient[MABAB[s,t,m,Nmax]/((s-m^2)^(k-q+1)t^(q+1)),{s,m^2,-1}],{t,0,-1}]-SeriesCoefficient[SeriesCoefficient[MAABB[s,t,m,Nmax]/((t-m^2)^(k-q+1)s^(q+1)),{s,0,-1}],{t,m^2,-1}];
+KerLow[s0_,m_,k_,q_,Nmax_Integer]:= Residue[Residue[MABAB[s,t,m,Nmax]/((s-s0)^(k-q+1)t^(q+1)),{s,Infinity}],{t,0}]-Residue[Residue[MAABB[s,t,m,Nmax]/((t-s0)^(k-q+1)s^(q+1)),{s,Infinity}],{t,s0}];
+
+
+KerLow[-m^2,m,0,0,2]//FullSimplify
+KerLow[-m^2,m,1,0,2]//FullSimplify
+KerLow[-m^2,m,2,0,2]//FullSimplify
 
 
 (* sum rule *)

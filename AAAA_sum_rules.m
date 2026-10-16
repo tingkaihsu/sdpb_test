@@ -30,7 +30,7 @@ validTriples[Nmax_Integer] :=
 (* AAAA scattering change the ansatz to be s-u symmetric *)
 Mfwdlow[s_, t_, mA_, Nmax_Integer] := Module[{u},
 	u = 4mA^2-s-t;
-    gAA^2(1/(s-mA^2)+1/(t-mA^2)+1/(u-mA^2))+Total[
+    -gAA^2(1/(s-mA^2)+1/(t-mA^2)+1/(u-mA^2))+Total[
         Function[{ab},
             del[ab[[1]], ab[[2]]]
             * (s-2*mA^2)^ab[[1]]
@@ -53,10 +53,10 @@ Series[-Residue[Ker[s,t,s1,s2,0,mA],{s,Infinity}],{t,0,0}]//FullSimplify
 
 
 (* ===== Input cell 6 ===== *)
-SumRule[s_,t_,s1_,s2_,k_,J_,mA_]:=((1)/((s-s1)*((s-s1)*(s-s2))^(k/2))-1/((4*mA^2-s-t-s1)*((4*mA^2-s-t-s1)*(4*mA^2-s-t-s2))^(k/2)))*(((-4 (mA)^(2)+s))^(7/2))/(Sqrt[s])*PartialWaveD[10,J,1+(2*t)/(s-4*mA^2)];
+SumRule[s_,t_,s1_,s2_,k_,J_,mA_]:=((1)/((s-s1)*((s-s1)*(s-s2))^(k/2))-1/((4*mA^2-s-t-s1)*((4*mA^2-s-t-s1)*(4*mA^2-s-t-s2))^(k/2)))*PartialWaveD[10,J,1+(2*t)/(s-4*mA^2)];
 
 (* ===== Input cell 7 ===== *)
-SeriesCoefficient[SumRule[x,t,s1,s2,0,J,mA],{t,0,0}]//FullSimplify
+ToString[SeriesCoefficient[SumRule[x,t,s1,s2,0,J,mA],{t,0,0}], InputForm, PageWidth->Infinity]
 
 
 
@@ -65,21 +65,31 @@ DblCtr[mA_, k_Integer, q_Integer, Nmax_Integer] := Residue[ Residue[ 1/(s*t) ( M
 
 (* ===== Input cell 9 ===== *)
 (* Double Contour Integral *)
-DblCtrSum[s_,k_,q_]:=Residue[((1)/(s*t)*((1)/(s^(k-q)*t^q)-(1)/(s^q*t^(k-q)))-(1)/((4*mA^2-s-t)*t)*((1)/((4*mA^2-s-t)^(k-q)*t^q)-(1)/((4*mA^2-s-t)^q*t^(k-q))))*(((-4 (mA)^(2)+s))^(7/2))/(Sqrt[s])*PartialWaveD[10,J,1+(2*t)/(s-4*mA^2)],{t,0}];
+DblCtrSum[s_,k_,q_]:=Residue[((1)/(s*t)*((1)/(s^(k-q)*t^q)-(1)/(s^q*t^(k-q)))-(1)/((4*mA^2-s-t)*t)*((1)/((4*mA^2-s-t)^(k-q)*t^q)-(1)/((4*mA^2-s-t)^q*t^(k-q))))*PartialWaveD[10,J,1+(2*t)/(s-4*mA^2)],{t,0}];
+
+DblCtr[m,1,0,5]
+DblCtr[m,2,0,5]
+DblCtr[m,3,0,5]
+DblCtr[m,3,1,5]
+
+
+lstwPoles = {DblCtrSum[x,1,0],DblCtrSum[x,2,0],DblCtrSum[x,3,0],DblCtrSum[x,3,1]};
+
+ToString[lstwPoles,InputForm,PageWidth->Infinity]
+
 
 (* ===== Input cell 10 ===== *)
 
-x00 = DblCtrSum[x,0,0]//FullSimplify;
+x20 = DblCtrSum[x,2,0]//FullSimplify
 
-x10 = DblCtrSum[x,1,0]//FullSimplify;
+x20/.{J->0,x->mA^2}
+
 
 (* ===== Input cell 11 ===== *)
 x20 = DblCtrSum[x,2,0]//FullSimplify;
 
 (* ===== Input cell 12 ===== *)
 x30 = DblCtrSum[x,3,0]//FullSimplify;
-
-
 x31 = DblCtrSum[x,3,1]//FullSimplify;
 
 (* ===== Input cell 13 ===== *)
