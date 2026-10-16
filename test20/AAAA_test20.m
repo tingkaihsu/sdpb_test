@@ -7,12 +7,23 @@ test20Directory = If[
 ];
 Import[FileNameJoin[{test20Directory, "..", "SDPB.m"}]];
 
-mAsq = 1/5;
+(* mAsq from the command line:  wolframscript -file AAAA_test20.m 1/5     *)
+(* (exact integer or fraction).  Without an argument the default 1/5 is used. *)
+mAsq = If[Length[$ScriptCommandLine] >= 2,
+  ToExpression[StringTrim[$ScriptCommandLine[[2]]]],
+  1/5
+];
 mA = Sqrt[mAsq];
 JA = 0;
 m2sq = 1;
 J2 = 2;
 mgap = 2;
+
+If[!(MatchQ[mAsq, _Integer | _Rational] && 0 < mAsq && 4 mAsq < m2sq < mgap),
+  Print["Invalid mAsq = ", mAsq, " : need an exact number with 0 < 4 mAsq < m2sq < mgap."];
+  Exit[2]
+];
+Print["mAsq = ", mAsq];
 
 
 aaNullIndices = Range[0, 3];
