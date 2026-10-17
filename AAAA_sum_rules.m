@@ -61,7 +61,7 @@ ToString[SeriesCoefficient[SumRule[x,t,s1,s2,0,J,mA],{t,0,0}], InputForm, PageWi
 
 
 (* ===== Input cell 8 ===== *)
-DblCtr[mA_, k_Integer, q_Integer, Nmax_Integer] := Residue[ Residue[ 1/(s*t) ( Mfwdlow[s, t, mA, Nmax]/(s^(k-q)*t^q) - Mfwdlow[t, s, mA, Nmax]/(t^(k-q)*s^q) ), {s, Infinity}], {t, 0}];
+DblCtr[mA_, k_Integer, q_Integer, Nmax_Integer] := -Residue[ Residue[ 1/(s*t) ( Mfwdlow[s, t, mA, Nmax]/(s^(k-q)*t^q) - Mfwdlow[t, s, mA, Nmax]/(t^(k-q)*s^q) ), {s, Infinity}], {t, 0}];
 
 (* ===== Input cell 9 ===== *)
 (* Double Contour Integral *)
