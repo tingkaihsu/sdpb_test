@@ -309,6 +309,4 @@ PMP2SDP[datfile_, prec_: 600] := Module[
   ]
 ];
 
-rTag = StringReplace[ToString[InputForm[rRatio]], "/" -> "o"];
-PMP2SDP[FileNameJoin[{LTDirectory,
-  "LT_" <> boundType <> If[includeAB, "", "_noAB"] <> "_r" <> rTag <> "_pmp.json"}], 1000];
+PMP2SDP[FileNameJoin[{LTDirectory,"n_pmp.json"}], 1000];
