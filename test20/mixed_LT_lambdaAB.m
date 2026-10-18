@@ -41,18 +41,16 @@ JA     = 0;
 m2sq   = 1;        (* X2, units m2 = 1                                    *)
 J2     = 2;
 mgapSq = 2;        (* neutral continuum M^2 >= mgapSq, J even             *)
-mcSq   = 2;        (* charged continuum M^2 >= mcSq,   all J              *)
+mcSq   = 1;        (* charged continuum M^2 >= mcSq,   all J              *)
 
 boundType = "upper";   (* "upper" or "lower"                              *)
-includeAB = True;      (* False = gamma = 0 regression test (Sec. 5.5)    *)
 
 If[!(MatchQ[mAsq, _Integer | _Rational] && MatchQ[rRatio, _Integer | _Rational] &&
      0 < mAsq && 4 mAsq < m2sq < mgapSq && mAsq < mcSq && rRatio > 0),
   Print["Invalid input: need exact 0 < 4 mAsq < m2sq < mgapSq, mAsq < mcSq, r > 0."];
   Exit[2]
 ];
-Print["mAsq = ", mAsq, ", r = ", rRatio, ", bound = ", boundType,
-      ", includeAB = ", includeAB];
+Print["mAsq = ", mAsq, ", r = ", rRatio, ", bound = ", boundType];
 
 
 (* ------------------------------------------------------------------------ *)
@@ -64,125 +62,6 @@ Print["mAsq = ", mAsq, ", r = ", rRatio, ", bound = ", boundType,
 (*         [(3,1) vanishes identically for massless externals]              *)
 (*   AB    (s0 = -mA^2)  n = 0..5 : (0,0) (1,0) (1,1) (2,0) (2,1) (2,2)     *)
 (* ------------------------------------------------------------------------ *)
-
-aaNullIndices = Range[0, 3];
-bbNullIndices = Range[0, 2];
-abNullIndices = If[includeAB, Range[0, 5], {}];
-
-nAA = Length[aaNullIndices];
-nBB = Length[bbNullIndices];
-nAB = Length[abNullIndices];
-
-zeroAA = ConstantArray[0, nAA];
-zeroBB = ConstantArray[0, nBB];
-zeroAB = ConstantArray[0, nAB];
-
-functionalDimension = 3 + nAA + nBB + nAB;  (* {ghatB, ghatA, lambda22, nulls} *)
-
-
-(* ------------------------------------------------------------------------ *)
-(* BLOCK 3.  Gegenbauer helpers, D = 10 (lambda = 7/2), P_J(1) = 1          *)
-(* ------------------------------------------------------------------------ *)
-
-(* p_n = P_J^(n)(1): polynomial in J *)
-dP1[n_, J_] := Product[(J - i) (J + 7 + i), {i, 0, n - 1}]/(2^n Pochhammer[4, n]);
-
-(* P_J^(n)(z) at a general point, J an integer *)
-dPz[n_, J_, z_] := If[n > J, 0,
-  2^n Pochhammer[7/2, n] GegenbauerC[J - n, 7/2 + n, z]/GegenbauerC[J, 7/2, 1]];
-
-(* AB kinematics at the null point (s,t) = (-mA^2, 0) *)
-alphaAB[x_] := 2 x/(x - mAsq)^2;              (* z_AB = 1 + alphaAB t          *)
-zc[x_]      := 1 - alphaAB[x] (x - 3 mAsq);   (* charged u'-channel angle      *)
-zn[x_]      := Sqrt[(x - 4 mAsq)/x];          (* neutral AA -> BB angle        *)
-rN[x_]      := Sqrt[x (x - 4 mAsq)];
-
-
-(* ------------------------------------------------------------------------ *)
-(* BLOCK 4.  AA -> AA rows   (KX, NA of AAAA_test20.m, verbatim)            *)
-(* ------------------------------------------------------------------------ *)
-
-KAAAA[n_, x_, J_] := {(32*mA^4 - 16*mA^2*x + 14*J*mA^2*x + 2*J^2*mA^2*x + 2*x^2 - 7*J*x^2 - J^2*x^2)/(2*x^2*(-4*mA^2 + x)^2), (-1280*mA^6 + 960*mA^4*x - 240*mA^2*x^2 - 112*J*mA^2*x^2 + 82*J^2*mA^2*x^2 + 28*J^3*mA^2*x^2 + 2*J^4*mA^2*x^2 + 20*x^3 + 91*J*x^3 - 36*J^2*x^3 - 14*J^3*x^3 - J^4*x^3)/(20*x^3*(-4*mA^2 + x)^3), (92160*mA^8 - 92160*mA^6*x + 34560*mA^4*x^2 - 5760*mA^2*x^3 + 2016*J*mA^2*x^3 - 2260*J^2*mA^2*x^3 - 42*J^3*mA^2*x^3 + 242*J^4*mA^2*x^3 + 42*J^5*mA^2*x^3 + 2*J^6*mA^2*x^3 + 360*x^4 - 2142*J*x^4 + 1409*J^2*x^4 + 147*J^3*x^4 - 112*J^4*x^4 - 21*J^5*x^4 - J^6*x^4)/(360*x^4*(-4*mA^2 + x)^4), -1/5*(J*(7 + J)*mA^2*(80*mA^4 - 76*mA^2*x + 14*J*mA^2*x + 2*J^2*mA^2*x + 23*x^2 - 7*J*x^2 - J^2*x^2))/((4*mA^2 - x)^4*x^3)}[[n+1]];
-
-NAAAA[n_, x_, J_] := {1/mA^4, 1/mA^6, 1/mA^8, 0}[[n+1]];
-
-
-(* ------------------------------------------------------------------------ *)
-(* BLOCK 5.  BB -> BB rows                                                  *)
-(* ------------------------------------------------------------------------ *)
-
-KBBBB[n_, x_, J_] := {
-  (1 - 4 dP1[1, J])/x^2,
-  (1 + 2 dP1[1, J] - 4 dP1[2, J])/x^3,
-  (1 - 2 dP1[1, J] + 2 dP1[2, J] - 8/3 dP1[3, J])/x^4
-}[[n+1]];
-
-NBBBB[n_, x_, J_] := {1/mA^4, 1/mA^6, 1/mA^8}[[n+1]];   (* A exchange, gABB^2 *)
-
-
-(* ------------------------------------------------------------------------ *)
-(* BLOCK 6.  AB -> AB rows, charged states (rho_AB^2)                       *)
-(*   X = M^2 + mA^2,  w = M^2 - 3 mA^2,  p_n = P^(n)(1),  c_n = P^(n)(zc)   *)
-(*   The 1/w poles are removable (they cancel between R1 and R2).           *)
-(* ------------------------------------------------------------------------ *)
-
-KABAB[n_, x_, J_] := With[
-  {X = x + mAsq, w = x - 3 mAsq, al = alphaAB[x],
-   p1 = dP1[1, J], p2 = dP1[2, J],
-   c0 = dPz[0, J, zc[x]], c1 = dPz[1, J, zc[x]], c2 = dPz[2, J, zc[x]]},
-  {
-    1/X + (1 - c0)/w,
-    1/X^2 - (1 - c0)/w^2 + al c1/w,
-    al p1 (1/X + 1/w) - (1 - c0)/w^2,
-    1/X^3 + (1 - c0)/w^3 - al c1/w^2 - al^2 c2/(2 w),
-    2 (1 - c0)/w^3 + al p1 (1/X^2 - 1/w^2) - al c1/w^2,
-    (1 - c0)/w^3 - al p1/w^2 + al^2 p2/2 (1/X + 1/w)
-  }[[n+1]]
-];
-
-NABAB[n_, x_, J_] := {1/mA^2, 1/mA^4, 0, 1/mA^6, 0, 0}[[n+1]];   (* B exchange, gABB^2 *)
-
-
-(* ------------------------------------------------------------------------ *)
-(* BLOCK 7.  AB -> AB rows, neutral states (rho_AA rho_BB)                  *)
-(*   e_n = P^(n)(zn),  rN = Sqrt[M^2 (M^2 - 4 mA^2)]                        *)
-(* ------------------------------------------------------------------------ *)
-
-KAABB[n_, x_, J_] := With[
-  {r = rN[x], e0 = dPz[0, J, zn[x]], e1 = dPz[1, J, zn[x]], e2 = dPz[2, J, zn[x]]},
-  {
-    -e0/x,
-    -2 e1/(r x),
-    -e0/x^2,
-    -2 e2/(r^2 x),
-    -2 e1/(r x^2),
-    -e0/x^3
-  }[[n+1]]
-];
-
-NAABB[n_, x_, J_] := {-1/mA^2, 0, -1/mA^4, 0, 0, -1/mA^6}[[n+1]];   (* A, gAAA gABB *)
-
-
-(* ------------------------------------------------------------------------ *)
-(* BLOCK 8.  Light rows = heavy rows at the light mass (consistency check)  *)
-(*   A = (mAsq, 0) in AAAA, BBBB, AABB;  B = (0, 0) in ABAB.                *)
-(* ------------------------------------------------------------------------ *)
-
-lightRowsOK[] := And @@ Flatten[{
-  Table[PossibleZeroQ[KAAAA[n, mAsq, 0] - NAAAA[n, mAsq, 0]], {n, aaNullIndices}],
-  Table[PossibleZeroQ[KBBBB[n, mAsq, 0] - NBBBB[n, mAsq, 0]], {n, bbNullIndices}],
-  Table[PossibleZeroQ[KABAB[n, 0, 0]    - NABAB[n, 0, 0]],    {n, abNullIndices}],
-  Table[PossibleZeroQ[KAABB[n, mAsq, 0] - NAABB[n, mAsq, 0]], {n, abNullIndices}]
-}];
-
-If[!lightRowsOK[], Print["Light rows do not match heavy rows at the light mass."]; Exit[3]];
-Print["light-row check passed"];
-
-
-(* ------------------------------------------------------------------------ *)
-(* BLOCK 9.  Normalization and phase-space weights                          *)
-(* ------------------------------------------------------------------------ *)
-
 g0AAWeight[x_] := 2/(x - 2 mAsq);     (* ghatA at (s,t) = (2mA^2, 0) *)
 g0BBWeight[x_] := 2/x;                (* ghatB at (s,t) = (0, 0)     *)
 
@@ -192,63 +71,86 @@ phiAA[x_] := (x - 4 mAsq)^(7/2)/Sqrt[x];
 phiBB[x_] := x^3;
 phiAB[x_] := (x - mAsq)^7/x^4;
 
-spinScale[j_] := 1;
+aaNullIndices = Range[0, 3];
+bbNullIndices = Range[0, 2];
+abNullIndices = Range[0, 1];
 
-
-(* ------------------------------------------------------------------------ *)
-(* BLOCK 10.  Component vectors {ghatB, ghatA, lambda22, nAAAA, nBBBB, nAB} *)
-(* ------------------------------------------------------------------------ *)
-
-aaRow[x_, j_]   := Table[KAAAA[n, x, j], {n, aaNullIndices}];
-bbRow[x_, j_]   := Table[KBBBB[n, x, j], {n, bbNullIndices}];
-abRow[x_, j_]   := Table[KABAB[n, x, j], {n, abNullIndices}];
-aabbRow[x_, j_] := Table[KAABB[n, x, j], {n, abNullIndices}];
-
-(* neutral state; lam12 = entry of E = {{0,1/2},{1/2,0}}: 1/2 for X2, else 0 *)
-vecAA[x_, j_]          := Join[{0, g0AAWeight[x], 0}, aaRow[x, j], zeroBB, zeroAB];
-vecBB[x_, j_]          := Join[{g0BBWeight[x], 0, 0}, zeroAA, bbRow[x, j], zeroAB];
-vecAABB[x_, j_, lam12_] := Join[{0, 0, lam12}, zeroAA, zeroBB, aabbRow[x, j]/2];
-
-(* charged state *)
-vecABAB[x_, j_] := Join[{0, 0, 0}, zeroAA, zeroBB, abRow[x, j]];
-
-(* light A and B, acting on (gAAA, gABB); A is absorbed into the hats *)
-vecLightAA = Join[{0, 0, 0}, Table[NAAAA[n, mAsq, JA], {n, aaNullIndices}], zeroBB, zeroAB];
-vecLightBB = Join[{0, 0, 0}, zeroAA, Table[NBBBB[n, mAsq, JA], {n, bbNullIndices}],
-                  Table[NABAB[n, 0, 0], {n, abNullIndices}]];
-vecLightAB = Join[{0, 0, 0}, zeroAA, zeroBB, Table[NAABB[n, mAsq, JA]/2, {n, abNullIndices}]];
-
-
-(* ------------------------------------------------------------------------ *)
-(* BLOCK 11.  PMP blocks = the four inequalities of Sec. 5.4                *)
-(*   PolyA  (i)   light A and B         2x2 constant                        *)
-(*   PolyH  (ii)  X2                    2x2,  F - E >= 0                    *)
-(*   PolyX  (iii) neutral continuum     2x2,  J even                        *)
-(*   PolyC  (iv)  charged continuum     1x1,  all J                         *)
-(* ------------------------------------------------------------------------ *)
-
-prefactor[y_] := DampedRational[1, {}, 1/E, y];
-
-neutralMatrix[j_, x_, lam12_] := Module[{wAA, wBB, off},
-  wAA = phiAA[x];
-  wBB = phiBB[x];
-  off = Sqrt[wAA wBB] vecAABB[x, j, lam12];
-  spinScale[j] {{wAA vecAA[x, j], off}, {off, wBB vecBB[x, j]}}
+nullCount = Total[
+  Length /@ {abNullIndices, aaNullIndices, bbNullIndices}
 ];
 
-PolyA[y_] := PositiveMatrixWithPrefactor[
-  prefactor[y],
-  {{vecLightAA, vecLightAB}, {vecLightAB, vecLightBB}}
-];
+list0 = ConstantArray[0, nullCount];
+functionalDimension = 3 + nullCount;
 
-PolyH[j_, x_, y_] := PositiveMatrixWithPrefactor[prefactor[y], neutralMatrix[j, x, 1/2]];
 
-PolyX[j_, x_, y_] := PositiveMatrixWithPrefactor[prefactor[y], neutralMatrix[j, x, 0]];
+NABAB[n_,x_,J_,m_] := {}[[n+1]];
 
-PolyC[j_, x_, y_] := PositiveMatrixWithPrefactor[
-  prefactor[y],
-  {{spinScale[j] phiAB[x] vecABAB[x, j]}}
-];
+
+NAABB[n_,x_,J_,m_] := {}[[n+1]];
+
+
+NBBBB[n_,z_,J_,m_] :={}[[n+1]];
+
+
+NAAAA[n_,x_,J_,mA_] := {}[[n+1]];
+
+
+
+NABMatrix[n_, z_, J_] := {
+  {0, -1/2 NAABB[n, z, J, mA]},
+  {-1/2 NAABB[n, z, J, mA], 0}
+};
+
+NAAMatrix[n_, z_, J_] := {
+  {NAAAA[n, z, J, mA], 0},
+  {0,0}
+};
+
+NBBMatrix[n_, z_, J_] := {
+  {0, 0},
+  {0, NBBBB[n, z, J, mA]}
+};
+
+
+
+(* light pole terms *)
+
+nlABAB[n_,x_,J_,m_] := {}[[n+1]];
+
+
+
+nlAABB[n_,x_,J_,m_] := {}[[n+1]];
+
+
+
+nlBBBB[n_,z_,J_,m_] := {}[[n+1]];
+
+
+
+nlAAAA[n_,x_,J_,mA_] := {}[[n+1]];
+
+
+
+(* light pole terms *)
+
+nlABMatrix[n_, z_, J_] := {
+  {0, -1/2 nlAABB[n, z, J, mA]},
+  {-1/2 nlAABB[n, z, J, mA], 0}
+};
+
+
+nlAAMatrix[n_, z_, J_] := {
+  {nlAAAA[n, z, J, mA], 0},
+  {0,0}
+};
+
+
+nlBBMatrix[n_, z_, J_] := {
+  {0, 0},
+  {0, nlBBBB[n, z, J, mA]}
+};
+
+
 
 
 (* ------------------------------------------------------------------------ *)
@@ -260,8 +162,8 @@ LaunchKernels[];
 PMP2SDP[datfile_, prec_: 600] := Module[
   {
     npts = 150, Jmax = 100, sgn,
-    phiSamples, massSamples, evenSpins, allSpins, chargedX,
-    pA, pH, pX, pC, pols, norm, obj
+    Fn, Fc, Fn2, FA, pols,
+    phiSamples, massSamples, evenSpins, allSpins, norm, obj
   },
 
   phiSamples = N[Table[Pi/2 + Pi/2 Cos[(k + 1/2) Pi/npts], {k, 0, npts - 1}], prec];
@@ -269,23 +171,99 @@ PMP2SDP[datfile_, prec_: 600] := Module[
   evenSpins = Range[0, Jmax, 2];
   allSpins  = Range[0, Jmax];
 
-  (* charged samples: stay off the removable point M^2 = 3 mA^2 *)
-  chargedX = Select[mcSq/(1 - #) & /@ massSamples, Abs[# - 3 mAsq] > 10^-10 &];
+  Fn[j_, x_, y_] := Module[{w, gB, gA, lam, polys},
+    w  = Sqrt[phiAA[x]*phiBB[x]];                     (* off-diagonal weight *)
+    gB = {{0, 0}, {0, phiBB[x]*g0BBWeight[x]}};
+    gA = {{phiAA[x]*g0AAWeight[x], 0}, {0, 0}};
 
-  pA = {N[PolyA[x], prec]};
-  pH = {N[PolyH[J2, m2sq, x], prec]};
-  pX = Flatten[N[ParallelTable[PolyX[i, mgapSq/(1 - m), x],
-         {i, evenSpins}, {m, massSamples}], prec], 1];
-  pC = If[nAB == 0, {},
-         Flatten[N[ParallelTable[PolyC[i, xc, x],
-           {i, allSpins}, {xc, chargedX}], prec], 1]];
+    lam = {{0, 0}, {0, 0}};   (* lam0 = {{0,1/2},{1/2,0}} for X2, zero matrix otherwise *)
 
-  pols = Join[pA, pH, pX, pC];
+    polys = Join[
+      {gB, gA, lam},
+      w*NABMatrix[#, x, j] & /@ abNullIndices,
+      phiAA[x]*NAAMatrix[#, x, j] & /@ aaNullIndices,
+      phiBB[x]*NBBMatrix[#, x, j] & /@ bbNullIndices
+    ];
 
-  (* upper: a_3 = -1 ;  lower: a_3 = +1 (E -> -E) *)
+    PositiveMatrixWithPrefactor[
+        DampedRational[1, {}, 1/E, y],
+        Table[
+            Table[polys[[k, row, column]], {k, Length[polys]}],
+            {row, 2}, {column, 2}
+        ]
+    ]
+  ];
+
+  Fc[j_, x_, y_] := Module[{polys},
+    polys = Join[
+      {0, 0, 0},
+      phiAB[x]*NABAB[#, x, j, mA] & /@ abNullIndices,
+      0 & /@ aaNullIndices,
+      0 & /@ bbNullIndices
+    ];
+
+    PositiveMatrixWithPrefactor[
+        DampedRational[1, {}, 1/E, y],
+        {{polys}}
+    ]
+  ];
+
+  (* second isolated state *)
+  Fn2[j_, x_, y_] := Module[{w, gB, gA, lam, polys},
+    w  = Sqrt[phiAA[x]*phiBB[x]];                     (* off-diagonal weight *)
+    gB = {{0, 0}, {0, phiBB[x]*g0BBWeight[x]}};
+    gA = {{phiAA[x]*g0AAWeight[x], 0}, {0, 0}};
+
+    lam = w*{{0, 1/2}, {1/2, 0}};   (* lam0 = {{0,1/2},{1/2,0}} for X2, zero matrix otherwise *)
+
+    polys = Join[
+      {gB, gA, lam},
+      w*NABMatrix[#, x, j] & /@ abNullIndices,
+      phiAA[x]*NAAMatrix[#, x, j] & /@ aaNullIndices,
+      phiBB[x]*NBBMatrix[#, x, j] & /@ bbNullIndices
+    ];
+
+    PositiveMatrixWithPrefactor[
+        DampedRational[1, {}, 1/E, y],
+        Table[
+            Table[polys[[k, row, column]], {k, Length[polys]}],
+            {row, 2}, {column, 2}
+        ]
+    ]
+  ];
+
+  (* light A and B, acting on (gAAA, gABB); B shares gABB -> (2,2) slot *)
+  FA[j_, x_, y_] := Module[{zero2, polys},
+    zero2 = ConstantArray[0, {2, 2}];
+
+    polys = Join[
+      {zero2, zero2, zero2},
+      nlABMatrix[#, mAsq, JA] + {{0, 0}, {0, nlABAB[#, 0, 0, mA]}} & /@ abNullIndices,
+      nlAAMatrix[#, mAsq, JA] & /@ aaNullIndices,
+      nlBBMatrix[#, mAsq, JA] & /@ bbNullIndices
+    ];
+
+    PositiveMatrixWithPrefactor[
+        DampedRational[1, {}, 1/E, y],
+        Table[
+            Table[polys[[k, row, column]], {k, Length[polys]}],
+            {row, 2}, {column, 2}
+        ]
+    ]
+  ];
+
+
+  pols = Flatten[{
+      Flatten[ N[ ParallelTable[ FA[i, mA, x], {i, JA, JA, 2}], prec] ],
+      Flatten[ N[ ParallelTable[ Fn2[i, 1, x], {i, J2, J2, 2}], prec] ],
+      Flatten[ N[ ParallelTable[ Fn[i, mgapSq/(1-m), x], {i, evenSpins}, {m, massSamples}], prec] ],
+      Flatten[ N[ ParallelTable[ Fc[i, 1/(1-m), x], {i, allSpins}, {m, massSamples}], prec] ]
+  }, 1];
+
+  
   sgn  = If[boundType === "upper", 1, -1];
-  norm = -sgn N[Join[{0, 0, 1}, zeroAA, zeroBB, zeroAB], prec];
-  obj  = -N[Join[{1, rRatio, 0}, zeroAA, zeroBB, zeroAB], prec];
+  norm = -sgn N[Join[{0, 0, 1}, list0], prec];
+  obj  = -N[Join[{1, rRatio, 0}, list0], prec];
 
   If[
     Length[norm] =!= functionalDimension ||
@@ -295,9 +273,9 @@ PMP2SDP[datfile_, prec_: 600] := Module[
   ];
 
   Print["functional dimension = ", functionalDimension,
-        "  (3 + ", nAA, " AAAA + ", nBB, " BBBB + ", nAB, " AB)"];
-  Print["number of PMP blocks = ", Length[pols],
-        "  (light 1, X2 1, neutral ", Length[pX], ", charged ", Length[pC], ")"];
+        "  (3 + ", Length[abNullIndices], " AB + ", Length[aaNullIndices],
+        " AAAA + ", Length[bbNullIndices], " BBBB)"];
+  Print["number of PMP blocks = ", Length[pols]];
   Print["bound = ", If[sgn == 1, "-V/Sqrt[r]", "+V/Sqrt[r]"],
         " with V the SDPB objective; Sqrt[r] = ", N[Sqrt[rRatio], 10]];
 

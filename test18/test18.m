@@ -135,7 +135,7 @@ PMP2SDP[datfile_, prec_:600] := Module[
             Table[polys[[k, row, column]], {k, Length[polys]}],
             {row, 3}, {column, 3}
         ]
-       ]
+      ]
     ];
 
     (* The first isolated state is neutral, so it only sees {AA, BB}. *)

@@ -8,7 +8,7 @@ N_PMP_JSON="${DATA_DIR}/n_pmp.json"
 OUT_PREFIX="${DATA_DIR}/out"
 
 # 0) Run PMP
-wolframscript -file AAAA_test20.m
+wolframscript -file BBBB_test20.m 1/5
 # 1) Remove old checkpoint file
 docker run --rm \
   -v "${WORKDIR}:${DATA_DIR}" \

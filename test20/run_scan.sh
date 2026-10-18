@@ -30,7 +30,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR" || exit 1
 
 INPUT="${1:-mAsq_list.txt}"
-MFILE="${MFILE:-AAAA_test20.m}"
+MFILE="${MFILE:-BBBB_test20.m}"
 IMAGE="${IMAGE:-bootstrapcollaboration/sdpb:master}"
 NPROC="${NPROC:-24}"
 
