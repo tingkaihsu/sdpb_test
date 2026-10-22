@@ -51,8 +51,8 @@ SumRule[s_,t_,s1_,s2_,k_,J_]:=(1/((s-s1)*((s-s1)*(s-s2))^(k/2))-1/((-s-t-s1)*((-
 (* ===== Input cell 9 ===== *)
 DblCtr[k_Integer, q_Integer] := Residue[ Residue[ 1/(s*t) ( Mlow[s,t,m,10]/(s^(k-q)*t^q) -  Mlow[t,s,m,10]/(t^(k-q)*s^q) ), {s, Infinity}], {t, 0}];
 
-(* Double Contour Integral *)
-DblCtrSum[s_,J_,k_,q_]:=Residue[((1)/(s*t)*((1)/(s^(k-q)*t^q)-(1)/(s^q*t^(k-q)))-(1)/((-s-t)*t)*((1)/((-s-t)^(k-q)*t^q)-(1)/((-s-t)^q*t^(k-q))))*((s)^((10-3)/(2)))/(Sqrt[s])*PartialWaveD[10,J,1+(2*t)/(s)],{t,0}];
+(* Double Contour Integral without phase-space volume *)
+DblCtrSum[s_,J_,k_,q_]:=Residue[((1)/(s*t)*((1)/(s^(k-q)*t^q)-(1)/(s^q*t^(k-q)))-(1)/((-s-t)*t)*((1)/((-s-t)^(k-q)*t^q)-(1)/((-s-t)^q*t^(k-q))))*PartialWaveD[10,J,1+(2*t)/(s)],{t,0}];
 
 xkq[z_,J_,k_,q_] := DblCtrSum[z,J,k,q];
 
