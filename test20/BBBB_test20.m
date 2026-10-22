@@ -42,7 +42,7 @@ nullX[n_, z_, J_] := {-1/2*((-2 + 7*J + J^2)*z), (20 + 91*J - 36*J^2 - 14*J^3 - 
 
 
 
-nullA[n_, z_, J_, m_] := {m^(-4), m^(-6), m^(-8), m^(-10), 0, m^(-12), 0, m^(-14), 0, m^(-16), 0, 0, m^(-18), 0, 0, m^(-20), 0, 0, m^(-22), 0, 0, 0, m^(-24), 0, 0, 0, m^(-26), 0, 0, 0, m^(-28), 0, 0, 0, 0, m^(-30), 0, 0, 0, 0, m^(-32), 0, 0, 0, 0, m^(-34), 0, 0, 0, 0, 0}[[n+1]];
+(* nullA[n_, z_, J_, m_] := {m^(-4), m^(-6), m^(-8), m^(-10), 0, m^(-12), 0, m^(-14), 0, m^(-16), 0, 0, m^(-18), 0, 0, m^(-20), 0, 0, m^(-22), 0, 0, 0, m^(-24), 0, 0, 0, m^(-26), 0, 0, 0, m^(-28), 0, 0, 0, 0, m^(-30), 0, 0, 0, 0, m^(-32), 0, 0, 0, 0, m^(-34), 0, 0, 0, 0, 0}[[n+1]]; *)
 
 
 largeJ[z_, J_] := {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1/212096239729887902957568000000*1/z^14, 0, 0, 0, 0, 0};
@@ -103,13 +103,13 @@ PMP2SDP[datfile_, prec_: 600] := Module[
     ];
 
     FA[j_, x_, y_] := Module[{g0, lam, polys},
-        g0 = 0;
+        g0 = g0BBWeight[x];
 
         lam = 1;
 
         polys = Join[
-            {g0, lam},
-            Table[nullA[n,x,j,mA], {n, bbNullIndices}]
+            phiBB[x]*{g0, lam},
+            Table[nullX[n,x,j], {n, bbNullIndices}]
         ];
 
         PositiveMatrixWithPrefactor[
@@ -127,7 +127,7 @@ PMP2SDP[datfile_, prec_: 600] := Module[
     ];
 
     pols = Flatten[{
-      Flatten[ N[ ParallelTable[ FA[i, mAsq, x], {i, JA, JA, 2}], prec] ],
+      Flatten[ N[ ParallelTable[ FA[i, mAsq, x], {i, JA, JA, 2}], prec] ], (* state A *)
       {N[Fn[J2, m2sq, x], prec]},                                  (* isolated X2 *)
       Flatten[ N[ ParallelTable[ Fn[i, mgap/(1-m), x], {i, evenSpins}, {m, massSamples}], prec] ],
       {N[FJ[x], prec]}                                             (* J = Infinity *)
