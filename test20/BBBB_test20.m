@@ -84,7 +84,7 @@ PMP2SDP[datfile_, prec_: 600] := Module[
       pols, norm, obj
     },
 
-    Jmax = 200;
+    Jmax = 1000;
     evenSpins = Range[0, Jmax, 2];
 
 
@@ -108,6 +108,9 @@ PMP2SDP[datfile_, prec_: 600] := Module[
       {N[Fpt[Vheavy[mAsq, JA, 0]], prec]},                       (* 1st isolated state: A *)
       {N[Fpt[Vheavy[m2sq, J2, 1]], prec]},                          (* 2nd isolated state: X2 *)
       N[ParallelTable[Fcont[j], {j, evenSpins}], prec],         (* continuum M^2 >= mgap *)
+      N[ParallelTable[Fcont[j], {j, 1500, 5000, 100}], prec],
+      N[ParallelTable[Fcont[j], {j, 6000, 20000, 500}], prec],
+      N[ParallelTable[Fcont[j], {j, 20000, 50000, 2000}], prec],
       {N[Fpt[Join[{0, 0},
           Cancel[x^zPow largeJ[x]][[bbNullIndices + 1]]]], prec]} (* J = Infinity *)
     ];
