@@ -105,8 +105,8 @@ PMP2SDP[datfile_, prec_: 600] := Module[
     (* single nonzero row (-c), so it only imposes beta_(16,0) <= 0, any M^2.     *)
     (* largeJ must be regenerated whenever bbNullIndices changes.                 *)
     pols = Join[
-      {N[Fpt[Vheavy[mAsq, JA, 1]], prec]},                       (* 1st isolated state: A *)
-      {N[Fpt[Vheavy[m2sq, J2]], prec]},                          (* 2nd isolated state: X2 *)
+      {N[Fpt[Vheavy[mAsq, JA, 0]], prec]},                       (* 1st isolated state: A *)
+      {N[Fpt[Vheavy[m2sq, J2, 1]], prec]},                          (* 2nd isolated state: X2 *)
       N[ParallelTable[Fcont[j], {j, evenSpins}], prec],         (* continuum M^2 >= mgap *)
       {N[Fpt[Join[{0, 0},
           Cancel[x^zPow largeJ[x]][[bbNullIndices + 1]]]], prec]} (* J = Infinity *)
