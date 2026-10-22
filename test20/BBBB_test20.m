@@ -21,10 +21,6 @@ m2sq = 1;
 J2 = 2;
 mgap = 166/100;
 
-If[!(MatchQ[mAsq, _Integer | _Rational] && 0 < mAsq && 4 mAsq < m2sq < mgap),
-  Print["Invalid mAsq = ", mAsq, " : need an exact number with 0 < 4 mAsq < m2sq < mgap."];
-  Exit[2]
-];
 Print["mAsq = ", mAsq];
 
 
@@ -51,86 +47,70 @@ largeJ[z_] := {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 (* D=10, BB -> BB at s = 0, t = 0, coupling normalization *)
 g0BBWeight[x_] := 2/x;
 
-phiBB[x_] := x^3;
+phiBB[x_] := x^3;   (* no longer used: an overall positive factor per state is irrelevant *)
 
 
-(* nullX already carries the phase space z^3 (from xkq); the light rows are the *)
-(* heavy kernels nullX/z^3 at A = (mAsq, 0).  nullA takes m = mA, not mAsq.      *)
-If[!And @@ Table[PossibleZeroQ[nullX[n, mAsq, 0]/mAsq^3 - nullA[n, mAsq, 0, mA]],
+(* nullX is the raw kernel K_n(z, J) (no phase space): at A = (mAsq, 0) it must   *)
+(* reproduce the exported light rows nullA.  nullA takes m = mA, not mAsq.        *)
+If[!And @@ Table[PossibleZeroQ[nullX[n, mAsq, 0] - nullA[n, mAsq, 0, mA]],
      {n, bbNullIndices}],
   Print["Light rows != heavy rows at (mAsq, 0); no PMP written."]; Exit[3]];
 Print["light-row check passed"];
 
 
+(* ---------- one vector for every state:  Msq^zPow {ghatB, gABB^2, nulls} ---------- *)
+(* A (lam = 1), X2 and the continuum all enter the same sum rules; ghatB includes  *)
+(* the A pole.  Msq^zPow (> 0) removes the largest pole z^-17, so every component *)
+(* is a polynomial in Msq (degree <= 16).                                          *)
+zPow = 17;
+Vheavy[Msq_, j_, lam_: 0] := Cancel[Msq^zPow Join[
+    {g0BBWeight[Msq], lam},
+    Table[nullX[n, Msq, j], {n, bbNullIndices}]]];
+
+(* exact polynomiality check in the PMP variable x  (M^2 = mgap + x, x >= 0) *)
+If[!And @@ (PolynomialQ[#, x] & /@ Vheavy[mgap + x, J]),
+  Print["Vheavy is not polynomial in x; no PMP written."]; Exit[4]];
+Print["polynomiality check passed: max degree in x = ",
+  Max[Exponent[#, x] & /@ Vheavy[mgap + x, J]]];
+
+
 LaunchKernels[];
+DistributeDefinitions[Vheavy, nullX, g0BBWeight, zPow, mgap, bbNullIndices];
 
 PMP2SDP[datfile_, prec_: 600] := Module[
     {
-      npts, phiSamples, massSamples, Jmax, evenSpins,
-      Fn, FA, FJ,
+      Jmax, evenSpins,
+      Fcont, Fpt,
       pols, norm, obj
     },
 
-    npts = 200;
-    phiSamples = N[Table[
-      Pi/2 + Pi/2 Cos[(k + 1/2) Pi/npts],
-      {k, 0, npts - 1}
-    ], prec];
-    massSamples = Sin[#/2]^2 & /@ phiSamples;
-    
     Jmax = 200;
     evenSpins = Range[0, Jmax, 2];
 
 
-    (* heavy neutral state (X2 and continuum): components {ghatB, gABB^2, nulls} *)
-    Fn[j_, x_, y_] := Module[{g0, lam, polys},
-        g0 = g0BBWeight[x];
-
-        (* Only the light state A contributes to gABB^2. *)
-        lam = 0;
-
-        (* phiBB on {g0, lam} only: nullX already contains x^3 *)
-        polys = Join[
-            phiBB[x]*{g0, lam},
-            Table[phiBB[x]*nullX[n,x,j], {n, bbNullIndices}]
-        ];
-
-        PositiveMatrixWithPrefactor[
-            DampedRational[1, {}, 1/E, y],
-            {{polys}}
-        ]
+    (* continuum M^2 = mgap + x, x >= 0: one polynomial block per spin;        *)
+    (* sample points come from getAnalyticSampleData (no mass sampling)        *)
+    Fcont[j_] := PositiveMatrixWithPrefactor[
+        DampedRational[1, {}, 1/E, x],
+        {{Expand[Vheavy[mgap + x, j]]}}
     ];
 
-    FA[j_, x_, y_] := Module[{g0, lam, polys},
-        g0 = g0BBWeight[x];
-
-        lam = 1;
-
-        polys = Join[
-            {g0, lam},
-            Table[nullX[n,x,j], {n, bbNullIndices}]
-        ];
-
-        PositiveMatrixWithPrefactor[
-            DampedRational[1, {}, 1/E, y],
-            {{polys}}
-        ]
+    (* any fixed-mass state, or the J = Infinity limit: constant block *)
+    Fpt[vec_List] := PositiveMatrixWithPrefactor[
+        DampedRational[1, {}, 1/E, x],
+        {{vec}}
     ];
 
-    (* J -> Infinity at fixed M^2: largeJ has a single nonzero row, -1/(c z^14), *)
-    (* so this only imposes beta_(16,0) <= 0; one mass sample suffices.         *)
-    (* largeJ must be regenerated whenever bbNullIndices changes.               *)
-    FJ[j_, x_, y_] := PositiveMatrixWithPrefactor[
-        DampedRational[1, {}, 1/E, y],
-        {{Join[{0, 0}, largeJ[x][[bbNullIndices + 1]]]}}
+    (* J -> Infinity at fixed M^2: x^zPow largeJ[x] is a constant vector with a   *)
+    (* single nonzero row (-c), so it only imposes beta_(16,0) <= 0, any M^2.     *)
+    (* largeJ must be regenerated whenever bbNullIndices changes.                 *)
+    pols = Join[
+      {N[Fpt[Vheavy[mAsq, JA, 1]], prec]},                       (* 1st isolated state: A *)
+      {N[Fpt[Vheavy[m2sq, J2]], prec]},                          (* 2nd isolated state: X2 *)
+      N[ParallelTable[Fcont[j], {j, evenSpins}], prec],         (* continuum M^2 >= mgap *)
+      {N[Fpt[Join[{0, 0},
+          Cancel[x^zPow largeJ[x]][[bbNullIndices + 1]]]], prec]} (* J = Infinity *)
     ];
-
-    pols = Flatten[{
-      Flatten[ N[ ParallelTable[ FA[i, mAsq, x], {i, JA, JA, 2}], prec] ], (* state A *)
-      {N[Fn[J2, m2sq, x], prec]},                                  (* isolated X2 *)
-      Flatten[ N[ ParallelTable[ Fn[i, mgap/(1-m), x], {i, evenSpins}, {m, massSamples}], prec] ],
-      Flatten[ N[ ParallelTable[ FJ[i, mgap/(1-m), x], {i, 0, 0, 2}, {m, massSamples}], prec] ] (* J = Infinity *)
-    }, 1];
 
 
     norm = -N[Flatten[{{0, 1}, list0}], prec];
@@ -145,8 +125,10 @@ PMP2SDP[datfile_, prec_: 600] := Module[
 
     Print["functional dimension = ", functionalDimension];
     Print["number of PMP blocks = ", Length[pols] ];
-    Print["finite J values = ", evenSpins, "  (+ X2 at (", m2sq, ", ", J2, "), + J = Infinity)"];
-    Print["bound: gABB^2/ghatB <= -V, with V the SDPB objective"];
+    Print["continuum J values = ", evenSpins, "  (+ A at (", mAsq, ", ", JA,
+          "), + X2 at (", m2sq, ", ", J2, "), + J = Infinity)"];
+    Print["bound: gABB^2/ghatB <= -V  (V = SDPB objective); ",
+          "R = 2 gABB^2/(mAsq ghatB) <= -2V/mAsq;  sanity: 0 <= -V <= mAsq/2 = ", N[mAsq/2]];
 
     WritePmpJson[
         datfile,
