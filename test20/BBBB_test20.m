@@ -63,15 +63,27 @@ Print["light-row check passed"];
 (* the A pole.  Msq^zPow (> 0) removes the largest pole z^-17, so every component *)
 (* is a polynomial in Msq (degree <= 16).                                          *)
 zPow = 17;
-Vheavy[Msq_, j_, lam_: 0] := Cancel[Msq^zPow Join[
-    {g0BBWeight[Msq], lam},
-    Table[nullX[n, Msq, j], {n, bbNullIndices}]]];
+
+Vheavy[x_, j_] := Cancel[x^zPow Join[
+    {phiBB[x]*g0BBWeight[x], 0},
+    Table[phiBB[x]*nullX[n, x, j], {n, bbNullIndices}]]];
+
+(* without phase volume *)
+VA[x_, j_] := Cancel[x^zPow Join[
+  {0, 1},
+  Table[nullA[n,x,j,mA], {n, bbNullIndices}]]];
+
 
 (* exact polynomiality check in the PMP variable x  (M^2 = mgap + x, x >= 0) *)
 If[!And @@ (PolynomialQ[#, x] & /@ Vheavy[mgap + x, J]),
   Print["Vheavy is not polynomial in x; no PMP written."]; Exit[4]];
 Print["polynomiality check passed: max degree in x = ",
   Max[Exponent[#, x] & /@ Vheavy[mgap + x, J]]];
+
+If[!And @@ (PolynomialQ[#, x] & /@ VA[x, J]),
+  Print["Vheavy is not polynomial in x; no PMP written."]; Exit[4]];
+Print["polynomiality check passed: max degree in x = ",
+  Max[Exponent[#, x] & /@ VA[x, J]]];
 
 
 (* ---------- impact-parameter limit: M -> Infinity at fixed y = J^2/M^2 = b^2/4 >= 0 ---------- *)
@@ -120,8 +132,8 @@ PMP2SDP[datfile_, prec_: 600] := Module[
     (* impact-parameter block (M -> Infinity, x = b^2/4 >= 0) replaces the old       *)
     (* J -> Infinity block: that was only the x -> Infinity top term of this one.    *)
     pols = Join[
-      {N[Fpt[Vheavy[mAsq, JA, 1]], prec]},                       (* 1st isolated state: A *)
-      {N[Fpt[Vheavy[m2sq, J2, 0]], prec]},                          (* 2nd isolated state: X2 *)
+      {N[Fpt[VA[mAsq, JA] ], prec]},                       (* 1st isolated state: A *)
+      {N[Fpt[Vheavy[m2sq, J2] ], prec]},                          (* 2nd isolated state: X2 *)
       N[ParallelTable[Fcont[j], {j, evenSpins}], prec],         (* continuum M^2 >= mgap *)
       N[ParallelTable[Fcont[j], {j, 1500, 5000, 100}], prec],
       N[ParallelTable[Fcont[j], {j, 6000, 20000, 500}], prec],
