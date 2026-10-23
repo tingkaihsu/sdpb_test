@@ -74,6 +74,22 @@ Print["polynomiality check passed: max degree in x = ",
   Max[Exponent[#, x] & /@ Vheavy[mgap + x, J]]];
 
 
+(* ---------- impact-parameter limit: M -> Infinity at fixed y = J^2/M^2 = b^2/4 >= 0 ---------- *)
+(* M^2 V(M^2, J) -> {2, 0, VbLimit}.  Only the q = 0 rows survive: -2 y^k/(k! (4)_k).          *)
+VbLimit = Table[
+   Limit[z nullX[n, z, Sqrt[y z]], z -> Infinity, Assumptions -> y > 0],
+   {n, bbNullIndices}];
+
+(* check: q = 0 rows are those with nullA = m^-(2k+2) != 0; all other rows must vanish *)
+kOf[n_] := (-Exponent[nullA[n, 1, 0, m], m] - 2)/2;
+If[!And @@ Table[
+     PossibleZeroQ[VbLimit[[i]] - If[nullA[bbNullIndices[[i]], 1, 0, m] === 0, 0,
+        -2 y^kOf[bbNullIndices[[i]]]/(kOf[bbNullIndices[[i]]]! Pochhammer[4, kOf[bbNullIndices[[i]]]])]],
+     {i, nBB}],
+  Print["impact-parameter limit check failed; no PMP written."]; Exit[5]];
+Print["impact-parameter limit check passed"];
+
+
 LaunchKernels[];
 DistributeDefinitions[Vheavy, nullX, g0BBWeight, zPow, mgap, bbNullIndices];
 
@@ -101,18 +117,17 @@ PMP2SDP[datfile_, prec_: 600] := Module[
         {{vec}}
     ];
 
-    (* J -> Infinity at fixed M^2: x^zPow largeJ[x] is a constant vector with a   *)
-    (* single nonzero row (-c), so it only imposes beta_(16,0) <= 0, any M^2.     *)
-    (* largeJ must be regenerated whenever bbNullIndices changes.                 *)
+    (* impact-parameter block (M -> Infinity, x = b^2/4 >= 0) replaces the old       *)
+    (* J -> Infinity block: that was only the x -> Infinity top term of this one.    *)
     pols = Join[
-      {N[Fpt[Vheavy[mAsq, JA, 0]], prec]},                       (* 1st isolated state: A *)
-      {N[Fpt[Vheavy[m2sq, J2, 1]], prec]},                          (* 2nd isolated state: X2 *)
+      {N[Fpt[Vheavy[mAsq, JA, 1]], prec]},                       (* 1st isolated state: A *)
+      {N[Fpt[Vheavy[m2sq, J2, 0]], prec]},                          (* 2nd isolated state: X2 *)
       N[ParallelTable[Fcont[j], {j, evenSpins}], prec],         (* continuum M^2 >= mgap *)
       N[ParallelTable[Fcont[j], {j, 1500, 5000, 100}], prec],
       N[ParallelTable[Fcont[j], {j, 6000, 20000, 500}], prec],
-      N[ParallelTable[Fcont[j], {j, 20000, 50000, 2000}], prec],
-      {N[Fpt[Join[{0, 0},
-          Cancel[x^zPow largeJ[x]][[bbNullIndices + 1]]]], prec]} (* J = Infinity *)
+      N[ParallelTable[Fcont[j], {j, 22000, 50000, 2000}], prec],   (* 20000 already above *)
+      {N[PositiveMatrixWithPrefactor[DampedRational[1, {}, 1/E, x],
+          {{Join[{2, 0}, VbLimit /. y -> x]}}], prec]}              (* impact-parameter limit *)
     ];
 
 
@@ -128,10 +143,12 @@ PMP2SDP[datfile_, prec_: 600] := Module[
 
     Print["functional dimension = ", functionalDimension];
     Print["number of PMP blocks = ", Length[pols] ];
-    Print["continuum J values = ", evenSpins, "  (+ A at (", mAsq, ", ", JA,
-          "), + X2 at (", m2sq, ", ", J2, "), + J = Infinity)"];
+    Print["continuum J values = ", evenSpins,
+          "  (+ J = 1500..5000 step 100, 6000..20000 step 500, 22000..50000 step 2000)",
+          "  (+ A at (", mAsq, ", ", JA, "), + X2 at (", m2sq, ", ", J2, "), + impact-parameter limit)"];
     Print["bound: gABB^2/ghatB <= -V  (V = SDPB objective); ",
-          "R = 2 gABB^2/(mAsq ghatB) <= -2V/mAsq;  sanity: 0 <= -V <= mAsq/2 = ", N[mAsq/2]];
+          "R = 2 gABB^2/(mAsq ghatB) <= -2V/mAsq;  expected: mAsq/3 = ", N[mAsq/3],
+          " <= -V <= mAsq/2 = ", N[mAsq/2]];
 
     WritePmpJson[
         datfile,
