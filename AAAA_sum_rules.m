@@ -8,13 +8,6 @@
 PartialWaveD[d_,J_,x_]:=Hypergeometric2F1[-J,J+d-3,(d-2)/2,(1-x)/2];
 
 
-PartialWaveD[4,J,x]-LegendreP[J,x]//FullSimplify
-
-(* ===== Input cell 2 ===== *)
- ((x-4*mA^2)^((10-3)/(2)))/(Sqrt[x])/.{mA->0}
- ((x-4*mA^2)^((10-3)/(2)))/(Sqrt[x])//FullSimplify
-
-(* ===== Input cell 3 ===== *)
 (* null constraint generator for AAAA scattering *)
 (* ---------- coefficient helper ---------- *)
 
@@ -30,7 +23,7 @@ validTriples[Nmax_Integer] :=
 (* AAAA scattering change the ansatz to be s-u symmetric *)
 Mfwdlow[s_, t_, mA_, Nmax_Integer] := Module[{u},
 	u = 4mA^2-s-t;
-    -gAA^2(1/(s-mA^2)+1/(t-mA^2)+1/(u-mA^2))+Total[
+    -gAAA^2(1/(s-mA^2)+1/(t-mA^2)+1/(u-mA^2))+Total[
         Function[{ab},
             del[ab[[1]], ab[[2]]]
             * (s-2*mA^2)^ab[[1]]
@@ -65,97 +58,32 @@ DblCtr[mA_, k_Integer, q_Integer, Nmax_Integer] := -Residue[ Residue[ 1/(s*t) ( 
 
 (* ===== Input cell 9 ===== *)
 (* Double Contour Integral *)
-DblCtrSum[s_,k_,q_]:=Residue[((1)/(s*t)*((1)/(s^(k-q)*t^q)-(1)/(s^q*t^(k-q)))-(1)/((4*mA^2-s-t)*t)*((1)/((4*mA^2-s-t)^(k-q)*t^q)-(1)/((4*mA^2-s-t)^q*t^(k-q))))*PartialWaveD[10,J,1+(2*t)/(s-4*mA^2)],{t,0}];
+DblCtrSum[s_,J_,k_,q_]:=Residue[((1)/(s*t)*((1)/(s^(k-q)*t^q)-(1)/(s^q*t^(k-q)))-(1)/((4*mA^2-s-t)*t)*((1)/((4*mA^2-s-t)^(k-q)*t^q)-(1)/((4*mA^2-s-t)^q*t^(k-q))))*PartialWaveD[10,J,1+(2*t)/(s-4*mA^2)],{t,0}];
 
-DblCtr[m,1,0,5]
-DblCtr[m,2,0,5]
-DblCtr[m,3,0,5]
-DblCtr[m,3,1,5]
+xkq[z_,J_,k_,q_] := DblCtrSum[z,J,k,q];
 
 
-lstwPoles = {DblCtrSum[x,1,0],DblCtrSum[x,2,0],DblCtrSum[x,3,0],DblCtrSum[x,3,1]};
-
-ToString[lstwPoles,InputForm,PageWidth->Infinity]
-
-
-(* ===== Input cell 10 ===== *)
-
-x20 = DblCtrSum[x,2,0]//FullSimplify
-
-x20/.{J->0,x->mA^2}
+(* ---------- index list: k, k-q > q ---------- *)
+kMax = 13;
+nullIndex = Flatten[
+  Table[{k, q}, {k, 1, kMax}, {q, 0, Floor[(k - 1)/2]}], 1];
+(* literal pseudo code would be {q, 0, Floor[k/2]}: adds 10 identically-zero rows *)
+Length[nullIndex] 
 
 
-(* ===== Input cell 11 ===== *)
-x20 = DblCtrSum[x,2,0]//FullSimplify;
-
-(* ===== Input cell 12 ===== *)
-x30 = DblCtrSum[x,3,0]//FullSimplify;
-x31 = DblCtrSum[x,3,1]//FullSimplify;
-
-(* ===== Input cell 13 ===== *)
-x40 = DblCtrSum[x,4,0]//FullSimplify;
+MlowPole[s_, t_, mA_] := -1^2 (1/(s - mA^2) + 1/(t - mA^2) + 1/(4mA^2 - s - t - mA^2));
+DblCtrFast[k_Integer, q_Integer] := Residue[Residue[
+   1/(s t) (MlowPole[s, t, m]/(s^(k - q) t^q) - MlowPole[t, s, m]/(t^(k - q) s^q)),
+   {s, Infinity}], {t, 0}];
+   
+DistributeDefinitions[xkq, DblCtrSum, PartialWaveD, DblCtrFast, MlowPole];
 
 
-x41 = DblCtrSum[x,4,1]//FullSimplify;
-
-(* ===== Input cell 14 ===== *)
-x50=DblCtrSum[x,5,0]//FullSimplify;
-
-
-x51 = DblCtrSum[x,5,1];
+LaunchKernels[];
+nullX = ParallelMap[Together@FunctionExpand@xkq[z, J, #[[1]], #[[2]]] &, nullIndex];
+nullA = ParallelMap[Together@DblCtrFast[#[[1]], #[[2]]] &, nullIndex];
 
 
-x52 = DblCtrSum[x,5,2];
-
-(* ===== Input cell 15 ===== *)
-x60 = DblCtrSum[x,6,0];
-
-
-x61 = DblCtrSum[x,6,1];
-
-
-x62 = DblCtrSum[x,6,2];
-
-(* ===== Input cell 16 ===== *)
-x70 = DblCtrSum[x,7,0];
-
-
-x71 = DblCtrSum[x,7,1];
-
-
-x73 = DblCtrSum[x,7,3];
-
-(* ===== Input cell 17 ===== *)
-x80 = DblCtrSum[x,8,0];
-
-
-x81 = DblCtrSum[x,8,1];
-
-
-x83 = DblCtrSum[x,8,3];
-
-(* ===== Input cell 18 ===== *)
-x90 = DblCtrSum[x,9,0];
-
-
-x91 = DblCtrSum[x,9,1];
-
-
-x93 =DblCtrSum[x,9,3];
-x94 = DblCtrSum[x,9,4];
-
-
-x100 = DblCtrSum[x,10,0];
-x101 = DblCtrSum[x,10,1];
-x103 = DblCtrSum[x,10,3];
-x104 = DblCtrSum[x,10,4];
-
-x110 = DblCtrSum[x,11,0];
-x111 = DblCtrSum[x,11,1];
-x112 = DblCtrSum[x,11,2];
-x113 = DblCtrSum[x,11,3];
-x114 = DblCtrSum[x,11,4];
-x115 = DblCtrSum[x,11,5];
 
 
 (* ===== Input cell 19 ===== *)
@@ -164,69 +92,37 @@ ClearAll[largeJ];
 
 
 largeJ[list_List,J_Symbol:J]:=Module[{p},p=Max[Exponent[Together@Simplify[#],J]&/@list];
-Assuming[J>0,Limit[list/J^p,J->Infinity]]]
+	Assuming[J>0,Limit[list/J^p,J->Infinity]]];
 
-(* ===== Input cell 20 ===== *)
-lst = {x00,x10,x20,x30, x40, x41 ,x50, x51,x52,x60,x61,x62,x70,x71,x73,x80,x81,x83,x90,x91,x93,x94,x100,x101,x103,x104,x110,x111,x112,x113,x114,x115};
+Jlimit = largeJ[nullX,J]
 
-
-
-largeJ[lst]//FullSimplify
+Length[Jlimit]
 
 
+ToString[nullA,InputForm,PageWidth->Infinity]
 
-Length[lst]
 
-(* ===== Input cell 21 ===== *)
-lst//FullSimplify
+ToString[nullX,InputForm,PageWidth->Infinity]
+
 
 (* Exact polynomial coefficient rank; earlier labels are kept first. *)
-ClearAll[FindRedundantNulls];
-SetAttributes[FindRedundantNulls, HoldAll];
-
-FindRedundantNulls[names_List, variables_List] := Module[
-  {held, labels, expressions, denominator, polynomials,
-   monomials, matrix, reduced, keep, drop},
-  held = HoldComplete[names];
-  expressions = Together /@ names;
-  labels = Table[
-    Extract[held, {1, i}, HoldForm],
-    {i, Length[expressions]}
-  ];
-
-  (* One common denominator preserves constant-coefficient dependence. *)
-  denominator = Fold[
-    PolynomialLCM, 1, Denominator /@ expressions
-  ];
-  polynomials = Expand[Cancel[denominator #]] & /@ expressions;
-  monomials = Union[
-    Flatten[(First /@ CoefficientRules[#, variables]) & /@ polynomials, 1]
-  ];
-
-  keep = If[monomials === {}, {},
-    matrix = Table[
-      Fold[
-        Coefficient[#1, #2[[1]], #2[[2]]] &,
-        polynomial,
-        Transpose[{variables, powers}]
-      ],
-      {powers, monomials}, {polynomial, polynomials}
-    ];
-    reduced = Select[RowReduce[matrix], AnyTrue[#, # != 0 &] &];
-    (First @ FirstPosition[#, value_ /; value != 0]) & /@ reduced
-  ];
-  drop = Complement[Range[Length[labels]], keep];
-
-  <|
-    "KeepLabels" -> labels[[keep]],
-    "DropLabels" -> labels[[drop]]
-  |>
+(* Also returns the RREF rows: column d satisfies                      *)
+(*   exprs[[d]] == rr[[All, d]] . exprs[[keep]]   (constant coefficients) *)
+FindRedundantNullsLabeled[exprs_List, labels_List, vars_List] := Module[
+  {ex, den, polys, monos, mat, rr, keep, drop},
+  ex    = Together /@ exprs;
+  den   = Fold[PolynomialLCM, 1, Denominator /@ ex];
+  polys = Expand[Cancel[den #]] & /@ ex;
+  monos = Union @@ (First /@ CoefficientRules[#, vars] & /@ polys);
+  mat   = Table[Fold[Coefficient[#1, #2[[1]], #2[[2]]] &, p, Transpose[{vars, pw}]],
+            {pw, monos}, {p, polys}];
+  rr    = Select[RowReduce[mat], AnyTrue[#, # != 0 &] &];
+  keep  = First@FirstPosition[#, v_ /; v != 0] & /@ rr;
+  drop  = Complement[Range@Length@labels, keep];
+  <|"Keep" -> keep, "Drop" -> drop, "Coeff" -> rr,
+    "KeepLabels" -> labels[[keep]], "DropLabels" -> labels[[drop]]|>
 ];
 
-nullDepReport = FindRedundantNulls[
-  {x00, x10,x20,x30, x40, x41 ,x50, x51,x52,x60,x61,x62,x70,x71,x73,x80,x81,x83,x90,x91,x93,x94,x100,x101,x103,x104,x110,x111,x112,x113,x114,x115},
-  {x, J,mA}
-];
-
-nullDepReport
-
+rep = FindRedundantNullsLabeled[nullX, nullIndex, {z, J}];
+keepPos = rep["Keep"];  dropPos = rep["Drop"];  cf = rep["Coeff"];
+rep["DropLabels"]

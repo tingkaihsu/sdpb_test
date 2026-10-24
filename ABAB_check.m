@@ -1,10 +1,10 @@
 (* ::Package:: *)
 
-TestABAB[s_, t_, m_] := gab^2/(s-m^2)+gab^2/(u-m^2)+(gaa gbb)/(t-m^2)/.{u->2m^2-s-t};
+(* TestABAB[s_, t_, m_] := gab^2/(s-m^2)+gab^2/(u-m^2)+(gaa gbb)/(t-m^2)/.{u->2m^2-s-t};
 
 TestAABB[s_, t_, m_] := (gaa gbb)/(s-m^2)+gab^2/(u-m^2)+gab^2/(t-m^2)/.{u->2m^2-s-t};
 
-TestAABB[t,s,m]-TestABAB[s,t,m]
+TestAABB[t,s,m]-TestABAB[s,t,m] *)
 
 
 gABABCoeff[a_, b_] := gABAB @@ Sort[{a, b}];
@@ -14,7 +14,7 @@ validTriples[Nmax_Integer] :=
     
 MABAB[s_, t_, mA_, Nmax_Integer] := Module[{u},
 	u = 2mA^2-s-t;
-    (*-gABB^2(1/s+1/u)-gAAA*gABB*(1/(t-mA^2))+*)
+    -gABB^2(1/s+1/u)-gAAA*gABB*(1/(t-mA^2))+
     Total[
         Function[{ab},
             gABABCoeff[ab[[1]], ab[[2]]]
@@ -28,7 +28,7 @@ gAABBCoeff[a_,b_] := gABAB @@ Sort[{a,b}];
 
 MAABB[s_,t_,m_,Nmax_Integer] :=Module[{u},
 	u = 2m^2-s-t;
-    (*-gAAA*gABB(1/(s-m^2))-gABB^2(1/t+1/u)+*)
+    -gAAA*gABB(1/(s-m^2))-gABB^2(1/t+1/u)+
     Total[
         Function[{ab},
             gABABCoeff[ab[[1]], ab[[2]]]
@@ -37,18 +37,13 @@ MAABB[s_,t_,m_,Nmax_Integer] :=Module[{u},
         ] /@ validTriples[Nmax]
     ] ];
 
-Series[-Residue[MABAB[s,t,m,10]/((s-m^2)*((s-m^2)*(s-m^2+t))^(k/2))/.{k->0},{s,Infinity}],{t,0,0}]
+(* Series[-Residue[MABAB[s,t,m,10]/((s-m^2)*((s-m^2)*(s-m^2+t))^(k/2))/.{k->0},{s,Infinity}],{t,0,0}] *)
 
 MABAB[s,t,m,10]-MAABB[t,s,m,10]//FullSimplify
 
 (* test Kernel *)
 
 KerLow[s0_,m_,k_,q_,Nmax_Integer]:= Residue[Residue[MABAB[s,t,m,Nmax]/((s-s0)^(k-q+1)t^(q+1)),{s,Infinity}],{t,0}]-Residue[Residue[MAABB[s,t,m,Nmax]/((t-s0)^(k-q+1)s^(q+1)),{s,Infinity}],{t,s0}];
-
-
-KerLow[-0,m,0,0,2]//FullSimplify
-KerLow[-0,m,1,0,2]//FullSimplify
-KerLow[-0,m,2,0,2]//FullSimplify
 
 
 (* sum rule *)
@@ -68,141 +63,115 @@ wAB[x_, m_] := (x - m^2)^7/x^4;
    and PhiBB = x^3 (BBBB file). Keep these three consistent; see the note above. *)
 phiAABB[s_,m_]:= s^(5/4) (s - 4 m^2)^(7/4);
 
-KerABAB[x_,J_,k_,q_,m_]:=Residue[(1/((x-m^2)^(k-q+1)*t^(q+1))-1/((2m^2-x-t-m^2)^(k-q+1)*t^(q+1)))*wAB[x, m]*PartialWaveD[10,J,1 + 2 x t/(x - m^2)^2],{t,0}];
+(* without phase-volume factor *)
+KerABAB[x_,J_,k_,q_,m_]:=Residue[(1/((x+m^2)^(k-q+1)*t^(q+1))-1/((2m^2-x-t+m^2)^(k-q+1)*t^(q+1)))*PartialWaveD[10,J,1 + 2 x t/(x - m^2)^2],{t,0}];
+
 
 (* term 2: s' on the neutral cut ... *)
-KerAABB1[x_,J_,k_,q_,m_]:=Residue[(1/((x)^(q+1)*(t-m^2)^(k-q+1)))*phiAABB[x,m]*PartialWaveD[10,J,(2 t + x - 2 m^2)/Sqrt[x (x - 4 m^2)]],{t,m^2}];
+KerAABB1[x_,J_,k_,q_,m_]:=Residue[(1/((x)^(q+1)*(t+m^2)^(k-q+1)))*PartialWaveD[10,J,(2 t + x - 2 m^2)/Sqrt[x (x - 4 m^2)]],{t,-m^2}];
 
 (* term 3: the second term on the u-channel cut *)
-KerAABB2[x_,J_,k_,q_,m_]:=Residue[-(1/((2m^2-x-t)^(q+1)*(t-m^2)^(k-q+1)))*wAB[x, m]*(-1)^J*PartialWaveD[10,J,-1-(2 (2 m^2-t-x) x)/(-m^2+x)^2],{t,m^2}];
+KerAABB2[x_,J_,k_,q_,m_]:=Residue[-(1/((2m^2-x-t)^(q+1)*(t+m^2)^(k-q+1)))*(-1)^J*PartialWaveD[10,J,-1-(2 (2 m^2-t-x) x)/(-m^2+x)^2],{t,-m^2}];
 
 
 NABAB[x_,m_,J_,k_, q_] := KerABAB[x, J, k, q, m] - KerAABB2[x, J, k, q, m];
-NAABB[x_,m_,J_,k_, q_] := KerAABB1[x, J, k, q, m];
+NAABB[x_,m_,J_,k_, q_] := -KerAABB1[x, J, k, q, m];
 
 
-abab00 = NABAB[x,m,J,0,0]//FullSimplify;
-aabb00 = NAABB[x,m,J,0,0]//FullSimplify;
+(* ---------- index list: k,q ---------- *)
+kMax = 8;
+nullIndex = Flatten[Table[{k, q}, {k, 0, kMax}, {q, 0, k}], 1];
+(* literal pseudo code would be {q, 0, Floor[k/2]}: adds 10 identically-zero rows *)
+Length[nullIndex]
 
-abab10 = NABAB[x,m,J,1,0]//FullSimplify;
-aabb10 = NAABB[x,m,J,1,0]//FullSimplify;
+(* ---------- the double loop ---------- *)
+LaunchKernels[];
 
-abab11 = NABAB[x,m,J,1,1]//FullSimplify;
-aabb11 = NAABB[x,m,J,1,1]//FullSimplify;
+nullABABx = ParallelMap[Together@NABAB[z, mA, J, #[[1]], #[[2]]] &, nullIndex];
+nullAABBx = ParallelMap[Together@NAABB[z, mA, J, #[[1]], #[[2]]] &, nullIndex];
 
+ABABlowPole[s_, t_, mA_] := -gABB^2(1/s+ 1/(2mA^2-s-t) )-gAAA*gABB*(1/(t-mA^2));
 
-abab20 = NABAB[x,m,J,2,0]//FullSimplify;
-aabb20 = NAABB[x,m,J,2,0]//FullSimplify;
+AABBlowPole[s_, t_, mA_] := -gAAA*gABB(1/(s-m^2))-gABB^2(1/t+1/(2mA^2-s-t) );
 
-abab21 = NABAB[x,m,J,2,1]//FullSimplify;
-aabb21 = NAABB[x,m,J,2,1]//FullSimplify;
+DblCtrABAB[k_Integer, q_Integer] := Residue[Residue[
+    1/( (s+mA^2) * t ) * ABABlowPole[s,t,mA]/( (s+mA^2)^(k - q) * (t)^q ),
+    {s, Infinity}
+], {t, 0} ];
 
-abab22 = NABAB[x,m,J,2,2]//FullSimplify;
-aabb22 = NAABB[x,m,J,2,2]//FullSimplify;
+DblCtrAABB[k_Integer, q_Integer] := Residue[Residue[
+    1/( (t+mA^2) * s ) * AABBlowPole[s,t,mA]/( (t+mA^2)^(k - q) * (s)^q ),
+    {s, Infinity}
+], {t, -mA^2}]
 
+nullABABa = ParallelMap[Together@DblCtrABAB[#[[1]], #[[2]]] &, nullIndex];
 
-abab30 = NABAB[x,m,J,3,0]//FullSimplify;
-aabb30 = NAABB[x,m,J,3,0]//FullSimplify;
-
-abab31 = NABAB[x,m,J,3,1]//FullSimplify;
-aabb31 = NAABB[x,m,J,3,1]//FullSimplify;
-
-abab32 = NABAB[x,m,J,3,2]//FullSimplify;
-aabb32 = NAABB[x,m,J,3,2]//FullSimplify;
-
-abab33 = NABAB[x,m,J,3,3]//FullSimplify;
-aabb33 = NAABB[x,m,J,3,3]//FullSimplify;
+nullAABBa = ParallelMap[Together@DblCtrAABB[#[[1]], #[[2]]] &, nullIndex];
 
 
-abab40 = NABAB[x,m,J,4,0]//FullSimplify;
-aabb40 = NAABB[x,m,J,4,0]//FullSimplify;
-
-abab41 = NABAB[x,m,J,4,1]//FullSimplify;
-aabb41 = NAABB[x,m,J,4,1]//FullSimplify;
-
-abab42 = NABAB[x,m,J,4,2]//FullSimplify;
-aabb42 = NAABB[x,m,J,4,2]//FullSimplify;
-
-abab43 = NABAB[x,m,J,4,3]//FullSimplify;
-aabb43 = NAABB[x,m,J,4,3]//FullSimplify;
-
-abab44 = NABAB[x,m,J,4,4]//FullSimplify;
-aabb44 = NAABB[x,m,J,4,4]//FullSimplify;
-
-abab50 = NABAB[x,m,J,5,0]//FullSimplify;
-aabb50 = NAABB[x,m,J,5,0]//FullSimplify;
-
-abab51 = NABAB[x,m,J,5,1]//FullSimplify;
-aabb51 = NAABB[x,m,J,5,1]//FullSimplify;
-
-abab52 = NABAB[x,m,J,5,2]//FullSimplify;
-aabb52 = NAABB[x,m,J,5,2]//FullSimplify;
-
-abab53 = NABAB[x,m,J,5,3]//FullSimplify;
-aabb53 = NAABB[x,m,J,5,3]//FullSimplify;
-
-abab54 = NABAB[x,m,J,5,4]//FullSimplify;
-aabb54 = NAABB[x,m,J,5,4]//FullSimplify;
-
-abab55 = NABAB[x,m,J,5,5]//FullSimplify;
-aabb55 = NAABB[x,m,J,5,5]//FullSimplify;
-
-abab60 = NABAB[x,m,J,6,0]//FullSimplify;
-aabb60 = NAABB[x,m,J,6,0]//FullSimplify;
-
-abab61 = NABAB[x,m,J,6,1]//FullSimplify;
-aabb61 = NAABB[x,m,J,6,1]//FullSimplify;
-
-abab62 = NABAB[x,m,J,6,2]//FullSimplify;
-aabb62 = NAABB[x,m,J,6,2]//FullSimplify;
-
-abab63 = NABAB[x,m,J,6,3]//FullSimplify;
-aabb63 = NAABB[x,m,J,6,3]//FullSimplify;
-
-abab64 = NABAB[x,m,J,6,4]//FullSimplify;
-aabb64 = NAABB[x,m,J,6,4]//FullSimplify;
-
-abab65 = NABAB[x,m,J,6,5]//FullSimplify;
-aabb65 = NAABB[x,m,J,6,5]//FullSimplify;
-
-abab66 = NABAB[x,m,J,6,6]//FullSimplify;
-aabb66 = NAABB[x,m,J,6,6]//FullSimplify;
-
-abab70 = NABAB[x,m,J,7,0]//FullSimplify;
-aabb70 = NAABB[x,m,J,7,0]//FullSimplify;
-
-abab71 = NABAB[x,m,J,7,1]//FullSimplify;
-aabb71 = NAABB[x,m,J,7,1]//FullSimplify;
-
-abab72 = NABAB[x,m,J,7,2]//FullSimplify;
-aabb72 = NAABB[x,m,J,7,2]//FullSimplify;
-
-abab73 = NABAB[x,m,J,7,3]//FullSimplify;
-aabb73 = NAABB[x,m,J,7,3]//FullSimplify;
-
-abab74 = NABAB[x,m,J,7,4]//FullSimplify;
-aabb74 = NAABB[x,m,J,7,4]//FullSimplify;
-
-abab75 = NABAB[x,m,J,7,5]//FullSimplify;
-aabb75 = NAABB[x,m,J,7,5]//FullSimplify;
-
-abab76 = NABAB[x,m,J,7,6]//FullSimplify;
-aabb76 = NAABB[x,m,J,7,6]//FullSimplify;
-
-abab77 = NABAB[x,m,J,7,7]//FullSimplify;
-aabb77 = NAABB[x,m,J,7,7]//FullSimplify;
-
-abab74
+Length[nullAABBx]
 
 
-lstabab = {abab00, abab10, abab11, abab20, abab21, abab22, abab30, abab31, abab32, abab33, abab40, abab41, abab42, abab43, abab44, abab50, abab51, abab52, abab53, abab54, abab55, abab60, abab61, abab62, abab63, abab64, abab65, abab66, abab70, abab71, abab72, abab73, abab74, abab75, abab76, abab77};
-
-(* safe copy *)
-ToString[lstabab, InputForm, PageWidth->Infinity]
+ToString[nullAABBx,InputForm,PageWidth->Infinity]
 
 
-lstaabb = {aabb00, aabb10, aabb11, aabb20, aabb21, aabb22, aabb30, aabb31, aabb32, aabb33, aabb40, aabb41, aabb42, aabb43, aabb44, aabb50, aabb51, aabb52, aabb53, aabb54, aabb55, aabb60, aabb61, aabb62, aabb63, aabb64, aabb65, aabb66, aabb70, aabb71, aabb72, aabb73, aabb74, aabb75, aabb76, aabb77}
+ToString[nullAABBa/.{gABB->1},InputForm,PageWidth->Infinity]
 
 
-Length[lstabab]
+ToString[nullABABa/.{gABB->1,gAAA->1},InputForm,PageWidth->Infinity]
 
+
+(* ======================================================================== *)
+(* EXPORT.  Gegenbauer-form kernels for the PMP generators (test20.m)       *)
+(*                                                                          *)
+(* Writes kernels_AB.m with                                                 *)
+(*   nGeg[n, l, z]          normalized Gegenbauer, P_n^(l)(1) = 1, 0 if n<0 *)
+(*   NABAB[n_,z_,J_,m_]     = nullABABx[[n+1]]   (same format as before)    *)
+(*   NAABB[n_,z_,J_,mA_]    = nullAABBx[[n+1]]                              *)
+(* Every Hypergeometric2F1[k-J, J+7+k, 4+k, w] equals nGeg[J-k, 7/2+k, 1-2w]*)
+(* (P_J^(k) = P_J^(k)(1) * normalized C_{J-k}^{7/2+k}).  Each distinct 2F1  *)
+(* is computed ONCE per call through With[] (NABAB has 9814 calls but only  *)
+(* 9 distinct values), and GegenbauerC keeps full precision at J ~ 5*10^4,  *)
+(* where the numerical Hypergeometric2F1 loses all digits near threshold.   *)
+(* ======================================================================== *)
+
+nGegDefinition =
+  "nGeg[n_Integer, l_, z_] := If[n < 0, 0, GegenbauerC[n, l, z] n!/Pochhammer[2 l, n]];";
+
+kernelDefinitionString[lhs_String, list_List] := Module[{hyps, bad, names, body, locals},
+  hyps = Union @ Cases[list, _Hypergeometric2F1, {0, Infinity}];
+  (* only the family 2F1[k-J, J+7+k, 4+k, w] is allowed *)
+  bad = Select[hyps,
+    Expand[#[[1]] + #[[2]] - 2 #[[3]] + 1] =!= 0 || !IntegerQ[Expand[#[[1]] + J]] &];
+  If[bad =!= {}, Print["kernelDefinitionString: unexpected 2F1 ", bad]; Abort[]];
+  names  = Table["gg" <> ToString[i], {i, Length[hyps]}];
+  ClearAll @@ names;          (* placeholders must be free symbols *)
+  body   = list /. Thread[hyps -> (Symbol /@ names)];
+  locals = MapThread[
+    #1 <> " = nGeg[" <> ToString[-#2[[1]], InputForm] <> ", " <>
+      ToString[#2[[3]] - 1/2, InputForm] <> ", " <>
+      ToString[1 - 2 #2[[4]], InputForm, PageWidth -> Infinity] <> "]" &,
+    {names, hyps}];
+  lhs <> " := With[{" <> StringRiffle[locals, ", "] <> "}, " <>
+    ToString[body, InputForm, PageWidth -> Infinity] <> "][[n+1]];"
+];
+
+exportKernels[file_String] := Export[file,
+  StringRiffle[{
+    "(* kernels_AB.m -- generated by ABAB_check.m, kMax = " <> ToString[kMax] <>
+      ", " <> DateString[] <> ".  Do not edit by hand. *)",
+    nGegDefinition,
+    kernelDefinitionString["NABAB[n_,z_,J_,m_]",  nullABABx],
+    kernelDefinitionString["NAABB[n_,z_,J_,mA_]", nullAABBx]
+  }, "\n\n"], "Text"];
+
+kernelsFile = FileNameJoin[{
+  Which[
+    StringQ[$InputFileName] && StringLength[$InputFileName] > 0,     (* wolframscript / Get *)
+      DirectoryName[ExpandFileName[$InputFileName]],
+    $FrontEnd =!= Null,                                                (* run from the front end *)
+      Quiet @ Check[NotebookDirectory[], Directory[]],
+    True, Directory[]],
+  "kernels_AB.m"}];
+exportKernels[kernelsFile];
+Print["wrote ", kernelsFile];
