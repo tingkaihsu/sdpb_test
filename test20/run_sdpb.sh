@@ -16,7 +16,7 @@ docker run --rm \
   sh -lc "rm -rf ${OUT_PREFIX}.ck"
 
 # 2) Convert PMP to SDP
-docker run --shm-size=16384m \
+docker run --shm-size=32g \
   -v "${WORKDIR}:${DATA_DIR}" \
   "${IMAGE}" \
   pmp2sdp 2048 -i "${N_PMP_JSON}" -o "${OUT_PREFIX}"
@@ -24,7 +24,7 @@ docker run --shm-size=16384m \
 # 3) Run SDPB
 # NOTE: --procsPerNode was removed — it is obsolete in SDPB 3.x and the MPI
 # process layout is determined automatically from the MPI environment.
-docker run --shm-size=16384m \
+docker run --shm-size=32g \
   -v "${WORKDIR}:${DATA_DIR}" \
   "${IMAGE}" \
   mpirun --allow-run-as-root -n 24 sdpb \
