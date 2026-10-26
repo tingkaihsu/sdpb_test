@@ -139,8 +139,8 @@ nlAAAA[n_,x_,J_,m_] := {m^(-4), m^(-6), m^(-8), 0, m^(-10), 0, m^(-12), 0, 0, m^
 (* at state A; the BB entry also carries the B exchange in AB->AB (nlAABB):  *)
 (* its weight is gABB^2 = A's BB coupling, so B is not an independent block   *)
 nlABMatrix[n_, z_, J_] := {
-  {0, 1/2 nlABAB[n, z, J, mA]},
-  {1/2 nlABAB[n, z, J, mA], nlAABB[n, z, J, mA]}
+  {0, -1/2 nlABAB[n, z, J, mA]},
+  {-1/2 nlABAB[n, z, J, mA], nlAABB[n, z, J, mA]}
 };
 
 
