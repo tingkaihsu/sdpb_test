@@ -285,16 +285,12 @@ PMP2SDP[datfile_, prec_: 600] := Module[
     Print["Invalid or coupled Run B blocks (indices): ", invalidBlocks]; Abort[]];
   Print["Run B block validation passed: finite, nonzero, diagonal, disjoint AA/BB coordinates."];
 
-  exportResult = Check[WritePmpJson[
+  WritePmpJson[
     datfile,
     SDP[obj, norm, pols],
     prec,
     getAnalyticSampleData
-  ], $Failed];
-  If[exportResult === $Failed, Print["PMP JSON export failed."]; Abort[]];
-  exportResult
+  ]
 ];
 
-runBDirectory = FileNameJoin[{FileDir, "runB"}];
-If[!DirectoryQ[runBDirectory], CreateDirectory[runBDirectory]];
-CheckAbort[PMP2SDP[FileNameJoin[{runBDirectory, "n_pmp.json"}], 1000], Exit[1]];
+PMP2SDP[FileNameJoin[{FileDir,"n_pmp.json"}], 1000];
