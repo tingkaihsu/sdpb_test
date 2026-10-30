@@ -1,12 +1,5 @@
 (* ::Package:: *)
 
-(* TestABAB[s_, t_, m_] := gab^2/(s-m^2)+gab^2/(u-m^2)+(gaa gbb)/(t-m^2)/.{u->2m^2-s-t};
-
-TestAABB[s_, t_, m_] := (gaa gbb)/(s-m^2)+gab^2/(u-m^2)+gab^2/(t-m^2)/.{u->2m^2-s-t};
-
-TestAABB[t,s,m]-TestABAB[s,t,m] *)
-
-
 gABABCoeff[a_, b_] := gABAB @@ Sort[{a, b}];
 
 validTriples[Nmax_Integer] :=
@@ -99,8 +92,9 @@ DblCtrABAB[k_Integer, q_Integer] := Residue[Residue[
     {s, Infinity}
 ], {t, 0} ];
 
+(* with additional minus sign *)
 DblCtrAABB[k_Integer, q_Integer] := Residue[Residue[
-    1/( (t+mA^2) * s ) * AABBlowPole[s,t,mA]/( (t+mA^2)^(k - q) * (s)^q ),
+    -1/( (t+mA^2) * s ) * AABBlowPole[s,t,mA]/( (t+mA^2)^(k - q) * (s)^q ),
     {s, Infinity}
 ], {t, -mA^2}]
 

@@ -119,7 +119,7 @@ nlABAB[n_,x_,J_,mA_] := {-mA^(-2), 0, -mA^(-4), 0, 0, -mA^(-6), 0, 0, 0, -mA^(-8
 
 
 (* couplings are gABB gABB exchanges B *)
-nlAABB[n_,x_,J_,mA_] := {-mA^(-2), -mA^(-4), 0, -mA^(-6), 0, 0, -mA^(-8), 0, 0, 0, -mA^(-10), 0, 0, 0, 0, -mA^(-12), 0, 0, 0, 0, 0, -mA^(-14), 0, 0, 0, 0, 0, 0, -mA^(-16), 0, 0, 0, 0, 0, 0, 0, -mA^(-18), 0, 0, 0, 0, 0, 0, 0, 0}[[n+1]];
+nlAABB[n_,x_,J_,mA_] := {mA^(-2), mA^(-4), 0, mA^(-6), 0, 0, mA^(-8), 0, 0, 0, mA^(-10), 0, 0, 0, 0, mA^(-12), 0, 0, 0, 0, 0, mA^(-14), 0, 0, 0, 0, 0, 0, mA^(-16), 0, 0, 0, 0, 0, 0, 0, mA^(-18), 0, 0, 0, 0, 0, 0, 0, 0}[[n+1]];
 
 
 
@@ -139,8 +139,8 @@ nlAAAA[n_,x_,J_,m_] := {m^(-4), m^(-6), m^(-8), 0, m^(-10), 0, m^(-12), 0, 0, m^
 (* at state A; the BB entry also carries the B exchange in AB->AB (nlAABB):  *)
 (* its weight is gABB^2 = A's BB coupling, so B is not an independent block   *)
 nlABMatrix[n_, z_, J_] := {
-  {0, -1/2 nlABAB[n, z, J, mA]},
-  {-1/2 nlABAB[n, z, J, mA], nlAABB[n, z, J, mA]}
+  {0, 1/2 nlABAB[n, z, J, mA]},
+  {1/2 nlABAB[n, z, J, mA], nlAABB[n, z, J, mA]}
 };
 
 
