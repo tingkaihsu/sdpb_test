@@ -75,7 +75,7 @@ phiAB[x_] := (x - mAsq)^7/x^4;
 
 aaNullIndices = Range[0, 48];
 bbNullIndices = Range[0, 50];
-abNullIndices = Range[0, 44];
+abNullIndices = Range[0, 1];
 
 nullCount = Total[
   Length /@ {abNullIndices, aaNullIndices, bbNullIndices}
