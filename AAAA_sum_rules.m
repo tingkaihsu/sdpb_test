@@ -102,7 +102,7 @@ Length[Jlimit]
 ToString[nullA,InputForm,PageWidth->Infinity]
 
 
-ToString[nullX,InputForm,PageWidth->Infinity]
+ToString[nullX,InputForm,PageWidth->Infinity];
 
 
 (* Exact polynomial coefficient rank; earlier labels are kept first. *)
@@ -126,3 +126,26 @@ FindRedundantNullsLabeled[exprs_List, labels_List, vars_List] := Module[
 rep = FindRedundantNullsLabeled[nullX, nullIndex, {z, J}];
 keepPos = rep["Keep"];  dropPos = rep["Drop"];  cf = rep["Coeff"];
 rep["DropLabels"]
+
+
+Limit[z nullX[[2]]/.{z->J^2/t},J->Infinity]
+
+imp[t_,k_,q_]:= Limit[z xkq[z,J,k,q]/.{z->J^2/t},J->Infinity];
+
+(* ---------- index list: k = 1..20, k-q > q ---------- *)
+kMax = 16;
+nullIndex = Flatten[
+  Table[{k, q}, {k, 1, kMax}, {q, 0, Floor[(k - 1)/2]}], 1];
+(* literal pseudo code would be {q, 0, Floor[k/2]}: adds 10 identically-zero rows *)
+Length[nullIndex]   (* 110 *)
+
+(* ---------- the double loop ---------- *)
+LaunchKernels[];
+DistributeDefinitions[xkq, DblCtrSum, PartialWaveD, DblCtrFast, MlowPole];
+
+impX = ParallelMap[Together@FunctionExpand@imp[t, #[[1]], #[[2]]] &, nullIndex][[keepPos]];
+
+Length[impX]
+
+
+ToString[impX,InputForm,PageWidth->Infinity]
