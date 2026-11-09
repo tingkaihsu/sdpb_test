@@ -114,8 +114,6 @@ keepPos = rep["Keep"];  dropPos = rep["Drop"];  cf = rep["Coeff"];
 rep["DropLabels"]
 
 
-
-
 (* ---------- sanity checks on the index sets ---------- *)
 dropExpected = {{3,1},{5,2},{6,2},{7,3},{8,3},{9,3},{9,4},{10,4},{11,4},{11,5},{12,4},{12,5},{13,5},{13,6},{14,5},{14,6},{15,5},{15,6},{15,7},{16,6},{16,7}};
 rep["DropLabels"] === dropExpected                          (* True *)
@@ -138,3 +136,31 @@ And @@ (PossibleZeroQ /@ Together[JlimitInd - largeJ[nullXind, J]])   (* True *)
 
 
 ToString[JlimitInd,InputForm, PageWidth->Infinity]
+
+
+(* Impact-parameter Block in terms of polys *)
+
+
+imp[t_,k_,q_]:= Limit[z xkq[z,J,k,q]/.{z->J^2/t},J->Infinity];
+
+(* ---------- index list: k = 1..20, k-q > q ---------- *)
+kMax = 16;
+nullIndex = Flatten[
+  Table[{k, q}, {k, 1, kMax}, {q, 0, Floor[(k - 1)/2]}], 1];
+(* literal pseudo code would be {q, 0, Floor[k/2]}: adds 10 identically-zero rows *)
+Length[nullIndex]   (* 110 *)
+
+(* ---------- the double loop ---------- *)
+LaunchKernels[];
+DistributeDefinitions[xkq, DblCtrSum, PartialWaveD, DblCtrFast, MlowPole];
+
+impX = ParallelMap[Together@FunctionExpand@imp[t, #[[1]], #[[2]]] &, nullIndex][[keepPos]];
+
+
+
+Length[impX]
+
+ToString[impX,InputForm,PageWidth->Infinity]
+
+
+
