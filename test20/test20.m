@@ -69,7 +69,7 @@ g0BBWeight[x_] := 2/x;                (* ghatB at (s,t) = (0, 0)     *)
 
 aaNullIndices = Range[0, 48];
 bbNullIndices = Range[0, 50];
-abNullIndices = Range[0, 10];
+abNullIndices = Range[0, 20];
 
 nullCount = Total[
   Length /@ {abNullIndices, aaNullIndices, bbNullIndices}
