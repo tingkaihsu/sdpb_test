@@ -61,7 +61,7 @@ bMaxFor[J_] := If[J >= 400, 200, 100];   (* large-J supp masses reach b = 200 *)
 bMaxImpact = 200;    (* impact-parameter limit blocks reach b = 200         *)
 
 neutralSpins = Join[Range[0, 200, 2], {400, 1000, 10000, 50000}];
-chargedSpins = Join[Range[0, 200], Flatten[{#, # + 1} & /@ {400, 1000, 10000, 50000}]];
+chargedSpins = Join[Range[0, 200], Flatten[{#, # + 1} & /@ {400, 1000, 10000, 50000}] ];
 
 
 

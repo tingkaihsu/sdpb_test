@@ -50,6 +50,18 @@ g2Fixed = 0;
 bmax = 40;
 dphi = Pi/4;
 
+(* ---- refined sampling parameters (tune here) ---- *)
+(* (1) finite-mass constraints for high spins (even J), m = 2J/b, i.e. m2 = (2J/b)^2 *)
+hiJmin = 44; hiJmax = 120;
+hiBmin = 17; hiBmax = 22; hiBstep = 1/20;
+(* (2) extra masses for refJmin <= J <= refJmax: suppMasses grid refined from dphi to dphiFine,
+       only for b = j dphiFine in [refBmin, refBmax]; points already on the dphi grid are skipped *)
+refJmin = 38; refJmax = 42;
+dphiFine = Pi/16;
+refBmin = 19; refBmax = 20;
+(* (3) fine b-block samples, added to the existing b-grid *)
+fineBmin = 99/5; fineBmax = 20; fineBstep = 1/1000;
+
 PMP2SDP[datfile_, prc_: 1000] := Module[
     {
         npts = 150, stateBlock, bBlock, fList, bigB, mmax, nNull, masslist,
@@ -65,6 +77,16 @@ PMP2SDP[datfile_, prc_: 1000] := Module[
         K = Floor[ N[Min[nn Pi, bmax]/dphi, 50] ];
         Table[N[1/Sin[j dphi/(2 nn)]^2, prec], {j, 1, K}]
     ];
+    refMasses[J_, prec_] := If[refJmin <= J <= refJmax,
+        Module[{nn = J + 3/2, kmin, kmax},
+            kmin = Ceiling[ N[refBmin/dphiFine, 50] ];
+            kmax = Floor[ N[Min[refBmax, nn Pi, bmax]/dphiFine, 50] ];
+            Table[N[1/Sin[k dphiFine/(2 nn)]^2, prec],
+                {k, Select[Range[kmin, kmax], !IntegerQ[# dphiFine/dphi] &]}]
+        ],
+        {}
+    ];
+    hiMasses[J_, prec_] := Table[N[(2 J/b)^2, prec], {b, Range[hiBmin, hiBmax, hiBstep]}];
 
     
 
@@ -72,7 +94,8 @@ PMP2SDP[datfile_, prc_: 1000] := Module[
 
     massList[J_] := Join[
         chebMasses[npts, prc],
-        suppMasses[J, dphi, bmax, prc]
+        suppMasses[J, dphi, bmax, prc],
+        refMasses[J, prc]
     ];
 
     Acoef[n_] := 2^n Gamma[(n + 1)/2]/Gamma[(3 - n)/2];
@@ -114,7 +137,9 @@ PMP2SDP[datfile_, prc_: 1000] := Module[
 
     pols = Join[
         Flatten[ParallelTable[stateBlock[J, m2], {J, 0, 42, 2}, {m2, massList[J]}] ],
-        Table[bBlock[b], {b, Range[1/250, 40, 1/32]}],
+        Flatten[ParallelTable[stateBlock[J, m2], {J, hiJmin, hiJmax, 2}, {m2, hiMasses[J, prc]}] ],
+        Table[bBlock[b], {b, Join[Range[1/250, 40, 1/32],
+            Complement[Range[fineBmin, fineBmax, fineBstep], Range[1/250, 40, 1/32]]]}],
         {largeBBlock}
     ];
     
