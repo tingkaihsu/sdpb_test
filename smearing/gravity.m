@@ -47,8 +47,10 @@ LaunchKernels[];
 
 
 g2Fixed = 0;
+bmax = 40;
+dphi = Pi/4;
 
-PMP2SDP[datfile_, prec_: 1000] := Module[
+PMP2SDP[datfile_, prc_: 1000] := Module[
     {
         npts = 150, stateBlock, bBlock, fList, bigB, mmax, nNull, masslist,
         largeBBlock, Acoef, trunc, Nexp, ent, osc, nullZeros, cG, c2, c3,
@@ -60,7 +62,7 @@ PMP2SDP[datfile_, prec_: 1000] := Module[
         N[1/(1 - Sin[#/2]^2) & /@ phi, prec]
     ];
     suppMasses[J_, dphi_, bmax_, prec_] := Module[{nn = J + 3/2, K},
-        K = Floor[N[Min[nn Pi, bmax]/dphi, 50]];
+        K = Floor[ N[Min[nn Pi, bmax]/dphi, 50] ];
         Table[N[1/Sin[j dphi/(2 nn)]^2, prec], {j, 1, K}]
     ];
 
@@ -69,11 +71,12 @@ PMP2SDP[datfile_, prec_: 1000] := Module[
     fList = Range[3/2, 15/2]; bigB = 40; mmax = 2; nNull = 10;
 
     massList[J_] := Join[
-        chebMasses[npts, prec],
-        suppMasses[J, dphi, bmax, prec]
+        chebMasses[npts, prc],
+        suppMasses[J, dphi, bmax, prc]
     ];
+
     Acoef[n_] := 2^n Gamma[(n + 1)/2]/Gamma[(3 - n)/2];
-    trunc[e_] := Normal[Series[e bb^(5/2), {bb, Infinity, mmax}]]/bb^(5/2);
+    trunc[e_] := Normal[ Series[e bb^(5/2), {bb, Infinity, mmax}] ]/bb^(5/2);
     Nexp = Max[fList] + 1;
 
     osc[n_, mmax_] := Module[{ser, c1, c2, al, be},
@@ -82,7 +85,7 @@ PMP2SDP[datfile_, prec_: 1000] := Module[
 
         c1 = Coefficient[ser, E^(I bb)]; c2 = Coefficient[ser, E^(-I bb)];
         al = c1 E^(5 I Pi/4); be = c2 E^(-5 I Pi/4);
-        {FullSimplify[ExpandAll[al + be]], FullSimplify[ExpandAll[I (al - be)]]}
+        {FullSimplify[ ExpandAll[al + be] ], FullSimplify[ExpandAll[I (al - be)] ] }
     ];
 
     ent[n_] := Module[{Bn, Cn}, 
@@ -110,7 +113,7 @@ PMP2SDP[datfile_, prec_: 1000] := Module[
 
 
     pols = Join[
-        Flatten[ParallelTable[stateBlock[J, m2], {J, 0, 42, 2}, {m2, massList[J]}]],
+        Flatten[ParallelTable[stateBlock[J, m2], {J, 0, 42, 2}, {m2, massList[J]}] ],
         Table[bBlock[b], {b, Range[1/250, 40, 1/32]}],
         {largeBBlock}
     ];
@@ -122,7 +125,7 @@ PMP2SDP[datfile_, prec_: 1000] := Module[
     c3 = Join[Table[1/(n + 3), {n, fList}], nullZeros];
     norm = -c3;
     obj = -(cG + g2Fixed c2);
-    WritePmpJson[datfile, SDP[obj, norm, N[pols, prec]], prec, getAnalyticSampleData];
+    WritePmpJson[datfile, SDP[obj, norm, N[pols, prc] ], prc, getAnalyticSampleData];
 ];    
 
 
