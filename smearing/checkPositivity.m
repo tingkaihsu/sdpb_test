@@ -33,7 +33,7 @@ FileDir = If[
 ];
 
 (* ---------------------------- parameters ---------------------------- *)
-logFile    = If[Length[$ScriptCommandLine] >= 2, $ScriptCommandLine[[2]], "2nd.log"];
+logFile    = If[Length[$ScriptCommandLine] >= 2, $ScriptCommandLine[[2]], "3rd.log"];
 g2Fixed    = 0;                                   (* must equal the value used to write the PMP *)
 
 fList  = Range[3/2, 15/2];                        (* f(p) powers          *)
