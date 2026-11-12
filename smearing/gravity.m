@@ -82,7 +82,7 @@ stBlock[row_] := PositiveMatrixWithPrefactor[DampedRational[1, {}, 1/E, x], {{ro
 LaunchKernels[];
 
 
-g2Fixed = 0;
+g2Fixed = -9;
 bmax = 40;
 dphi = Pi/4;
 
