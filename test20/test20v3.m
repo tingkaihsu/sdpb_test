@@ -271,8 +271,10 @@ PMP2SDP[datfile_, prec_: 600] := Module[
     }
   ];
 
-  impactNodes = DeleteDuplicates[Append[
-    Table[k dPhiSupp/mA, {k, 0, Floor[mA bMaxImpact/dPhiSupp]}], bMaxImpact]];
+  (* Extra nodes resolve the charged F + K minimum near b = 6.8. *)
+  impactNodes = DeleteDuplicates[Join[
+    Table[k dPhiSupp/mA, {k, 0, Floor[mA bMaxImpact/dPhiSupp]}],
+    {bMaxImpact, 676/100, 680/100, 682/100}]];
   impactBlocks = Table[N[physicalImpactBlocks[b], prec], {b, impactNodes}];
   
   If[!AllTrue[impactBlocks,
