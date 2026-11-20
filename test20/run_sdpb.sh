@@ -6,6 +6,7 @@ WORKDIR="$(pwd)"
 DATA_DIR="/data"
 N_PMP_JSON="${DATA_DIR}/n_pmp.json"
 OUT_PREFIX="${DATA_DIR}/out"
+SOLUTION_DIR="${OUT_PREFIX}_out"
 
 # 0) Run PMP
 wolframscript -file test20v3.m 1/5 344
@@ -39,9 +40,20 @@ docker run --shm-size=28g \
     --precision=2048 \
     --maxIterations=50000 \
     --noFinalCheckpoint \
-    -s "${OUT_PREFIX}"
+    -s "${OUT_PREFIX}" \
+    -o "${SOLUTION_DIR}"
 
+# 4) Extract zeros and couplings using the matching SDP metadata and solution.
+docker run --rm --shm-size=28g \
+  -v "${WORKDIR}:${DATA_DIR}" \
+  "${IMAGE}" \
+  mpirun --allow-run-as-root -n 24 spectrum \
+    --pmpInfo="${OUT_PREFIX}/pmp_info.json" \
+    --solution="${SOLUTION_DIR}" \
+    --output="${SOLUTION_DIR}/spectrum.json" \
+    --precision=2048
 
+# 5) Remove the checkpoint after spectrum extraction succeeds.
 docker run --rm \
   -v "${WORKDIR}:${DATA_DIR}" \
   "${IMAGE}" \
