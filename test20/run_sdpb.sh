@@ -9,49 +9,50 @@ OUT_PREFIX="${DATA_DIR}/out"
 SOLUTION_DIR="${OUT_PREFIX}_out"
 
 # 0) Run PMP
-wolframscript -file test20v3.m 1/5 344
+# wolframscript -file test20v3.m 1/5 344
 # 1) Remove old checkpoint file
-docker run --rm \
-  -v "${WORKDIR}:${DATA_DIR}" \
-  "${IMAGE}" \
-  sh -lc "rm -rf ${OUT_PREFIX}.ck"
+# docker run --rm \
+#   -v "${WORKDIR}:${DATA_DIR}" \
+#   "${IMAGE}" \
+#   sh -lc "rm -rf ${OUT_PREFIX}.ck"
 
 # 2) Convert PMP to SDP
-docker run --shm-size=28g \
-  -v "${WORKDIR}:${DATA_DIR}" \
-  "${IMAGE}" \
-  pmp2sdp 2048 -i "${N_PMP_JSON}" -o "${OUT_PREFIX}"
+# docker run --shm-size=28g \
+#   -v "${WORKDIR}:${DATA_DIR}" \
+#   "${IMAGE}" \
+#   pmp2sdp 2048 -i "${N_PMP_JSON}" -o "${OUT_PREFIX}"
 
-rm n_pmp.json
+# rm n_pmp.json
 
 # 3) Run SDPB
 # NOTE: --procsPerNode was removed — it is obsolete in SDPB 3.x and the MPI
 # process layout is determined automatically from the MPI environment.
-docker run --shm-size=28g \
-  -v "${WORKDIR}:${DATA_DIR}" \
-  "${IMAGE}" \
-  mpirun --allow-run-as-root -n 24 sdpb \
-    --writeSolution="x,y,z,X,Y" \
-    --maxComplementarity=1e1000 \
-    --dualityGapThreshold=1e-30 \
-    --stepLengthReduction=0.7 \
-    --primalErrorThreshold=1e-30 \
-    --dualErrorThreshold=1e-30 \
-    --precision=2048 \
-    --maxIterations=50000 \
-    --noFinalCheckpoint \
-    -s "${OUT_PREFIX}" \
-    -o "${SOLUTION_DIR}"
+# docker run --shm-size=28g \
+#   -v "${WORKDIR}:${DATA_DIR}" \
+#   "${IMAGE}" \
+#   mpirun --allow-run-as-root -n 24 sdpb \
+#     --writeSolution="x,y,z,X,Y" \
+#     --maxComplementarity=1e1000 \
+#     --dualityGapThreshold=1e-30 \
+#     --stepLengthReduction=0.7 \
+#     --primalErrorThreshold=1e-30 \
+#     --dualErrorThreshold=1e-30 \
+#     --precision=2048 \
+#     --maxIterations=50000 \
+#     --noFinalCheckpoint \
+#     -s "${OUT_PREFIX}" \
+#     -o "${SOLUTION_DIR}"
 
 # 4) Extract zeros and couplings using the matching SDP metadata and solution.
 docker run --rm --shm-size=28g \
-  -v "${WORKDIR}:${DATA_DIR}" \
-  "${IMAGE}" \
-  mpirun --allow-run-as-root -n 24 spectrum \
-    --pmpInfo="${OUT_PREFIX}/pmp_info.json" \
-    --solution="${SOLUTION_DIR}" \
-    --output="${SOLUTION_DIR}/spectrum.json" \
-    --precision=2048
+  -v "$PWD:/data" \
+  "$IMAGE" \
+  mpirun --allow-run-as-root -n 1 spectrum \
+    --input=/data/n_pmp.json \
+    --solution=/data/out_out \
+    --output=/data/out_out/spectrum_trial_1e-15.json \
+    --precision=2048 \
+    --threshold=1e-15
 
 # 5) Remove the checkpoint after spectrum extraction succeeds.
 docker run --rm \
